@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+ <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <!--ICON-->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+        <!--CSS-->
+        <link rel="stylesheet" href="assets/css/authentication.css">
+
+        <title>Try Login</title>
+    </head>
+
+    <body>
+ 
+<div class="auth-card" id="authCard">
+  <div class="track" id="track">
+ 
+    <!-- ══════════════ SCREEN 1 — CUSTOMER ══════════════ -->
+    <div class="screen screen-customer">
+ 
+      <!-- LEFT: form pane with two inner views -->
+      <div class="form-pane" id="custFormPane">
+ 
+        <!-- LOGIN VIEW (default active) -->
+        <div class="view login-view active" id="custLoginView">
+          <div class="role-chip customer"><i class="ri-user-3-line"></i> Customer</div>
+          <h2 class="form-title">Welcome back 👋</h2>
+          <form action="" method="post">
+            <div class="field-group">
+              <div class="field">
+                <i class="ri-mail-fill"></i>
+                <input type="email" name="email" autocomplete="email" required placeholder=" " id="c-email">
+                <label for="c-email">Email</label>
+              </div>
+              <div class="field">
+                <i class="ri-lock-2-fill"></i>
+                <input type="password" name="password" autocomplete="current-password" required placeholder=" " id="c-pass" class="has-eye">
+                <label for="c-pass">Password</label>
+                <button type="button" class="eye-btn" data-target="c-pass">
+                  <i class="ri-eye-off-line"></i>
+                </button>
+              </div>
+            </div>
+            <a href="#" class="forgot">Forgot Password?</a>
+            <button type="submit" class="submit-btn c-btn">
+              Log In <i class="ri-send-plane-2-fill"></i>
+            </button>
+            <p class="form-foot">
+              Don't have an account?
+              <a href="#" class="show-reg" data-target="custRegView">Sign Up</a>
+            </p>
+          </form>
+        </div>
+ 
+        <!-- REGISTER VIEW (hidden by default) -->
+        <div class="view reg-view" id="custRegView">
+          <div class="role-chip customer"><i class="ri-user-add-line"></i> New Customer</div>
+          <h2 class="form-title">Create account ✨</h2>
+          <form action="" method="post">
+            <div class="field-group">
+              <div class="field">
+                <i class="ri-user-3-fill"></i>
+                <input type="text" name="username" required placeholder=" " id="c-username">
+                <label for="c-username">Username</label>
+              </div>
+              <div class="field">
+                <i class="ri-mail-fill"></i>
+                <input type="email" name="reg_email" required placeholder=" " id="c-regemail">
+                <label for="c-regemail">Email</label>
+              </div>
+              <div class="field">
+                <i class="ri-lock-2-fill"></i>
+                <input type="password" name="reg_pass" required placeholder=" " id="c-regpass" class="has-eye">
+                <label for="c-regpass">Password</label>
+                <button type="button" class="eye-btn" data-target="c-regpass">
+                  <i class="ri-eye-off-line"></i>
+                </button>
+              </div>
+              <div class="field">
+                <i class="ri-lock-password-fill"></i>
+                <input type="password" name="reg_confirm" required placeholder=" " id="c-confirm" class="has-eye">
+                <label for="c-confirm">Confirm Password</label>
+                <button type="button" class="eye-btn" data-target="c-confirm">
+                  <i class="ri-eye-off-line"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="submit-btn c-btn" style="margin-top:.75rem">
+              Sign Up <i class="ri-user-add-fill"></i>
+            </button>
+            <p class="form-foot">
+              Already have an account?
+              <a href="#" class="show-login" data-target="custLoginView">Sign In</a>
+            </p>
+          </form>
+        </div>
+ 
+      </div><!-- /custFormPane -->
+ 
+      <!-- RIGHT: Image panel -->
+      <div class="img-pane">
+        <img src="assets/img/login-bg.jpg" alt="" id="imgFront">
+        <div class="img-body" id="custImgBody">
+          <span class="img-badge"><i class="ri-store-2-line"></i> Shop Owner?</span>
+          <p class="img-tag">Run your store<br>from one place.</p>
+          <p class="img-sub">Manage products, orders &amp; analytics<br>on a powerful owner dashboard.</p>
+          <button class="img-toggle-btn" id="toOwnerBtn">Access Shop Portal →</button>
+        </div>
+      </div>
+ 
+    </div><!-- /screen-customer -->
+ 
+    <!-- ══════════════ SCREEN 2 — SHOP OWNER ══════════════ -->
+    <div class="screen screen-owner">
+ 
+      <!-- LEFT: Image panel -->
+      <div class="img-pane">
+        <img src="assets/img/logincafe-bg.jpg" alt="" id="imgBack">
+        <div class="img-body" id="ownerImgBody">
+          <span class="img-badge"><i class="ri-arrow-left-line"></i> Customer?</span>
+          <p class="img-tag">Back to<br>customer login.</p>
+          <p class="img-sub">Sign in to your personal account<br>or browse our store.</p>
+          <button class="img-toggle-btn" id="toCustomerBtn">← Back to Customer</button>
+        </div>
+      </div>
+ 
+      <!-- RIGHT: form pane with two inner views -->
+      <div class="form-pane" id="ownerFormPane">
+ 
+        <!-- LOGIN VIEW (default active) -->
+        <div class="view login-view active" id="ownerLoginView">
+          <div class="role-chip owner"><i class="ri-store-2-line"></i> Shop Owner</div>
+          <h2 class="form-title">Shop Portal 🏪</h2>
+          <form action="" method="post">
+            <div class="field-group">
+              <div class="field">
+                <i class="ri-mail-fill"></i>
+                <input type="email" name="owner_email" autocomplete="email" required placeholder=" " id="o-email">
+                <label for="o-email">Business Email</label>
+              </div>
+              <div class="field">
+                <i class="ri-lock-2-fill"></i>
+                <input type="password" name="owner_pass" autocomplete="current-password" required placeholder=" " id="o-pass" class="has-eye">
+                <label for="o-pass">Password</label>
+                <button type="button" class="eye-btn" data-target="o-pass">
+                  <i class="ri-eye-off-line"></i>
+                </button>
+              </div>
+            </div>
+            <a href="#" class="forgot">Forgot Password?</a>
+            <button type="submit" class="submit-btn o-btn">
+              Enter Dashboard <i class="ri-dashboard-2-line"></i>
+            </button>
+            <p class="form-foot">
+              No shop account?
+              <a href="#" class="show-reg" data-target="ownerRegView">Register your store</a>
+            </p>
+ 
+          </form>
+        </div>
+ 
+        <!-- REGISTER VIEW (hidden by default) -->
+        <div class="view reg-view" id="ownerRegView">
+          <div class="role-chip owner"><i class="ri-store-3-line"></i> New Shop</div>
+          <h2 class="form-title">Register store 🛍️</h2>
+          <form action="" method="post">
+            <div class="field-group">
+              <div class="field">
+                <i class="ri-mail-fill"></i>
+                <input type="email" name="owner_reg_email" required placeholder=" " id="o-regemail">
+                <label for="o-regemail">Business Email</label>
+              </div>
+              <div class="field">
+                <i class="ri-phone-fill"></i>
+                <input type="tel" name="phone" required placeholder=" " id="o-phone">
+                <label for="o-phone">Phone Number</label>
+              </div>
+              <div class="field">
+                <i class="ri-lock-2-fill"></i>
+                <input type="password" name="owner_reg_pass" required placeholder=" " id="o-regpass" class="has-eye">
+                <label for="o-regpass">Password</label>
+                <button type="button" class="eye-btn" data-target="o-regpass">
+                  <i class="ri-eye-off-line"></i>
+                </button>
+              </div>
+              <div class="field">
+                <i class="ri-lock-password-fill"></i>
+                <input type="password" name="owner_confirm" required placeholder=" " id="o-confirm" class="has-eye">
+                <label for="o-confirm">Confirm Password</label>
+                <button type="button" class="eye-btn" data-target="o-confirm">
+                  <i class="ri-eye-off-line"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="submit-btn o-btn" style="margin-top:.75rem">
+              Submit Application <i class="ri-send-plane-2-fill"></i>
+            </button>
+            <p class="form-foot">
+              Already registered?
+              <a href="#" class="show-login" data-target="ownerLoginView">Sign In</a>
+            </p>
+ 
+          </form>
+        </div>
+ 
+      </div><!-- /ownerFormPane -->
+ 
+    </div><!-- /screen-owner -->
+ 
+  </div><!-- /track -->
+</div><!-- /auth-card -->
+        </section>
+        <!--ANIMATION-->
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.1/dist/gsap.min.js"></script>
+        
+        <!--MAIN JS-->
+        <script src="assets/js/authen.js"></script>
+    </body>
+ </html>
+
+ 
