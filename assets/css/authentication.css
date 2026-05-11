@@ -182,6 +182,7 @@
       display: flex; align-items: center;
       background: var(--surface);
       transition: border-color .25s;
+      isolation: isolate;
     }
     .screen-customer .field:focus-within { border-color: var(--purple); }
     .screen-owner    .field:focus-within { border-color: var(--teal); }
@@ -202,22 +203,24 @@
       background: transparent; color: var(--title);
       font-family: var(--font); font-size: .85rem; font-weight: 600;
       border: none; outline: none;
+      position: relative; z-index: 1;  /* ADD THIS */
     }
     .field input:focus + label,
     .field input:not(:placeholder-shown) + label { opacity: 0; }
     .field input:-webkit-autofill { -webkit-transition: background-color 6000s, color 6000s; }
- 
-    /* eye toggle button: centered inside the field on the right */
-    .pw-wrap { position: relative; }
+    .field input.has-eye {padding-right: 3rem;}
+
+    
     .eye-btn {
       position: absolute;
       top: 50%;
-      right: 3rem;
+      right: 1.2rem;
       transform: translateY(-50%);
       background: none; border: none; cursor: pointer;
       color: var(--muted); font-size: 1.1rem;
       display: flex; align-items: center;
-      transition: color .2s; padding: 0; z-index: 3;
+      transition: color .2s; padding: 0;
+      z-index: 2;  /* HIGHER than input's z-index: 1 */
     }
     .eye-btn:hover { color: var(--title); }
  

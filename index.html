@@ -39,13 +39,13 @@
                 <i class="ri-lock-2-fill"></i>
                 <input type="password" name="password" autocomplete="current-password" required placeholder=" " id="c-pass" class="has-eye">
                 <label for="c-pass">Password</label>
-                <button type="button" class="eye-btn" data-target="c-pass">
+                <button type="button" class="eye-btn" data-target="c-pass" id="buttonlogin">
                   <i class="ri-eye-off-line"></i>
                 </button>
               </div>
             </div>
             <a href="#" class="forgot">Forgot Password?</a>
-            <button type="submit" class="submit-btn c-btn">
+            <button type="button" class="submit-btn c-btn" onclick=loginCustomer()>
               Log In <i class="ri-send-plane-2-fill"></i>
             </button>
             <p class="form-foot">
@@ -59,7 +59,7 @@
         <div class="view reg-view" id="custRegView">
           <div class="role-chip customer"><i class="ri-user-add-line"></i> New Customer</div>
           <h2 class="form-title">Create account ✨</h2>
-          <form action="" method="post">
+          <form onsubmit="return false">
             <div class="field-group">
               <div class="field">
                 <i class="ri-user-3-fill"></i>
@@ -75,7 +75,7 @@
                 <i class="ri-lock-2-fill"></i>
                 <input type="password" name="reg_pass" required placeholder=" " id="c-regpass" class="has-eye">
                 <label for="c-regpass">Password</label>
-                <button type="button" class="eye-btn" data-target="c-regpass">
+                <button type="button" class="eye-btn" data-target="c-regpass" id="eyebtn1">
                   <i class="ri-eye-off-line"></i>
                 </button>
               </div>
@@ -83,12 +83,12 @@
                 <i class="ri-lock-password-fill"></i>
                 <input type="password" name="reg_confirm" required placeholder=" " id="c-confirm" class="has-eye">
                 <label for="c-confirm">Confirm Password</label>
-                <button type="button" class="eye-btn" data-target="c-confirm">
-                  <i class="ri-eye-off-line"></i>
+                <button type="button" class="eye-btn" data-target="c-confirm" id="eyebtn2">
+                  <i class="ri-eye-off-line" id="showpassword"></i>
                 </button>
               </div>
             </div>
-            <button type="submit" class="submit-btn c-btn" style="margin-top:.75rem">
+            <button type="button" class="submit-btn c-btn" style="margin-top:.75rem" onclick=registerCustomer()>
               Sign Up <i class="ri-user-add-fill"></i>
             </button>
             <p class="form-foot">
@@ -151,7 +151,7 @@
               </div>
             </div>
             <a href="#" class="forgot">Forgot Password?</a>
-            <button type="submit" class="submit-btn o-btn">
+            <button type="button" class="submit-btn o-btn" onclick=loginShopOwner()>
               Enter Dashboard <i class="ri-dashboard-2-line"></i>
             </button>
             <p class="form-foot">
@@ -195,8 +195,8 @@
                 </button>
               </div>
             </div>
-            <button type="submit" class="submit-btn o-btn" style="margin-top:.75rem">
-              Submit Application <i class="ri-send-plane-2-fill"></i>
+            <button type="button" class="submit-btn o-btn" style="margin-top:.75rem" onclick=registerShopOwner()>
+              Register <i class="ri-send-plane-2-fill"></i>
             </button>
             <p class="form-foot">
               Already registered?
@@ -217,7 +217,7 @@
         <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.1/dist/gsap.min.js"></script>
         
         <!--MAIN JS-->
-        <script src="assets/js/authen.js"></script>
+        <script src="assets/js/authen.js" type="module"></script>
     </body>
  </html>
 
