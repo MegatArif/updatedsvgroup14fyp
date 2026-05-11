@@ -1,0 +1,241 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f4f4f4;
+}
+
+/* TOPBAR */
+.topbar {
+  width: 100%;
+  height: 70px;
+  background-color: #F3E4C9;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  z-index: 1000;
+}
+
+/* PAGE */
+.page {
+  display: flex;
+  gap: 40px;
+
+  padding: 30px;
+  margin-top: 80px;
+
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 450px;
+  background: #F3E4C9;
+
+  padding: 20px;
+  border-radius: 12px;
+
+  min-height: 80vh;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+  display: flex;
+  flex-direction: column;
+
+  border: 2px solid black;
+
+  position: sticky;
+  top: 90px;
+}
+
+/* CREATE POST */
+.create-post-bar {
+  margin-top: auto;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  background: white;
+
+  padding: 10px;
+  border-radius: 20px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.bottom-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.create-post-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+}
+
+/* FEED */
+.feed {
+  flex: 1;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  align-items: flex-start;
+}
+
+/* POST CARD */
+.post-card {
+  width: 380px;
+
+  background: white;
+
+  padding: 12px;
+  border-radius: 12px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+  position: relative;
+}
+
+.sidebar .post-card {
+  width: 90%;
+  margin: 15px auto;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  margin-right: 10px;
+}
+
+.username {
+  font-weight: bold;
+}
+
+.post-content {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.post-image {
+  width: 100%;
+  height: 220px;
+
+  object-fit: cover;
+
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+.post-location {
+  display: inline-block;
+
+  margin-top: 8px;
+
+  font-size: 13px;
+  color: #4A90E2;
+
+  text-decoration: none;
+}
+
+.post-actions {
+  margin-top: 10px;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heart {
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.post-time {
+  margin-top: 5px;
+
+  font-size: 11px;
+  color: #999;
+}
+
+.action-icon {
+  width: 22px;
+  height: 22px;
+
+  cursor: pointer;
+}
+
+/* MORE ICON */
+.more-icon {
+  width: 14px;
+  height: 14px;
+
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  cursor: pointer;
+}
+
+/* BUTTON */
+button {
+  border: none;
+  background: #F3E4C9;
+
+  padding: 8px 14px;
+
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+
+.my-post {
+  position: relative;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+
+  cursor: pointer;
+  font-size: 16px;
+
+  background: white;
+  border-radius: 50%;
+  padding: 4px;
+}
+
+.logo {
+  height: 70px;
+  display: flex;
+  align-items: center;
+
+  padding-left: 20px;
+
+  font-size: 20px;
+  font-weight: bold;
+
+  color: #3b2f2f;
+  letter-spacing: 1px;
+}
