@@ -20,6 +20,7 @@ import { showToast } from './toast.js'
   const toOwnerBtn    = document.getElementById('toOwnerBtn');
   const toCustomerBtn = document.getElementById('toCustomerBtn');
   
+  
   function showEmailOverlay(type, email) {
   // Remove any existing overlay
   document.querySelector('.email-overlay')?.remove();

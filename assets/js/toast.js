@@ -69,6 +69,57 @@ toastStyle.textContent = `
   .toast.success .toast-progress { background: #43a047; }
   .toast.error   .toast-progress { background: #e53935; }
   .toast.info    .toast-progress { background: #1e88e5; }
+
+  /* ── EMAIL OVERLAY ── */
+    .email-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      z-index: 99998;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    .email-overlay.show { opacity: 1; pointer-events: all; }
+    .email-overlay-box {
+      background: #1a1a1a;
+      border-radius: 1.5rem;
+      padding: 2.5rem 2.25rem;
+      max-width: 400px; width: 90%;
+      text-align: center;
+      box-shadow: 0 16px 64px rgba(0,0,0,0.5);
+      transform: translateY(20px);
+      transition: transform .35s ease;
+      font-family: "Syne", sans-serif;
+    }
+    .email-overlay.show .email-overlay-box { transform: translateY(0); }
+    .email-overlay-icon {
+      font-size: 3rem; margin-bottom: 1rem;
+      display: block;
+    }
+    .email-overlay-icon.verify  { color: #1e88e5; }
+    .email-overlay-icon.reset   { color: #43a047; }
+    .email-overlay-title {
+      font-size: 1.2rem; font-weight: 800;
+      color: #f5f5f5; margin-bottom: .6rem;
+    }
+    .email-overlay-msg {
+      font-size: .83rem; color: #999;
+      line-height: 1.6; margin-bottom: 1.75rem;
+      font-family: "Montserrat", sans-serif;
+    }
+    .email-overlay-msg span { color: #f5f5f5; font-weight: 600; }
+    .email-overlay-close {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: .65rem 2rem; border-radius: 3rem;
+      border: none; cursor: pointer;
+      font-family: "Syne", sans-serif; font-size: .85rem; font-weight: 700;
+      color: #fff; transition: filter .2s, transform .18s;
+    }
+    .email-overlay-close.blue  { background: #1e88e5; }
+    .email-overlay-close.green { background: #43a047; }
+    .email-overlay-close:hover { filter: brightness(1.15); transform: scale(1.03); }
+
 `;
 document.head.appendChild(toastStyle);
 
