@@ -13,9 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 
-// =====================
-// 👤 USER
-// =====================
+
 const currentUser = {
   userId: "annie001",
   username: "ANNIE",
@@ -23,9 +21,7 @@ const currentUser = {
 };
 
 
-// =====================
-// LOCATION
-// =====================
+
 let selectedLocation = "";
 let selectedLocationLink = "";
 
@@ -40,9 +36,7 @@ function addLocation() {
 }
 
 
-// =====================
-// IMAGE
-// =====================
+
 let selectedImageURL = "";
 
 document.getElementById("upload-img").addEventListener("change", (e) => {
@@ -55,7 +49,7 @@ document.getElementById("upload-img").addEventListener("change", (e) => {
   reader.onload = (event) => {
     selectedImageURL = event.target.result;
 
-    // ✅ NEW: show preview
+   
     const preview = document.getElementById("preview-img");
     preview.src = selectedImageURL;
     preview.style.display = "block";
@@ -64,14 +58,12 @@ document.getElementById("upload-img").addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-// =====================
-// CREATE POST
-// =====================
+
 async function createPost() {
 
   const content = document.getElementById("post-input").value;
 
-  // ❌ 防呆：没有内容
+
   if (content.trim() === "") {
     showToast("ERROR: Please write something before posting", "error");
     return;
@@ -96,10 +88,10 @@ async function createPost() {
 
   });
 
-  // ✅ 成功提示（你之前要的）
+  
   showToast("Create successful ☕", "success");
 
-  // 清空输入
+
   document.getElementById("post-input").value = "";
   selectedImageURL = "";
   selectedLocation = "";
@@ -107,9 +99,7 @@ async function createPost() {
 }
 
 
-// =====================
-// DELETE POST (ONLY OWN POSTS)
-// =====================
+
 async function deletePost(postId, postUserId) {
 
   if (postUserId !== currentUser.userId) return;
@@ -122,9 +112,6 @@ async function deletePost(postId, postUserId) {
 }
 
 
-// =====================
-// ❤️ LIKE SYSTEM (FIXED)
-// =====================
 async function toggleLike(postId, likedBy = [], currentLikes = 0) {
 
   const ref = doc(db, "posts", postId);
@@ -135,7 +122,7 @@ async function toggleLike(postId, likedBy = [], currentLikes = 0) {
 
   if (isLiked) {
 
-    // ❌ unlike
+   
     list = list.filter(id => id !== currentUser.userId);
 
     await updateDoc(ref, {
@@ -146,7 +133,7 @@ async function toggleLike(postId, likedBy = [], currentLikes = 0) {
 
   } else {
 
-    // ❤️ like
+    
     list.push(currentUser.userId);
 
     await updateDoc(ref, {
@@ -160,9 +147,7 @@ async function toggleLike(postId, likedBy = [], currentLikes = 0) {
 }
 
 
-// =====================
-// LOAD POSTS (REALTIME)
-// =====================
+
 function loadPosts() {
 
   const q = query(
@@ -186,9 +171,7 @@ function loadPosts() {
       const isMine = post.userId === currentUser.userId;
       const isLiked = (post.likedBy || []).includes(currentUser.userId);
 
-      // =====================
-      // FEED (ALL USERS)
-      // =====================
+   
       const feedHTML = `
         <div class="post-card">
 
@@ -226,9 +209,6 @@ function loadPosts() {
       feed.innerHTML += feedHTML;
 
 
-      // =====================
-      // MY POSTS (WITH DELETE)
-      // =====================
       if (isMine) {
 
         const myHTML = `
@@ -280,9 +260,7 @@ function loadPosts() {
 }
 
 
-// =====================
-// EXPORT
-// =====================
+
 window.createPost = createPost;
 window.addLocation = addLocation;
 window.deletePost = deletePost;
@@ -292,9 +270,7 @@ window.toggleLike = toggleLike;
 // START
 loadPosts();
 
-// =====================
-// 🍞 TOAST SYSTEM (ADDED ONLY - NO CHANGES)
-// =====================
+
 
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `
@@ -370,7 +346,7 @@ toastStyle.textContent = `
 `;
 document.head.appendChild(toastStyle);
 
-// container
+
 const toastContainer = document.createElement('div');
 toastContainer.id = 'toast-container';
 document.body.appendChild(toastContainer);
