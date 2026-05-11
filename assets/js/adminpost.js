@@ -1,4 +1,5 @@
-import { db } from "./firebase.js";
+import { db } from './firebase-config.js';
+console.log("Firestore Instance:", db);
 
 import {
   collection,

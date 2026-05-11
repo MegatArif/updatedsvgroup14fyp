@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Cafe Explorer | Discover & Filter Cafes in Johor</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
+    <link rel="stylesheet" href="assets/css/gallery.css">
+    <script type="module" src="assets/js/gallery.js" defer></script>
+</head>
+<body>
+
+<!-- navigation bar -->
+<div class="navbar">
+    <div class="logo-area">
+        <i class="fas fa-mug-hot logo-icon"></i>
+        <span class="logo-text">CafeHunt</span>
+    </div>
+    <div class="nav-links">
+        <a href="#" class="explore"><i class="fas fa-compass"></i> Explore</a>
+        <a href="#"><i class="fas fa-plus-circle"></i> Post</a>
+        <a href="#"><i class="fas fa-user"></i> Profile</a>
+    </div>
+</div>
+
+<!-- Hero: carousel + search bar in middle -->
+<div class="hero-section">
+    <div class="carousel-container" id="carouselContainer">
+        <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1400&auto=format');"></div>
+        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1400&auto=format');"></div>
+        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1400&auto=format');"></div>
+        <div class="carousel-overlay"></div>
+    </div>
+    <!-- search bar in the middle -->
+    <div class="search-card">
+        <div class="search-fields">
+            <div class="input-group">
+                <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                <select id="locationFilter">
+                    <option value="all">All Johor</option>
+                    <option value="skudai">Skudai</option>
+                    <option value="kulai">Kulai</option>
+                    <option value="masai">Masai</option>
+                    <option value="tangkak">Tangkak</option>
+                    <option value="potian">Potian</option>
+                    <option value="segamat">Segamat</option>
+                    <option value="muar">Muar</option>
+                    <option value="kluang">Kluang</option>
+                    <option value="batuPahat">Batu Pahat</option>
+
+                </select>
+            </div>
+            <div class="input-group">
+                <label><i class="fas fa-search"></i> Cafe Name</label>
+                <input type="text" id="nameSearch" placeholder="e.g., Coffee, Brew">
+            </div>
+            <div class="input-group">
+                <label><i class="fas fa-calendar-alt"></i> Date</label>
+                <input type="date" id="datePicker">
+            </div>
+            <div class="input-group">
+                <label><i class="fas fa-clock"></i> Time slot</label>
+                <select id="timeSlot">
+                    <option value="" disabled selected>Please select</option>
+                    <option value="00:00~01:00">00:00 ~ 01:00</option>
+                    <option value="01:00~02:00">01:00 ~ 02:00</option>
+                    <option value="02:00~03:00">02:00 ~ 03:00</option>
+                    <option value="03:00~04:00">03:00 ~ 04:00</option>
+                    <option value="04:00~05:00">04:00 ~ 05:00</option>
+                    <option value="05:00~06:00">05:00 ~ 06:00</option>
+                    <option value="06:00~07:00">06:00 ~ 07:00</option>
+                    <option value="07:00~08:00">07:00 ~ 08:00</option>
+                    <option value="08:00~09:00">08:00 ~ 09:00</option>
+                    <option value="09:00~10:00">09:00 ~ 10:00</option>
+                    <option value="10:00~11:00">10:00 ~ 11:00</option>
+                    <option value="11:00~12:00">11:00 ~ 12:00</option>
+                    <option value="12:00~13:00">12:00 ~ 13:00</option>
+                    <option value="13:00~14:00">13:00 ~ 14:00</option>
+                    <option value="14:00~15:00">14:00 ~ 15:00</option>
+                    <option value="15:00~16:00">15:00 ~ 16:00</option>
+                    <option value="16:00~17:00">16:00 ~ 17:00</option>
+                    <option value="17:00~18:00">17:00 ~ 18:00</option>
+                    <option value="18:00~19:00">18:00 ~ 19:00</option>
+                    <option value="19:00~20:00">19:00 ~ 20:00</option>
+                    <option value="20:00~21:00">20:00 ~ 21:00</option>
+                    <option value="21:00~22:00">21:00 ~ 22:00</option>
+                    <option value="22:00~23:00">22:00 ~ 23:00</option>
+                    <option value="23:00~00:00">23:00 ~ 00:00</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn-search" id="searchBtn"><i class="fas fa-sliders-h"></i> Search</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter UI component: type & more filter detail -->
+<div class="filter-section">
+    <div class="filter-panel">
+        <div class="filter-badge">
+            <span style="font-weight: 600;"><i class="fas fa-microchip"></i>facilities:</span>
+            <div class="type-group" id="facilitiesFilterGroup">
+                <label><input type="checkbox" value="WiFi"> <i class="fas fa-wifi"></i> WiFi</label>
+                <label><input type="checkbox" value="Power outlet"> <i class="fas fa-plug"></i> Power outlet</label>
+                <label><input type="checkbox" value="Outdoor seating"> <i class="fas fa-umbrella-beach"></i> Outdoor seating</label>
+                <label><input type="checkbox" value="Meeting equipment"> <i class="fas fa-chalkboard-user"></i> Meeting equipment</label>
+            </div>
+        </div>
+        <div class="more-filters">
+            <div class="rating-filter">
+                <label><i class="fas fa-star"></i> Min Rating</label>
+                <select id="ratingFilterSelect">
+                    <option value="0">All ratings</option>
+                    <option value="3">3★ & above</option>
+                    <option value="4">4★ & above</option>
+                </select>
+            </div>
+            <button class="clear-filters" id="clearFiltersBtn"><i class="fas fa-undo-alt"></i> Clear filters</button>
+        </div>
+    </div>
+</div>
+
+<!-- Available cafes grid -->
+<div id="cafeGridContainer" class="cafe-grid">
+    <!-- dynamic cafe cards from JS -->
+</div>
+
+<!-- About Us section -->
+<div class="about-section">
+    <div class="about-content">
+        <h3><i class="fas fa-heart"></i> About Us</h3>
+        <p>We’re passionate about connecting coffee lovers with the best cafes in Johor — from hidden gems to workspaces. Explore real reviews, opening hours, and unique atmospheres. Filter by amenities, time, or location to find your perfect spot. Start your cafe journey now!</p>
+        <p style="margin-top: 12px;"><i class="fas fa-clock"></i> Real-time open status based on selected time slot</p>
+    </div>
+</div>
+
+<!-- Cafe Detail Modal -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="modalDynamicContent"></div>
+    </div>
+</div>
+
+<div class="footer-note">
+    ☕ Cafe Explorer — Discover, Filter & Enjoy your perfect coffee moment
+</div>
+
+</body>
+</html>
