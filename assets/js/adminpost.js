@@ -1,6 +1,9 @@
 import { db } from './firebase-config.js';
 import { showToast } from './toast.js';
+import { setupNavbar } from './navbar.js';
 
+// Call it once the page loads
+setupNavbar();
 import {
   collection,
   query,

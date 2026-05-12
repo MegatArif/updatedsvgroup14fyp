@@ -1,7 +1,10 @@
 import { db, storage } from './firebase-config.js';
 import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+import { setupNavbar } from './navbar.js';
 
+// Call it once the page loads
+setupNavbar();
 // UI Utilities
 const showLoading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
 const showToast = (msg, type = 'success') => {

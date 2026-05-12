@@ -1,6 +1,9 @@
 import { db } from './firebase-config.js';
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { setupNavbar } from './navbar.js';
 
+// Call it once the page loads
+setupNavbar();
 let cafes = [];
 // ---------- CAFE DATABASE (cafe dataset) ----------
     const localCafes = [
