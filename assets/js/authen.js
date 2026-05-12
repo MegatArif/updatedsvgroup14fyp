@@ -22,37 +22,38 @@ import { showToast } from './toast.js'
   
   
   function showEmailOverlay(type, email) {
-  // Remove any existing overlay
-  document.querySelector('.email-overlay')?.remove();
- 
-  const isVerify = type === 'verify';
-  const overlay  = document.createElement('div');
-  overlay.className = 'email-overlay';
-  overlay.innerHTML = `
-    <div class="email-overlay-box">
-      <i class="email-overlay-icon ${isVerify ? 'verify ri-mail-send-line' : 'reset ri-lock-password-line'}"></i>
-      <div class="email-overlay-title">${isVerify ? 'Verify your email' : 'Check your email'}</div>
-      <div class="email-overlay-msg">
-        ${isVerify
-          ? `We've sent a verification link to <span>${email}</span>.<br>Please check your inbox and click the link to activate your account.`
-          : `We've sent a password reset link to <span>${email}</span>.<br>Please check your inbox and follow the instructions.`
-        }
+    // Remove any existing overlay
+    document.querySelector('.email-overlay')?.remove();
+  
+    const isVerify = type === 'verify';
+    const overlay  = document.createElement('div');
+    overlay.className = 'email-overlay';
+    overlay.innerHTML = `
+      <div class="email-overlay-box">
+        <i class="email-overlay-icon ${isVerify ? 'verify ri-mail-send-line' : 'reset ri-lock-password-line'}"></i>
+        <div class="email-overlay-title">${isVerify ? 'Verify your email' : 'Check your email'}</div>
+        <div class="email-overlay-msg">
+          ${isVerify
+            ? `We've sent a verification link to <span>${email}</span>.<br>Please check your inbox and click the link to activate your account.`
+            : `We've sent a password reset link to <span>${email}</span>.<br>Please check your inbox and follow the instructions.`
+          }
+        </div>
+        <button class="email-overlay-close ${isVerify ? 'blue' : 'green'}">Got it</button>
       </div>
-      <button class="email-overlay-close ${isVerify ? 'blue' : 'green'}">Got it</button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
- 
-  // Close on button or backdrop click
-  overlay.querySelector('.email-overlay-close').addEventListener('click', () => closeOverlay(overlay));
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(overlay); });
-}
- 
-function closeOverlay(overlay) {
-  overlay.classList.remove('show');
-  overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
-}
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
+  
+    // Close on button or backdrop click
+    overlay.querySelector('.email-overlay-close').addEventListener('click', () => closeOverlay(overlay));
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(overlay); });
+  }
+  
+  function closeOverlay(overlay) {
+    overlay.classList.remove('show');
+    overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+  }
+
   /* ── GSAP entrance ── */
   const tl = gsap.timeline();
   tl.fromTo(card,
@@ -144,117 +145,118 @@ function closeOverlay(overlay) {
 
   //System function
   document.querySelectorAll('.forgot').forEach(link => {
-  link.addEventListener('click', async (e) => {
-    e.preventDefault();
- 
-    // Figure out which email field is visible (customer or owner)
-    const isOwner = card.classList.contains('shop-mode');
-    const emailId = isOwner ? 'o-email' : 'c-email';
-    const email   = document.getElementById(emailId)?.value?.trim();
- 
-    if (!email) {
-      showToast('Please enter your email address first, then click Forgot Password.', 'error');
-      document.getElementById(emailId)?.focus();
-      return;
-    }
- 
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showEmailOverlay('reset', email);
-    } catch (error) {
-      let msg = 'Could not send reset email.';
-      if (error.code === 'auth/user-not-found')  msg = 'No account found with that email.';
-      if (error.code === 'auth/invalid-email')   msg = 'Please enter a valid email address.';
-      showToast(msg, 'error');
-    }
-  });
-});
-document.querySelectorAll('.eye-btn').forEach(btn => {
-  // Ensure button has proper styling for clicking
-  btn.style.cursor = 'pointer';
-  btn.style.minWidth = '32px';
-  btn.style.minHeight = '32px';
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
   
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const inputId = btn.getAttribute('data-target');
-    const input = document.getElementById(inputId);
-    const icon = btn.querySelector('i');
-    
-    if (!input) {
-      console.error('Input not found for target:', inputId);
-      return;
-    }
+      // Figure out which email field is visible (customer or owner)
+      const isOwner = card.classList.contains('shop-mode');
+      const emailId = isOwner ? 'o-email' : 'c-email';
+      const email   = document.getElementById(emailId)?.value?.trim();
   
-    if (input.type === 'password') {
-      input.type = 'text';
-      if (icon) {
-        icon.className = 'ri-eye-line';
+      if (!email) {
+        showToast('Please enter your email address first, then click Forgot Password.', 'error');
+        document.getElementById(emailId)?.focus();
+        return;
       }
-    } else {
-      input.type = 'password';
-      if (icon) {
-        icon.className = 'ri-eye-off-line';
+  
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showEmailOverlay('reset', email);
+      } catch (error) {
+        let msg = 'Could not send reset email.';
+        if (error.code === 'auth/user-not-found')  msg = 'No account found with that email.';
+        if (error.code === 'auth/invalid-email')   msg = 'Please enter a valid email address.';
+        showToast(msg, 'error');
       }
-    }
+    });
   });
-});
+
+  document.querySelectorAll('.eye-btn').forEach(btn => {
+    // Ensure button has proper styling for clicking
+    btn.style.cursor = 'pointer';
+    btn.style.minWidth = '32px';
+    btn.style.minHeight = '32px';
+    
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const inputId = btn.getAttribute('data-target');
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      
+      if (!input) {
+        console.error('Input not found for target:', inputId);
+        return;
+      }
+    
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+          icon.className = 'ri-eye-line';
+        }
+      } else {
+        input.type = 'password';
+        if (icon) {
+          icon.className = 'ri-eye-off-line';
+        }
+      }
+    });
+  });
 
   //Login customer
   async function loginCustomer() {
-  const email    = document.getElementById('c-email').value.trim();
-  const password = document.getElementById('c-pass').value;
+    const email    = document.getElementById('c-email').value.trim();
+    const password = document.getElementById('c-pass').value;
 
-  const emailError = validateEmail(email);
-  if (emailError) { showToast(emailError, 'error'); document.getElementById('c-email').focus(); return; }
-  if (!password)  { showToast('Password is required', 'error'); document.getElementById('c-pass').focus(); return; }
+    const emailError = validateEmail(email);
+    if (emailError) { showToast(emailError, 'error'); document.getElementById('c-email').focus(); return; }
+    if (!password)  { showToast('Password is required', 'error'); document.getElementById('c-pass').focus(); return; }
 
-  showToast('Signing in...', 'info', 4000);
+    showToast('Signing in...', 'info', 4000);
 
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    if (!user.emailVerified) {
-      showToast('Please verify your email before logging in.', 'error', 5000);
-      await sendEmailVerification(user);
-      showEmailOverlay('verify', email);
-      return;
+      if (!user.emailVerified) {
+        showToast('Please verify your email before logging in.', 'error', 5000);
+        await sendEmailVerification(user);
+        showEmailOverlay('verify', email);
+        return;
+      }
+
+      // ✅ Check if admin — silent, no one knows this check exists
+      if (ADMIN_EMAILS.includes(email)) {
+        showToast('Welcome, Admin! Redirecting to dashboard...', 'success', 2000);
+        setTimeout(() => { window.location.href = 'admin-dashboard.html'; }, 2000);
+        return;
+      }
+
+      // Normal customer redirect
+      showToast('Welcome back! Redirecting...', 'success', 2000);
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+
+    } catch (error) {
+      console.error('Login error:', error);
+      let msg = '';
+      switch (error.code) {
+        case 'auth/user-not-found':         msg = 'No account found with that email.'; break;
+        case 'auth/wrong-password':         msg = 'Incorrect password. Please try again.'; break;
+        case 'auth/invalid-credential':     msg = 'Invalid email or password.'; break;
+        case 'auth/too-many-requests':      msg = 'Too many failed attempts. Try again later.'; break;
+        case 'auth/network-request-failed': msg = 'Network error. Check your connection.'; break;
+        default:                            msg = 'An error occurred: ' + error.message;
+      }
+      showToast(msg, 'error');
     }
-
-    // ✅ Check if admin — silent, no one knows this check exists
-    if (ADMIN_EMAILS.includes(email)) {
-      showToast('Welcome, Admin! Redirecting to dashboard...', 'success', 2000);
-      setTimeout(() => { window.location.href = 'admin-dashboard.html'; }, 2000);
-      return;
-    }
-
-    // Normal customer redirect
-    showToast('Welcome back! Redirecting...', 'success', 2000);
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
-
-  } catch (error) {
-    console.error('Login error:', error);
-    let msg = '';
-    switch (error.code) {
-      case 'auth/user-not-found':         msg = 'No account found with that email.'; break;
-      case 'auth/wrong-password':         msg = 'Incorrect password. Please try again.'; break;
-      case 'auth/invalid-credential':     msg = 'Invalid email or password.'; break;
-      case 'auth/too-many-requests':      msg = 'Too many failed attempts. Try again later.'; break;
-      case 'auth/network-request-failed': msg = 'Network error. Check your connection.'; break;
-      default:                            msg = 'An error occurred: ' + error.message;
-    }
-    showToast(msg, 'error');
   }
-}
-  
-   const BANNED_WORDS = [
-  'fuck', 'shit', 'ass', 'bitch', 'bastard', 'damn',
-  'cunt', 'dick', 'cock', 'pussy', 'nigga', 'nigger',
-  'bodoh', 'babi', 'anjing', 'anjir',
-];
+    
+  const BANNED_WORDS = [
+    'fuck', 'shit', 'ass', 'bitch', 'bastard', 'damn',
+    'cunt', 'dick', 'cock', 'pussy', 'nigga', 'nigger',
+    'bodoh', 'babi', 'anjing', 'anjir',
+  ];
 
 function validateUsername(name) {
   if (!name || name.trim().length < 2)
