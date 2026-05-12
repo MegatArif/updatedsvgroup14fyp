@@ -259,7 +259,10 @@ function loadPosts() {
 
       const avatar = post.avatar || DEFAULT_AVATAR;
 
-      const html = `
+      // =========================
+      // 🔵 FEED CARD (NO DELETE)
+      // =========================
+      const feedHTML = `
         <div class="post-card">
 
           <div class="post-header">
@@ -291,15 +294,57 @@ function loadPosts() {
         </div>
       `;
 
-      feed.innerHTML += html;
+      feed.innerHTML += feedHTML;
 
+      // =========================
+      // 🟢 MY POSTS (WITH DELETE)
+      // =========================
       if (isMine) {
-        myPosts.innerHTML += html;
+
+        const myPostHTML = `
+          <div class="post-card">
+
+            <!-- 🔥 DELETE ONLY HERE -->
+            <div class="delete-btn"
+                 onclick='deletePost("${postId}", "${post.userId}")'
+                 style="cursor:pointer; float:right;">
+              🗑
+            </div>
+
+            <div class="post-header">
+              <img src="${avatar}" class="avatar">
+              <b>${post.username}</b>
+            </div>
+
+            <div class="post-content">${post.content}</div>
+
+            <div class="post-time">
+              ${post.createAt ? post.createAt.toDate().toLocaleString() : ""}
+            </div>
+
+            <img src="${post.imageURL}" class="post-image">
+
+            ${post.locationName ? `
+              <a href="${post.locationLink}" target="_blank">
+                📍 ${post.locationName}
+              </a>
+            ` : ""}
+
+            <div style="cursor:pointer"
+                 onclick='toggleLike("${postId}", ${JSON.stringify(post.likedBy || [])}, ${post.likes || 0})'>
+
+              ${isLiked ? "❤️" : "🤍"} ${post.likes || 0}
+
+            </div>
+
+          </div>
+        `;
+
+        myPosts.innerHTML += myPostHTML;
       }
     });
   });
 }
-
 // =====================
 // EXPORT
 // =====================
