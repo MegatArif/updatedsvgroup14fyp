@@ -5,21 +5,70 @@ body {
 }
 
 /* TOP BAR */
-.topbar {
-  height: 60px;
-  background: #3b2f2f;
-  color: white;
+.navbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: hsl(39, 64%, 87%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+.nav-links{
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
 
-  display: flex;
-  align-items: center;
-  padding-left: 20px;
+.nav-links a {
+    text-decoration: none;
+    font-weight: 500;
+    color:hsl(32, 23%, 29%) ;
+    font-size: 1.1rem;
+    transition: 0.2s;
+}
 
-  font-size: 18px;
-  font-weight: bold;
+.nav-links a.post{
+    font-weight: 800;
+    color: hsl(24, 51%, 53%);
+    border-bottom: 2px solid hsl(24, 51%, 53%);
+    padding-bottom: 4px;
+}
 
-  position: fixed;
-  width: 100%;
-  top: 0;
+.nav-links a:hover{
+    color: hsl(24, 51%, 53%);
+}
+
+.notif-badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background: #e53935;
+    color: white;
+    font-size: .65rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+.logo-area{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon{
+    font-size: 28px;
+    color: hsl(28, 48%, 54%);
+}
+
+.logo-text{
+    font-weight: 700;
+    font-size: 1.5rem;
+    color:hsl(24, 31%, 18%);
 }
 
 /* LAYOUT */

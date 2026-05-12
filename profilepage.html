@@ -5,27 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Settings - CafeHunt</title>
     <link rel="stylesheet" href="./assets/css/profile.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
 </head>
 <body class="bg-primary">
     <div id="toast-container"></div>
     <div id="loading-overlay" class="loading-overlay hidden"><div class="spinner"></div></div>
 
-    <nav class="navbar">
-        <div class="nav-brand text-accent">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            CafeHunt
-        </div>
-        <div class="nav-links">
-            <a href="#" class="nav-item">Dashboard</a>
-            <a href="#" class="nav-item active">Profile</a>
-            <a href="#" class="nav-item">Settings</a>
-        </div>
-        <div class="nav-user">
-            <button id="logout-btn" class="btn btn-outline">Logout</button>
-            <img id="nav-profile-pic" src="assets/images/default-avatar.png" alt="User" class="nav-avatar">
-            <span id="nav-username" class="text-dark">Loading...</span>
-        </div>
-    </nav>
+    <div class="navbar">
+    <div class="logo-area">
+        <i class="fas fa-mug-hot logo-icon"></i>
+        <span class="logo-text">CafeHunt</span>
+    </div>
+    <div class="nav-links">
+        <a href="gallery.html"><i class="fas fa-compass"></i> Explore</a>
+        <a href="socialpage.html" ><i class="fas fa-plus-circle"></i> Post</a>
+        <a href="#" style="position:relative">
+            <i class="fas fa-bell"></i> Notifications
+            
+        </a>
+        <a href="profilepage.html" class="post"><i class="fas fa-user"></i> Profile</a>
+    </div>
+</div>
 
     <main class="container">
         <header class="page-header">

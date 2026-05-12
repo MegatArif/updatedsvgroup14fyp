@@ -229,13 +229,13 @@ import { showToast } from './toast.js'
       // ✅ Check if admin — silent, no one knows this check exists
       if (ADMIN_EMAILS.includes(email)) {
         showToast('Welcome, Admin! Redirecting to dashboard...', 'success', 2000);
-        setTimeout(() => { window.location.href = 'admin-dashboard.html'; }, 2000);
+        setTimeout(() => { window.location.href = 'adminpost.html'; }, 2000);
         return;
       }
 
       // Normal customer redirect
       showToast('Welcome back! Redirecting...', 'success', 2000);
-      setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+      setTimeout(() => { window.location.href = 'socialpage.html'; }, 2000);
 
     } catch (error) {
       console.error('Login error:', error);
