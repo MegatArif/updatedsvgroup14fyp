@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-console.log("Firestore Instance:", db);
+import { showToast } from './toast.js';
 
 import {
   collection,
@@ -74,15 +74,26 @@ function loadAdminPosts() {
 
 
 // =====================
-// DELETE POST
+// DELETE POST (WITH TOAST)
 // =====================
 async function deletePost(postId) {
 
   const ok = confirm("Delete this post?");
-
   if (!ok) return;
 
-  await deleteDoc(doc(db, "posts", postId));
+  try {
+    await deleteDoc(doc(db, "posts", postId));
+
+    // ✅ SUCCESS TOAST
+    showToast("Post deleted 🗑", "success");
+
+  } catch (err) {
+
+    console.error(err);
+
+    // ❌ ERROR TOAST
+    showToast("Delete failed", "error");
+  }
 }
 
 
