@@ -1,5 +1,5 @@
-import { db } from './firebase-config.js';
-import { showToast } from './toast.js'
+import { db, storage, app } from './firebase-config.js';
+import { showToast } from './toast.js';
 
 import {
   collection,
@@ -10,23 +10,92 @@ import {
   orderBy,
   onSnapshot,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-const currentUser = {
-  userId: "annie001",
-  username: "ANNIE",
-  avatar: "picture/user2avatar.jpeg"
-};
+const auth = getAuth(app);
 
-
-
+// =====================
+// STATE
+// =====================
+let currentUser = null;
+let isPosting = false;
+let selectedImageFile = null;
 let selectedLocation = "";
 let selectedLocationLink = "";
 
-function addLocation() {
+const DEFAULT_AVATAR = "picture/user2avatar.jpeg";
+
+// =====================
+// TITLE
+// =====================
+function updateMyPostTitle() {
+  const el = document.getElementById("my-post-title");
+  if (!el) return;
+
+  el.innerText = currentUser
+    ? `My Posts (${currentUser.username})`
+    : "My Posts ()";
+}
+
+// =====================
+// AUTH CONNECT
+// =====================
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    currentUser = null;
+    updateMyPostTitle();
+    return;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, "Customers", user.uid));
+    const data = snap.exists() ? snap.data() : {};
+
+    currentUser = {
+      userId: user.uid,
+      username: data.username || user.email.split("@")[0],
+      avatar: data.avatar || DEFAULT_AVATAR
+    };
+
+  } catch (err) {
+    console.error(err);
+
+    currentUser = {
+      userId: user.uid,
+      username: user.email.split("@")[0],
+      avatar: DEFAULT_AVATAR
+    };
+  }
+
+  updateMyPostTitle();
+
+  // 🔥 SIDEBAR AVATAR UPDATE (KEY FIX)
+  const sidebarAvatar = document.getElementById("sidebar-avatar");
+  if (sidebarAvatar) {
+    sidebarAvatar.src = currentUser.avatar;
+  }
+
+  loadPosts();
+});
+
+// =====================
+// LOCATION
+// =====================
+window.addLocation = function () {
   selectedLocation = prompt("Enter cafe name:");
 
   if (selectedLocation) {
@@ -34,121 +103,135 @@ function addLocation() {
       "https://www.google.com/maps/search/" +
       encodeURIComponent(selectedLocation);
   }
+};
+
+// =====================
+// IMAGE
+// =====================
+const uploadEl = document.getElementById("upload-img");
+
+if (uploadEl) {
+  uploadEl.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    selectedImageFile = file;
+
+    const preview = document.getElementById("preview-img");
+    if (preview) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
+  });
 }
 
+// =====================
+// CREATE POST
+// =====================
+window.createPost = async function () {
 
-
-let selectedImageURL = "";
-
-document.getElementById("upload-img").addEventListener("change", (e) => {
-
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = (event) => {
-    selectedImageURL = event.target.result;
-
-   
-    const preview = document.getElementById("preview-img");
-    preview.src = selectedImageURL;
-    preview.style.display = "block";
-  };
-
-  reader.readAsDataURL(file);
-});
-
-
-async function createPost() {
+  if (isPosting || !currentUser) return;
+  isPosting = true;
 
   const content = document.getElementById("post-input").value;
 
-
-  if (content.trim() === "") {
-    showToast("ERROR: Please write something before posting", "error");
+  if (!content.trim()) {
+    showToast("Please write something first", "error");
+    isPosting = false;
     return;
   }
 
-  await addDoc(collection(db, "posts"), {
+  try {
 
-    username: currentUser.username,
-    userId: currentUser.userId,
-    avatar: currentUser.avatar,
+    let imageURL = "picture/postalice.png";
 
-    content: content,
-    imageURL: selectedImageURL || "picture/postalice.png",
+    if (selectedImageFile) {
+      const imageRef = ref(
+        storage,
+        `posts/${Date.now()}_${selectedImageFile.name}`
+      );
 
-    locationName: selectedLocation,
-    locationLink: selectedLocationLink,
+      await uploadBytes(imageRef, selectedImageFile);
+      imageURL = await getDownloadURL(imageRef);
+    }
 
-    likes: 0,
-    likedBy: [],
+    await addDoc(collection(db, "posts"), {
+      username: currentUser.username,
+      userId: currentUser.userId,
+      avatar: currentUser.avatar,
 
-    createAt: serverTimestamp()
+      content,
+      imageURL,
 
-  });
+      locationName: selectedLocation,
+      locationLink: selectedLocationLink,
 
-  
-  showToast("Create successful ☕", "success");
+      likes: 0,
+      likedBy: [],
 
+      createAt: serverTimestamp()
+    });
 
-  document.getElementById("post-input").value = "";
-  selectedImageURL = "";
-  selectedLocation = "";
-  selectedLocationLink = "";
-}
+    showToast("Post created ☕", "success");
 
+    document.getElementById("post-input").value = "";
+    selectedImageFile = null;
+    selectedLocation = "";
+    selectedLocationLink = "";
 
+    const preview = document.getElementById("preview-img");
+    if (preview) preview.style.display = "none";
 
-async function deletePost(postId, postUserId) {
+  } finally {
+    isPosting = false;
+  }
+};
 
-  if (postUserId !== currentUser.userId) return;
+// =====================
+// DELETE
+// =====================
+window.deletePost = async function (postId, postUserId) {
+  if (!currentUser || postUserId !== currentUser.userId) return;
 
-  const ok = confirm("Delete this post?");
-  if (!ok) return;
+  if (!confirm("Delete this post?")) return;
 
   await deleteDoc(doc(db, "posts", postId));
-  showToast("Delete post successful 🗑", "success");
-}
+};
 
+// =====================
+// LIKE
+// =====================
+window.toggleLike = async function (postId, likedBy = [], currentLikes = 0) {
 
-async function toggleLike(postId, likedBy = [], currentLikes = 0) {
+  if (!currentUser) return;
 
-  const ref = doc(db, "posts", postId);
+  const refDoc = doc(db, "posts", postId);
 
   let list = [...likedBy];
 
   const isLiked = list.includes(currentUser.userId);
 
   if (isLiked) {
-
-   
     list = list.filter(id => id !== currentUser.userId);
 
-    await updateDoc(ref, {
+    await updateDoc(refDoc, {
       likedBy: list,
       likes: currentLikes - 1
     });
-    showToast("Unlike removed successfully", "info");
 
   } else {
-
-    
     list.push(currentUser.userId);
 
-    await updateDoc(ref, {
+    await updateDoc(refDoc, {
       likedBy: list,
       likes: currentLikes + 1
     });
-
-    showToast("Like successful ❤️", "success");
-
   }
-}
+};
 
-
-
+// =====================
+// LOAD POSTS
+// =====================
 function loadPosts() {
 
   const q = query(
@@ -161,6 +244,8 @@ function loadPosts() {
     const feed = document.getElementById("feed");
     const myPosts = document.getElementById("my-posts");
 
+    if (!feed || !myPosts) return;
+
     feed.innerHTML = "";
     myPosts.innerHTML = "";
 
@@ -169,15 +254,16 @@ function loadPosts() {
       const post = docSnap.data();
       const postId = docSnap.id;
 
-      const isMine = post.userId === currentUser.userId;
-      const isLiked = (post.likedBy || []).includes(currentUser.userId);
+      const isMine = currentUser && post.userId === currentUser.userId;
+      const isLiked = (post.likedBy || []).includes(currentUser?.userId);
 
-   
-      const feedHTML = `
+      const avatar = post.avatar || DEFAULT_AVATAR;
+
+      const html = `
         <div class="post-card">
 
           <div class="post-header">
-            <img src="${post.avatar || 'picture/user1avatar.jpeg'}" class="avatar">
+            <img src="${avatar}" class="avatar">
             <b>${post.username}</b>
           </div>
 
@@ -190,14 +276,12 @@ function loadPosts() {
           <img src="${post.imageURL}" class="post-image">
 
           ${post.locationName ? `
-            <a class="post-location"
-               href="${post.locationLink}"
-               target="_blank">
+            <a href="${post.locationLink}" target="_blank">
               📍 ${post.locationName}
             </a>
           ` : ""}
 
-          <div style="cursor:pointer;"
+          <div style="cursor:pointer"
                onclick='toggleLike("${postId}", ${JSON.stringify(post.likedBy || [])}, ${post.likes || 0})'>
 
             ${isLiked ? "❤️" : "🤍"} ${post.likes || 0}
@@ -207,66 +291,19 @@ function loadPosts() {
         </div>
       `;
 
-      feed.innerHTML += feedHTML;
-
+      feed.innerHTML += html;
 
       if (isMine) {
-
-        const myHTML = `
-          <div class="post-card my-post">
-
-            <div class="delete-btn"
-                 onclick='deletePost(${JSON.stringify(postId)}, ${JSON.stringify(post.userId)})'>
-              🗑
-            </div>
-
-            <div class="post-header">
-              <img src="${post.avatar || 'picture/user1avatar.jpeg'}" class="avatar">
-              <b>${post.username}</b>
-            </div>
-
-            <div class="post-content">${post.content}</div>
-
-            <div class="post-time">
-              ${post.createAt ? post.createAt.toDate().toLocaleString() : ""}
-            </div>
-
-            <img src="${post.imageURL}" class="post-image">
-
-            ${post.locationName ? `
-              <a class="post-location"
-                 href="${post.locationLink}"
-                 target="_blank">
-                📍 ${post.locationName}
-              </a>
-            ` : ""}
-
-            <div style="cursor:pointer;"
-                 onclick='toggleLike("${postId}", ${JSON.stringify(post.likedBy || [])}, ${post.likes || 0})'>
-
-              ${isLiked ? "❤️" : "🤍"} ${post.likes || 0}
-
-            </div>
-
-          </div>
-        `;
-
-        myPosts.innerHTML += myHTML;
+        myPosts.innerHTML += html;
       }
-
     });
-
   });
-
 }
 
-
-
+// =====================
+// EXPORT
+// =====================
 window.createPost = createPost;
 window.addLocation = addLocation;
 window.deletePost = deletePost;
 window.toggleLike = toggleLike;
-
-
-// START
-loadPosts();
