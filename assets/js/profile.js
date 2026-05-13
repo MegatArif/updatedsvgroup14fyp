@@ -7,7 +7,7 @@ import { setupNavbar } from './navbar.js';
 
 const auth = getAuth(app);
 
-const DEFAULT_AVATAR = "assets/picture/user2avatar.jpeg"; // ✅ default for all accounts
+const DEFAULT_AVATAR = "picture/user2avatar.jpeg" // ✅ default for all accounts
 
 // UI Utilities
 const showLoading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
