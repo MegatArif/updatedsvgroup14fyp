@@ -13,6 +13,7 @@ import { showToast } from './toast.js'
       'megatarifidlan@graduate.utm.my',
       'leexuanhui@graduate.utm.my',
       'looeeying@graduate.utm.my',
+      'ammar06@graduate,utm.my',
   ];
 
   const auth = getAuth(app);
