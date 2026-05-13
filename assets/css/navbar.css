@@ -1,0 +1,167 @@
+
+.navbar{
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 2rem;
+
+    background: hsl(39, 64%, 87%);
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+
+    box-sizing: border-box;
+}
+
+/* LEFT LOGO */
+.logo-area{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon{
+    font-size: 28px;
+    color: hsl(28, 48%, 54%);
+}
+
+.logo-text{
+    font-weight: 700;
+    font-size: 1.5rem;
+    color:hsl(24, 31%, 18%);
+}
+
+/* NAV LINKS */
+.nav-links{
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.nav-links a{
+    position: relative;
+
+    text-decoration: none;
+
+    font-size: 1rem;
+    font-weight: 500;
+
+    color:hsl(32, 23%, 29%);
+
+    transition: 0.2s;
+}
+
+/* hover */
+.nav-links a:hover{
+    color:hsl(24, 51%, 53%);
+}
+
+/* active page */
+.nav-links a.active{
+    color:hsl(24, 51%, 53%);
+    font-weight: 700;
+}
+
+/* underline animation */
+.nav-links a.active::after{
+    content: "";
+
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+
+    width: 100%;
+    height: 2px;
+
+    background:hsl(24, 51%, 53%);
+}
+
+/* notification badge */
+.notif-badge{
+    position: absolute;
+
+    top: -6px;
+    right: -10px;
+
+    background: #e53935;
+    color: white;
+
+    font-size: .65rem;
+    font-weight: 700;
+
+    min-width: 18px;
+    height: 18px;
+
+    border-radius: 999px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 4px;
+}
+
+/* user area */
+.nav-user{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-avatar{
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.nav-links a.active{
+    color:hsl(24, 51%, 53%);
+    font-weight:700;
+}
+
+.nav-links a.active::after{
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    bottom:-6px;
+
+    width:100%;
+    height:2px;
+
+    background:hsl(24, 51%, 53%);
+}
+
+/* responsive */
+@media (max-width: 768px){
+
+    .navbar{
+        padding: 0 1rem;
+        height: auto;
+
+        flex-wrap: wrap;
+        gap: 12px;
+
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .nav-links{
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .logo-text{
+        font-size: 1.2rem;
+    }
+}

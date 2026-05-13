@@ -18,7 +18,7 @@
 }
 
 /* Base Styles */
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', system-ui, sans-serif; }
 body { background-color: var(--color-bg); color: var(--color-text-dark); line-height: 1.6; padding-bottom: 2rem; }
 .bg-primary { background-color: var(--color-bg); }
 .bg-secondary { background-color: var(--color-secondary); }
@@ -37,74 +37,6 @@ body { background-color: var(--color-bg); color: var(--color-text-dark); line-he
 .card { background: var(--color-card); border-radius: var(--radius-md); padding: 2rem; box-shadow: var(--shadow-soft); }
 .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 .auth-container .card { width: 100%; max-width: 400px; }
-
-/* Navigation */
-/* Navigation */
-.navbar{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 2rem;
-    background: hsl(39, 64%, 87%);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-}
-.nav-links{
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
-
-.nav-links a {
-    text-decoration: none;
-    font-weight: 500;
-    color:hsl(32, 23%, 29%) ;
-    font-size: 1.1rem;
-    transition: 0.2s;
-}
-
-.nav-links a.post{
-    font-weight: 800;
-    color: hsl(24, 51%, 53%);
-    border-bottom: 2px solid hsl(24, 51%, 53%);
-    padding-bottom: 4px;
-}
-
-.nav-links a:hover{
-    color: hsl(24, 51%, 53%);
-}
-
-.notif-badge {
-    position: absolute;
-    top: -6px;
-    right: -10px;
-    background: #e53935;
-    color: white;
-    font-size: .65rem;
-    font-weight: 700;
-    min-width: 18px;
-    height: 18px;
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 4px;
-}
-.logo-area{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo-icon{
-    font-size: 28px;
-    color: hsl(28, 48%, 54%);
-}
-
-.logo-text{
-    font-weight: 700;
-    font-size: 1.5rem;
-    color:hsl(24, 31%, 18%);
-}
 
 .nav-user { 
     display: flex; 
