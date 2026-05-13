@@ -50,13 +50,9 @@ async function loadUserProfile(user) {
             const data = docSnap.data();
 
             document.getElementById('display-name').textContent =
-                data.firstName ? `${data.firstName} ${data.lastName}` : (data.username || 'User');
+                data.username || user.email.split('@')[0];
 
             document.getElementById('username').value   = data.username  || '';
-            document.getElementById('firstName').value  = data.firstName || '';
-            document.getElementById('lastName').value   = data.lastName  || '';
-            document.getElementById('bio').value        = data.bio       || '';
-            document.getElementById('bio-count').textContent = (data.bio || '').length;
 
             // ✅ Use saved photo or fall back to default
             document.getElementById('main-profile-pic').src = data.photoURL || DEFAULT_AVATAR;
@@ -153,17 +149,14 @@ document.getElementById('personal-info').addEventListener('submit', async (e) =>
     if (!user) return showToast("Not logged in.", "error");
 
     const username  = document.getElementById('username').value.trim();
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName  = document.getElementById('lastName').value.trim();
-    const bio       = document.getElementById('bio').value.trim();
-
+    
     try {
         await setDoc(doc(db, "Customers", user.uid), {
-            username, firstName, lastName, bio
+            username,
         }, { merge: true });
 
         document.getElementById('display-name').textContent =
-            firstName ? `${firstName} ${lastName}` : username;
+            username;
 
         showToast("Profile updated successfully! 💾");
     } catch (error) {
