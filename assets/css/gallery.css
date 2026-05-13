@@ -46,6 +46,30 @@ body{
     padding: 1rem 2rem;
     background: hsl(39, 64%, 87%);
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}   
+.nav-links{
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    font-weight: 500;
+    color:hsl(32, 23%, 29%) ;
+    font-size: 1.1rem;
+    transition: 0.2s;
+}
+
+.nav-links a.post{
+    font-weight: 800;
+    color: hsl(24, 51%, 53%);
+    border-bottom: 2px solid hsl(24, 51%, 53%);
+    padding-bottom: 4px;
+}
+
+.nav-links a:hover{
+    color: hsl(24, 51%, 53%);
 }
 
 .notif-badge {

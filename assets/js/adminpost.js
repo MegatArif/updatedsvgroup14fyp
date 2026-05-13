@@ -1,4 +1,4 @@
-import { db } from './firebase-config.js';
+import { db, storage } from './firebase-config.js';
 import { showToast } from './toast.js';
 import { setupNavbar } from './navbar.js';
 
@@ -10,10 +10,14 @@ import {
   orderBy,
   onSnapshot,
   doc,
-  deleteDoc
+  deleteDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-
+import {
+  ref,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 // =====================
 // LOAD POSTS
 // =====================
@@ -80,25 +84,33 @@ function loadAdminPosts() {
 // DELETE POST (WITH TOAST)
 // =====================
 async function deletePost(postId) {
-
   const ok = confirm("Delete this post?");
   if (!ok) return;
 
   try {
+    // Fetch the post first to get the imageURL
+    const postSnap = await getDoc(doc(db, "posts", postId));
+    const imageURL = postSnap.exists() ? postSnap.data().imageURL : null;
+
+    // Delete Firestore document
     await deleteDoc(doc(db, "posts", postId));
 
-    // ✅ SUCCESS TOAST
+    // Delete image from Storage if it's not the default
+    if (imageURL && !imageURL.includes("postalice.png")) {
+      try {
+        await deleteObject(ref(storage, imageURL));
+      } catch (err) {
+        console.warn("Image not found in storage:", err);
+      }
+    }
+
     showToast("Post deleted 🗑", "success");
 
   } catch (err) {
-
     console.error(err);
-
-    // ❌ ERROR TOAST
     showToast("Delete failed", "error");
   }
 }
-
 
 // expose
 window.deletePost = deletePost;
