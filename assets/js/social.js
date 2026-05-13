@@ -2,8 +2,11 @@ import { db, storage, app } from './firebase-config.js';
 import { showToast } from './toast.js';
 import { setupNavbar } from './navbar.js';
 
-// Call it once the page loads
 setupNavbar();
+
+// =====================
+// FIREBASE IMPORTS
+// =====================
 import {
   collection,
   addDoc,
@@ -21,7 +24,7 @@ import {
   ref,
   uploadBytes,
   getDownloadURL,
-  deleteObject 
+  deleteObject
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
 import {
@@ -35,66 +38,84 @@ const auth = getAuth(app);
 // STATE
 // =====================
 let currentUser = null;
-let isPosting = false;
 let selectedImageFile = null;
 let selectedLocation = "";
 let selectedLocationLink = "";
 
 const DEFAULT_AVATAR = "picture/user2avatar.jpeg";
 
-// =====================
-// TITLE
-// =====================
-function updateMyPostTitle() {
-  const el = document.getElementById("my-post-title");
-  if (!el) return;
-
-  el.innerText = currentUser
-    ? `My Posts (${currentUser.username})`
-    : "My Posts ()";
-}
+// user cache (feed optimization)
+const userCache = {};
 
 // =====================
-// AUTH CONNECT
+// AUTH + PROFILE SYNC (FIXED)
 // =====================
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
     currentUser = null;
-    updateMyPostTitle();
     return;
   }
 
-  try {
-    const snap = await getDoc(doc(db, "Customers", user.uid));
-    const data = snap.exists() ? snap.data() : {};
+  // 🔥 ALWAYS load profile from Firestore (source of truth)
+  const snap = await getDoc(doc(db, "Customers", user.uid));
+  const data = snap.exists() ? snap.data() : {};
 
-    currentUser = {
-      userId: user.uid,
-      username: data.username || user.email.split("@")[0],
-      avatar: data.avatar || DEFAULT_AVATAR
-    };
+  currentUser = {
+    userId: user.uid,
+    email: user.email,
+    username: data.username || user.email.split("@")[0],
 
-  } catch (err) {
-    console.error(err);
+    // 🔥 KEY FIX: always use Firestore photoURL
+    photoURL: data.photoURL || DEFAULT_AVATAR
+  };
 
-    currentUser = {
-      userId: user.uid,
-      username: user.email.split("@")[0],
-      avatar: DEFAULT_AVATAR
-    };
-  }
-
-  updateMyPostTitle();
-
-  // 🔥 SIDEBAR AVATAR UPDATE (KEY FIX)
-  const sidebarAvatar = document.getElementById("sidebar-avatar");
-  if (sidebarAvatar) {
-    sidebarAvatar.src = currentUser.avatar;
-  }
+  // update UI immediately
+  updateSidebarAvatar();
 
   loadPosts();
+
+  // 🔥 REALTIME LISTENER: profile changes instantly update avatar
+  onSnapshot(doc(db, "Customers", user.uid), (snap) => {
+    const data = snap.data();
+    if (!data) return;
+
+    currentUser.photoURL = data.photoURL || DEFAULT_AVATAR;
+    currentUser.username = data.username || currentUser.username;
+
+    updateSidebarAvatar();
+  });
 });
+
+// =====================
+// UPDATE SIDEBAR AVATAR (CREATE BAR)
+// =====================
+function updateSidebarAvatar() {
+  const sidebarAvatar = document.getElementById("sidebar-avatar");
+  const sidebarName = document.getElementById("sidebar-username");
+
+  if (sidebarAvatar && currentUser) {
+    sidebarAvatar.src = currentUser.photoURL;
+  }
+
+  if (sidebarName && currentUser) {
+    sidebarName.textContent = currentUser.username;
+  }
+}
+
+// =====================
+// GET USER DATA (CACHE)
+// =====================
+async function getUserData(userId) {
+
+  if (userCache[userId]) return userCache[userId];
+
+  const snap = await getDoc(doc(db, "Customers", userId));
+  const data = snap.exists() ? snap.data() : null;
+
+  userCache[userId] = data;
+  return data;
+}
 
 // =====================
 // LOCATION
@@ -116,16 +137,7 @@ const uploadEl = document.getElementById("upload-img");
 
 if (uploadEl) {
   uploadEl.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    selectedImageFile = file;
-
-    const preview = document.getElementById("preview-img");
-    if (preview) {
-      preview.src = URL.createObjectURL(file);
-      preview.style.display = "block";
-    }
+    selectedImageFile = e.target.files[0];
   });
 }
 
@@ -134,20 +146,18 @@ if (uploadEl) {
 // =====================
 window.createPost = async function () {
 
-  if (isPosting || !currentUser) return;
-  isPosting = true;
+  if (!currentUser) return;
 
   const content = document.getElementById("post-input").value;
 
   if (!content.trim()) {
-    showToast("Please write something first", "error");
-    isPosting = false;
+    showToast("Write something first", "error");
     return;
   }
 
-  try {
+  let imageURL = "picture/postalice.png";
 
-    let imageURL = "picture/postalice.png";
+  try {
 
     if (selectedImageFile) {
       const imageRef = ref(
@@ -160,57 +170,49 @@ window.createPost = async function () {
     }
 
     await addDoc(collection(db, "posts"), {
-      username: currentUser.username,
       userId: currentUser.userId,
-      avatar: currentUser.avatar,
-
       content,
       imageURL,
-
       locationName: selectedLocation,
       locationLink: selectedLocationLink,
-
       likes: 0,
       likedBy: [],
-
       createAt: serverTimestamp()
     });
 
-    showToast("Post created ☕", "success");
+    showToast("Post created ☕");
 
     document.getElementById("post-input").value = "";
     selectedImageFile = null;
     selectedLocation = "";
     selectedLocationLink = "";
 
-    const preview = document.getElementById("preview-img");
-    if (preview) preview.style.display = "none";
-
-  } finally {
-    isPosting = false;
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to create post", "error");
   }
 };
 
 // =====================
-// DELETE
+// DELETE POST
 // =====================
 window.deletePost = async function (postId, postUserId, imageURL) {
+
   if (!currentUser || postUserId !== currentUser.userId) return;
   if (!confirm("Delete this post?")) return;
 
-  // Delete Firestore document
   await deleteDoc(doc(db, "posts", postId));
 
-  // Delete image from Storage (only if it's not the default image)
   if (imageURL && !imageURL.includes("postalice.png")) {
     try {
       const imageRef = ref(storage, imageURL);
       await deleteObject(imageRef);
     } catch (err) {
-      console.warn("Image already deleted or not found:", err);
+      console.warn(err);
     }
   }
-  showToast("Post deleted successfully 🗑️", "success");
+
+  showToast("Deleted 🗑️");
 };
 
 // =====================
@@ -228,15 +230,12 @@ window.toggleLike = async function (postId, likedBy = [], currentLikes = 0) {
 
   if (isLiked) {
     list = list.filter(id => id !== currentUser.userId);
-
     await updateDoc(refDoc, {
       likedBy: list,
       likes: currentLikes - 1
     });
-
   } else {
     list.push(currentUser.userId);
-
     await updateDoc(refDoc, {
       likedBy: list,
       likes: currentLikes + 1
@@ -254,7 +253,7 @@ function loadPosts() {
     orderBy("createAt", "desc")
   );
 
-  onSnapshot(q, (snapshot) => {
+  onSnapshot(q, async (snapshot) => {
 
     const feed = document.getElementById("feed");
     const myPosts = document.getElementById("my-posts");
@@ -264,7 +263,7 @@ function loadPosts() {
     feed.innerHTML = "";
     myPosts.innerHTML = "";
 
-    snapshot.forEach((docSnap) => {
+    for (const docSnap of snapshot.docs) {
 
       const post = docSnap.data();
       const postId = docSnap.id;
@@ -272,17 +271,17 @@ function loadPosts() {
       const isMine = currentUser && post.userId === currentUser.userId;
       const isLiked = (post.likedBy || []).includes(currentUser?.userId);
 
-      const avatar = post.avatar || DEFAULT_AVATAR;
+      const userData = await getUserData(post.userId);
 
-      // =========================
-      // 🔵 FEED CARD (NO DELETE)
-      // =========================
-      const feedHTML = `
+      const avatar = userData?.photoURL || DEFAULT_AVATAR;
+      const username = userData?.username || "User";
+
+      const card = `
         <div class="post-card">
 
           <div class="post-header">
             <img src="${avatar}" class="avatar">
-            <b>${post.username}</b>
+            <b>${username}</b>
           </div>
 
           <div class="post-content">${post.content}</div>
@@ -300,66 +299,29 @@ function loadPosts() {
           ` : ""}
 
           <div style="cursor:pointer"
-               onclick='toggleLike("${postId}", ${JSON.stringify(post.likedBy || [])}, ${post.likes || 0})'>
-
+            onclick='toggleLike("${postId}", ${JSON.stringify(post.likedBy || [])}, ${post.likes || 0})'>
             ${isLiked ? "❤️" : "🤍"} ${post.likes || 0}
-
           </div>
+
+          ${isMine ? `
+            <div class="delete-btn"
+              onclick='deletePost("${postId}", "${post.userId}", "${post.imageURL}")'>
+              🗑
+            </div>
+          ` : ""}
 
         </div>
       `;
 
-      feed.innerHTML += feedHTML;
+      feed.innerHTML += card;
 
-      // =========================
-      // 🟢 MY POSTS (WITH DELETE)
-      // =========================
       if (isMine) {
-
-        const myPostHTML = `
-          <div class="post-card">
-
-            <!-- 🔥 DELETE ONLY HERE -->
-            <div class="delete-btn"
-            onclick='deletePost("${postId}", "${post.userId}", "${post.imageURL}")'
-            style="cursor:pointer; float:right;">
-            🗑
-        </div>
-
-            <div class="post-header">
-              <img src="${avatar}" class="avatar">
-              <b>${post.username}</b>
-            </div>
-
-            <div class="post-content">${post.content}</div>
-
-            <div class="post-time">
-              ${post.createAt ? post.createAt.toDate().toLocaleString() : ""}
-            </div>
-
-            <img src="${post.imageURL}" class="post-image">
-
-            ${post.locationName ? `
-              <a href="${post.locationLink}" target="_blank">
-                📍 ${post.locationName}
-              </a>
-            ` : ""}
-
-            <div style="cursor:pointer"
-                 onclick='toggleLike("${postId}", ${JSON.stringify(post.likedBy || [])}, ${post.likes || 0})'>
-
-              ${isLiked ? "❤️" : "🤍"} ${post.likes || 0}
-
-            </div>
-
-          </div>
-        `;
-
-        myPosts.innerHTML += myPostHTML;
+        myPosts.innerHTML += card;
       }
-    });
+    }
   });
 }
+
 // =====================
 // EXPORT
 // =====================

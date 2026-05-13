@@ -2,62 +2,78 @@
 <html>
 <head>
   <title>Social Page</title>
+
   <link rel="stylesheet" href="./assets/css/social.css">
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
+
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
 </head>
 
 <body>
 
+<!-- ================= NAVBAR ================= -->
 <div class="navbar">
   <div class="logo-area">
     <i class="fas fa-mug-hot logo-icon"></i>
     <span class="logo-text">CafeHunt</span>
   </div>
+
   <div class="nav-links">
     <!-- Populated by navbar.js -->
   </div>
 </div>
 
+<!-- ================= PAGE ================= -->
 <div class="page">
 
+  <!-- ================= SIDEBAR ================= -->
   <div class="sidebar">
 
-  <h3 id="my-post-title">My Posts ()</h3>
+    <h3 id="my-post-title">My Posts ()</h3>
 
-  <div id="my-posts"></div>
+    <!-- MY POSTS -->
+    <div id="my-posts"></div>
 
-  <div class="create-post-bar">
+    <!-- CREATE BAR -->
+    <div class="create-post-bar">
 
-    <!-- 🔥 FIX：加 id -->
-    <img id="sidebar-avatar"
-         src="picture/user2avatar.jpeg"
-         class="bottom-avatar">
+      <!-- 🔥 avatar (will be updated by JS) -->
+      <img id="sidebar-avatar"
+           src="picture/user2avatar.jpeg"
+           class="bottom-avatar">
 
-    <input type="text" id="post-input" placeholder="Share your cafe experience...">
+      <!-- optional: username display (NEW - recommended) -->
+      <div id="sidebar-username"></div>
 
-    <label for="upload-img">📷</label>
+      <input type="text"
+             id="post-input"
+             placeholder="Share your cafe experience...">
 
-    <input type="file" id="upload-img" hidden>
+      <label for="upload-img">📷</label>
+      <input type="file" id="upload-img" hidden>
 
-    <img id="preview-img"
-         style="width:60px;height:60px;border-radius:10px;object-fit:cover;display:none;" />
+      <img id="preview-img"
+           style="width:60px;height:60px;border-radius:10px;object-fit:cover;display:none;" />
 
-    <img src="picture/locateicon.png"
-         onclick="addLocation()"
-         class="action-icon">
+      <img src="picture/locateicon.png"
+           onclick="addLocation()"
+           class="action-icon">
 
-    <button onclick="createPost()">Create</button>
+      <button onclick="createPost()">Create</button>
+
+    </div>
 
   </div>
 
-</div>
-
-
+  <!-- ================= FEED ================= -->
   <div class="feed" id="feed"></div>
 
 </div>
 
+<!-- ================= SCRIPT ================= -->
 <script type="module" src="./assets/js/social.js"></script>
 
 </body>
