@@ -20,7 +20,8 @@ import {
 import {
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
+  deleteObject 
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
 import {
@@ -193,12 +194,23 @@ window.createPost = async function () {
 // =====================
 // DELETE
 // =====================
-window.deletePost = async function (postId, postUserId) {
+window.deletePost = async function (postId, postUserId, imageURL) {
   if (!currentUser || postUserId !== currentUser.userId) return;
-
   if (!confirm("Delete this post?")) return;
 
+  // Delete Firestore document
   await deleteDoc(doc(db, "posts", postId));
+
+  // Delete image from Storage (only if it's not the default image)
+  if (imageURL && !imageURL.includes("postalice.png")) {
+    try {
+      const imageRef = ref(storage, imageURL);
+      await deleteObject(imageRef);
+    } catch (err) {
+      console.warn("Image already deleted or not found:", err);
+    }
+  }
+  showToast("Post deleted successfully 🗑️", "success");
 };
 
 // =====================
@@ -309,10 +321,10 @@ function loadPosts() {
 
             <!-- 🔥 DELETE ONLY HERE -->
             <div class="delete-btn"
-                 onclick='deletePost("${postId}", "${post.userId}")'
-                 style="cursor:pointer; float:right;">
-              🗑
-            </div>
+            onclick='deletePost("${postId}", "${post.userId}", "${post.imageURL}")'
+            style="cursor:pointer; float:right;">
+            🗑
+        </div>
 
             <div class="post-header">
               <img src="${avatar}" class="avatar">

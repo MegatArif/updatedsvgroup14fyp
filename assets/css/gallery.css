@@ -46,7 +46,7 @@ body{
     padding: 1rem 2rem;
     background: hsl(39, 64%, 87%);
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-}
+}   
 .nav-links{
     display: flex;
     gap: 2rem;
