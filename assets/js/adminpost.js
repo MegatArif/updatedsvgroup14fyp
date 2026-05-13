@@ -39,19 +39,28 @@ function loadAdminPosts() {
       const post = docSnap.data();
       const postId = docSnap.id;
 
-      // 🔥 FIX: ALWAYS fetch user info from Customers
       let username = "Unknown User";
 
       try {
         if (post.userId) {
           const userSnap = await getDoc(doc(db, "Customers", post.userId));
           const userData = userSnap.data();
-
           username = userData?.username || "Unknown User";
         }
       } catch (err) {
         console.warn("User fetch failed", err);
       }
+
+      // 🔥 FIX: clickable location
+      const locationHTML = post.locationName
+        ? `
+          <div class="post-location">
+            📍 <a href="${post.locationLink}" target="_blank" rel="noopener noreferrer">
+              ${post.locationName}
+            </a>
+          </div>
+        `
+        : "";
 
       const card = `
         <div class="post-card">
@@ -71,9 +80,7 @@ function loadAdminPosts() {
 
           <img src="${post.imageURL}" class="post-image">
 
-          <div class="post-location">
-            📍 ${post.locationName || ""}
-          </div>
+          ${locationHTML}
 
           <div class="post-time">
             ${post.createAt ? post.createAt.toDate().toLocaleString() : ""}

@@ -65,15 +65,10 @@ onAuthStateChanged(auth, async (user) => {
     photoURL: data.photoURL || DEFAULT_AVATAR
   };
 
-  // 🔥 FIX 1: update sidebar avatar
   updateSidebarAvatar();
-
-  // 🔥 FIX 2: update "My Posts (alex)"
   updateMyPostTitle();
-
   loadPosts();
 
-  // realtime sync profile changes
   onSnapshot(doc(db, "Customers", user.uid), (snap) => {
     const data = snap.data();
     if (!data) return;
@@ -132,13 +127,27 @@ window.addLocation = function () {
 };
 
 // =====================
-// IMAGE
+// IMAGE (✔ UPDATED: ADD PREVIEW)
 // =====================
 const uploadEl = document.getElementById("upload-img");
 
 if (uploadEl) {
   uploadEl.addEventListener("change", (e) => {
-    selectedImageFile = e.target.files[0];
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    selectedImageFile = file;
+
+    // =========================
+    // ✅ IMAGE PREVIEW ADDED
+    // =========================
+    const preview = document.getElementById("preview-img");
+
+    if (preview) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
   });
 }
 
@@ -187,6 +196,10 @@ window.createPost = async function () {
     selectedImageFile = null;
     selectedLocation = "";
     selectedLocationLink = "";
+
+    // reset preview
+    const preview = document.getElementById("preview-img");
+    if (preview) preview.style.display = "none";
 
   } catch (err) {
     console.error(err);
