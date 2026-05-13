@@ -1,7 +1,7 @@
 import { db, storage, app } from './firebase-config.js';
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { doc, getDoc, setDoc, collection, query, where, getDocs} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-import { getAuth, onAuthStateChanged, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider, signOut } 
+import { getAuth, onAuthStateChanged, updatePassword, updateEmail, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider, signOut } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { setupNavbar } from './navbar.js';
 
@@ -45,7 +45,7 @@ async function loadUserProfile(user) {
         const docSnap = await getDoc(docRef);
 
         document.getElementById('display-email').value = user.email;
-
+        await setDoc(docRef, { email: user.email }, { merge: true });
         if (docSnap.exists()) {
             const data = docSnap.data();
 
@@ -211,21 +211,51 @@ document.getElementById('change-email').addEventListener('submit', async (e) => 
     const user = auth.currentUser;
     if (!user) return;
 
-    const newEmail  = document.getElementById('new-email').value.trim();
-    const password  = document.getElementById('email-password-confirm').value;
+    const newEmail = document.getElementById('new-email').value.trim();
+    const password = document.getElementById('email-password-confirm').value;
 
+    if (newEmail === user.email) {
+        showToast("New email must be different from your current email.", "error");
+        showLoading(false);
+        return;
+    }
+
+    const emailQuery = query(collection(db, "Customers"), where("email", "==", newEmail));
+    const emailSnap = await getDocs(emailQuery);
+
+    if (!emailSnap.empty) {
+        showToast("That email is already registered.", "error");
+        showLoading(false);
+        return;
+    }
     try {
-        // ✅ Re-authenticate first before changing email
+        // Re-authenticate first
         const credential = EmailAuthProvider.credential(user.email, password);
         await reauthenticateWithCredential(user, credential);
-        await updateEmail(user, newEmail);
 
-        document.getElementById('display-email').value = newEmail;
-        showToast("Email updated successfully! ✉️");
+        // ✅ Use verifyBeforeUpdateEmail instead of updateEmail
+        await verifyBeforeUpdateEmail(user, newEmail);
+
+        showToast("Verification email sent to " + newEmail + "! Please check your inbox to confirm the change. ✉️", "success", 5000);
+        setTimeout(async () => {
+            await signOut(auth);
+            window.location.href = 'index.html';
+        }, 3000);
+
         e.target.reset();
+
+
     } catch (error) {
         console.error(error);
-        showToast("Wrong password or session expired.", "error");
+        let msg = "Failed to update email.";
+        switch (error.code) {
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':  msg = 'Wrong password. Please try again.'; break;
+            case 'auth/email-already-in-use': msg = 'That email is already in use.'; break;
+            case 'auth/invalid-email':        msg = 'Invalid email address.'; break;
+            case 'auth/requires-recent-login': msg = 'Session expired. Please log out and log in again.'; break;
+        }
+        showToast(msg, "error");
     } finally {
         showLoading(false);
     }
