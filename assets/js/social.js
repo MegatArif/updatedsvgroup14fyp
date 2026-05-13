@@ -43,12 +43,10 @@ let selectedLocation = "";
 let selectedLocationLink = "";
 
 const DEFAULT_AVATAR = "picture/user2avatar.jpeg";
-
-// user cache (feed optimization)
 const userCache = {};
 
 // =====================
-// AUTH + PROFILE SYNC (FIXED)
+// AUTH (FIXED)
 // =====================
 onAuthStateChanged(auth, async (user) => {
 
@@ -57,7 +55,6 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // 🔥 ALWAYS load profile from Firestore (source of truth)
   const snap = await getDoc(doc(db, "Customers", user.uid));
   const data = snap.exists() ? snap.data() : {};
 
@@ -65,46 +62,50 @@ onAuthStateChanged(auth, async (user) => {
     userId: user.uid,
     email: user.email,
     username: data.username || user.email.split("@")[0],
-
-    // 🔥 KEY FIX: always use Firestore photoURL
     photoURL: data.photoURL || DEFAULT_AVATAR
   };
 
-  // update UI immediately
+  // 🔥 FIX 1: update sidebar avatar
   updateSidebarAvatar();
+
+  // 🔥 FIX 2: update "My Posts (alex)"
+  updateMyPostTitle();
 
   loadPosts();
 
-  // 🔥 REALTIME LISTENER: profile changes instantly update avatar
+  // realtime sync profile changes
   onSnapshot(doc(db, "Customers", user.uid), (snap) => {
     const data = snap.data();
     if (!data) return;
 
-    currentUser.photoURL = data.photoURL || DEFAULT_AVATAR;
     currentUser.username = data.username || currentUser.username;
+    currentUser.photoURL = data.photoURL || DEFAULT_AVATAR;
 
     updateSidebarAvatar();
+    updateMyPostTitle();
   });
 });
 
 // =====================
-// UPDATE SIDEBAR AVATAR (CREATE BAR)
+// UI UPDATES
 // =====================
 function updateSidebarAvatar() {
-  const sidebarAvatar = document.getElementById("sidebar-avatar");
-  const sidebarName = document.getElementById("sidebar-username");
-
-  if (sidebarAvatar && currentUser) {
-    sidebarAvatar.src = currentUser.photoURL;
-  }
-
-  if (sidebarName && currentUser) {
-    sidebarName.textContent = currentUser.username;
+  const el = document.getElementById("sidebar-avatar");
+  if (el && currentUser) {
+    el.src = currentUser.photoURL;
   }
 }
 
+function updateMyPostTitle() {
+  const el = document.getElementById("my-post-title");
+
+  if (!el || !currentUser) return;
+
+  el.innerText = `My Posts (${currentUser.username})`;
+}
+
 // =====================
-// GET USER DATA (CACHE)
+// CACHE USER DATA
 // =====================
 async function getUserData(userId) {
 
