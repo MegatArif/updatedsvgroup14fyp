@@ -7,7 +7,7 @@ import { setupNavbar } from './navbar.js';
 
 const auth = getAuth(app);
 
-const DEFAULT_AVATAR = "picture/user2avatar.jpeg" // ✅ default for all accounts
+const DEFAULT_AVATAR = "picture/user2avatar.jpeg"; // ✅ default for all accounts
 
 // UI Utilities
 const showLoading = (show) => document.getElementById('loading-overlay').classList.toggle('hidden', !show);
@@ -50,9 +50,10 @@ async function loadUserProfile(user) {
             const data = docSnap.data();
 
             document.getElementById('display-name').textContent =
-                data.username || user.email.split('@')[0];
+                 data.username || user.email.split('@')[0];
 
             document.getElementById('username').value   = data.username  || '';
+            
 
             // ✅ Use saved photo or fall back to default
             document.getElementById('main-profile-pic').src = data.photoURL || DEFAULT_AVATAR;
@@ -81,13 +82,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         e.target.classList.add('active');
         document.getElementById(e.target.dataset.target).classList.remove('hidden');
     });
-});
-
-// =====================
-// BIO COUNTER
-// =====================
-document.getElementById('bio').addEventListener('input', (e) => {
-    document.getElementById('bio-count').textContent = e.target.value.length;
 });
 
 // =====================
@@ -150,9 +144,10 @@ document.getElementById('personal-info').addEventListener('submit', async (e) =>
 
     const username  = document.getElementById('username').value.trim();
     
+
     try {
         await setDoc(doc(db, "Customers", user.uid), {
-            username,
+            username
         }, { merge: true });
 
         document.getElementById('display-name').textContent =
@@ -170,6 +165,7 @@ document.getElementById('personal-info').addEventListener('submit', async (e) =>
 // =====================
 // CHANGE PASSWORD (real)
 // =====================
+
 
 document.getElementById('change-password').addEventListener('submit', async (e) => {
     e.preventDefault();
