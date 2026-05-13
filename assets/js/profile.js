@@ -1,7 +1,7 @@
-import { db, storage, app } from './firebase-config.js'; // ✅ app must be exported from firebase-config.js
+import { db, storage, app } from './firebase-config.js';
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-import { getAuth, onAuthStateChanged, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider }
+import { getAuth, onAuthStateChanged, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider, signOut } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { setupNavbar } from './navbar.js';
 
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             loadUserProfile(user);
         } else {
-            window.location.href = 'login.html';
+            window.location.href ='index.html';
         }
     });
 });
@@ -228,5 +228,43 @@ document.getElementById('change-email').addEventListener('submit', async (e) => 
         showToast("Wrong password or session expired.", "error");
     } finally {
         showLoading(false);
+    }
+});
+
+// =====================
+// LOGOUT FUNCTIONALITY
+// =====================
+document.addEventListener('DOMContentLoaded', () => {
+    // Change logout button type from 'submit' to 'button' to prevent form submission
+    const logoutBtn = document.getElementById('log-up-btn');
+    if (logoutBtn) {
+        logoutBtn.type = 'button'; // Prevents form from triggering save profile
+        
+        // Add click event listener for logout
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // Confirm logout (optional but user-friendly)
+            const confirmLogout = confirm("Are you sure you want to log out?");
+            if (!confirmLogout) return;
+            
+            showLoading(true);
+            
+            try {
+                const auth = getAuth();
+                await signOut(auth);
+                showToast("Logged out successfully! 👋");
+                
+                // Redirect to login page after short delay
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+                
+            } catch (error) {
+                console.error("Logout error:", error);
+                showToast("Failed to log out. Please try again.", "error");
+                showLoading(false);
+            }
+        });
     }
 });
