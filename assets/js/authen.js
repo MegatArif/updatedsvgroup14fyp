@@ -11,7 +11,7 @@ import { showToast } from './toast.js'
 
   const ADMIN_EMAILS = [
       'megatarifidlan@graduate.utm.my',
-      'leexuabhui.tuta@gmail.com',
+      'leexuanhui@graduate.utm.my',
       'looeeying@graduate.utm.my',
   ];
 
