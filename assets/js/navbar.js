@@ -77,6 +77,12 @@ export function setupNavbar() {
       ?.classList.add("active");
   }
 
+  if(currentPage === "adminpost.html"){
+    document.getElementById("nav-post")
+      ?.classList.add("active");
+  }
+
+
   /* LOGOUT */
 
   document.getElementById('nav-logout')
