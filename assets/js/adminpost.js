@@ -2,8 +2,8 @@ import { db, storage } from './firebase-config.js';
 import { showToast } from './toast.js';
 import { setupNavbar } from './navbar.js';
 
-// Call it once the page loads
 setupNavbar();
+
 import {
   collection,
   query,
@@ -18,35 +18,46 @@ import {
   ref,
   deleteObject
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+
 // =====================
 // LOAD POSTS
 // =====================
 function loadAdminPosts() {
 
-  const q = query(
-    collection(db, "posts"),
-    orderBy("createAt", "desc")
-  );
+  const q = query(collection(db, "posts"), orderBy("createAt", "desc"));
 
-  onSnapshot(q, (snapshot) => {
+  onSnapshot(q, async (snapshot) => {
 
     const adminFeed = document.getElementById("admin-feed");
     const totalPosts = document.getElementById("total-posts");
 
     adminFeed.innerHTML = "";
-
     totalPosts.innerText = snapshot.size;
 
-    snapshot.forEach((docSnap) => {
+    for (const docSnap of snapshot.docs) {
 
       const post = docSnap.data();
       const postId = docSnap.id;
+
+      // 🔥 FIX: ALWAYS fetch user info from Customers
+      let username = "Unknown User";
+
+      try {
+        if (post.userId) {
+          const userSnap = await getDoc(doc(db, "Customers", post.userId));
+          const userData = userSnap.data();
+
+          username = userData?.username || "Unknown User";
+        }
+      } catch (err) {
+        console.warn("User fetch failed", err);
+      }
 
       const card = `
         <div class="post-card">
 
           <div class="post-header">
-            <b>${post.username}</b>
+            <b>${username}</b>
 
             <button class="delete-btn"
               onclick="deletePost('${postId}')">
@@ -72,35 +83,28 @@ function loadAdminPosts() {
       `;
 
       adminFeed.innerHTML += card;
-
-    });
-
+    }
   });
-
 }
 
-
 // =====================
-// DELETE POST (WITH TOAST)
+// DELETE POST
 // =====================
 async function deletePost(postId) {
-  const ok = confirm("Delete this post?");
-  if (!ok) return;
+
+  if (!confirm("Delete this post?")) return;
 
   try {
-    // Fetch the post first to get the imageURL
     const postSnap = await getDoc(doc(db, "posts", postId));
     const imageURL = postSnap.exists() ? postSnap.data().imageURL : null;
 
-    // Delete Firestore document
     await deleteDoc(doc(db, "posts", postId));
 
-    // Delete image from Storage if it's not the default
     if (imageURL && !imageURL.includes("postalice.png")) {
       try {
         await deleteObject(ref(storage, imageURL));
       } catch (err) {
-        console.warn("Image not found in storage:", err);
+        console.warn(err);
       }
     }
 
