@@ -213,7 +213,9 @@ async function showDetailModal(cafe) {
         <div style="margin-top:12px;"><i class="fas fa-microchip"></i> <strong>Facilities:</strong> ${cafe.facilities.join(', ')}</div>
         <div style="margin-top:8px;"><i class="fas fa-star-of-life"></i> <strong>Review Star Rating:</strong> ${cafe.rating} / 5</div>
         <hr>
-        <button id="closeModalBtn" style="background:#c47b4a; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer; margin-top:10px;"><i class="fas fa-times"></i> Close</button>`;
+        <button id="closeModalBtn" style="background:#c47b4a; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer; margin-top:10px;"><i class="fas fa-times"></i> Close</button>
+        <button id="closeModalBtn" style="background:#F7BF09; border:node; padding:8px 16px; border-radius:30px; color:white; cursor:pointer; margin-top:10px;"><i class="fas fa-calendar-check"></i> Make a reservation</button>`;
+
     modal.style.display = 'flex';
     const closeSpan = modal.querySelector('.close-modal');
     const closeBtn = contentDiv.querySelector('#closeModalBtn');
