@@ -2,6 +2,7 @@ import { db, storage } from './firebase-config.js';
 import { showToast } from './toast.js';
 import { setupNavbar } from './navbar.js';
 
+// Initialize navbar
 setupNavbar();
 
 import {
@@ -19,21 +20,21 @@ import {
   deleteObject
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
-// =====================
 // LOAD POSTS
-// =====================
+
 function loadAdminPosts() {
-
+// Get posts ordered by latest
   const q = query(collection(db, "posts"), orderBy("createAt", "desc"));
-
+// Listen for realtime updates
   onSnapshot(q, async (snapshot) => {
 
     const adminFeed = document.getElementById("admin-feed");
     const totalPosts = document.getElementById("total-posts");
-
+// Clear old posts
     adminFeed.innerHTML = "";
+// Update total posts count
     totalPosts.innerText = snapshot.size;
-
+// Loop through all posts
     for (const docSnap of snapshot.docs) {
 
       const post = docSnap.data();
@@ -42,16 +43,17 @@ function loadAdminPosts() {
       let username = "Unknown User";
 
       try {
+        // fetch user data
         if (post.userId) {
           const userSnap = await getDoc(doc(db, "Customers", post.userId));
           const userData = userSnap.data();
-          username = userData?.username || "Unknown User";
+          username = userData?.username || "Unknown User"; // get username from firebase
         }
       } catch (err) {
         console.warn("User fetch failed", err);
       }
 
-      // 🔥 FIX: clickable location
+      // FIX: clickable location
       const locationHTML = post.locationName
         ? `
           <div class="post-location">
@@ -61,7 +63,7 @@ function loadAdminPosts() {
           </div>
         `
         : "";
-
+// Post Card HTML
       const card = `
         <div class="post-card">
 
@@ -94,18 +96,18 @@ function loadAdminPosts() {
   });
 }
 
-// =====================
+
 // DELETE POST
-// =====================
+
 async function deletePost(postId) {
 
   if (!confirm("Delete this post?")) return;
 
   try {
-    const postSnap = await getDoc(doc(db, "posts", postId));
-    const imageURL = postSnap.exists() ? postSnap.data().imageURL : null;
+    const postSnap = await getDoc(doc(db, "posts", postId)); // get post document
+    const imageURL = postSnap.exists() ? postSnap.data().imageURL : null; // get imageURL
 
-    await deleteDoc(doc(db, "posts", postId));
+    await deleteDoc(doc(db, "posts", postId)); // delete firestore posts
 
     if (imageURL && !imageURL.includes("postalice.png")) {
       try {
@@ -115,7 +117,7 @@ async function deletePost(postId) {
       }
     }
 
-    showToast("Post deleted 🗑", "success");
+    showToast("Post deleted 🗑", "success"); // success message
 
   } catch (err) {
     console.error(err);
