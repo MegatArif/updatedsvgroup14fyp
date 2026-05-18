@@ -359,58 +359,555 @@ body{
 }
 
 /* modal (detail page) */
+
+/* Overlay */
 .modal {
     display: none;
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.75);
+    inset: 0;
+    background: rgba(15, 10, 5, 0.78);
+    backdrop-filter: blur(4px);
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
+    padding: 1rem;
 }
 
+/* Outer shell */
 .modal-content {
-    background: white;
-    max-width: 600px;
-    width: 90%;
+    background: transparent;
+    width: min(1040px, 96vw);
+    max-height: 90vh;
     border-radius: 2rem;
-    padding: 1.5rem;
     position: relative;
-    max-height: 85vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.55);
+ 
+    /* entrance animation */
+    animation: modalSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Close button (top-right corner of whole modal) ── */
 .close-modal {
     position: absolute;
     top: 1rem;
-    right: 1.5rem;
-    font-size: 1.8rem;
+    right: 1.2rem;
+    z-index: 10;
+    font-size: 1.6rem;
+    line-height: 1;
     cursor: pointer;
+    color: rgba(255,255,255,0.75);
+    background: rgba(0,0,0,0.25);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+.close-modal:hover { background: rgba(0,0,0,0.5); color: #fff; }
+
+/* ============================================================
+   SPLIT MODAL — append this block to the end of gallery.css
+   Left 50% = cafe details  |  Right 50% = distance / maps
+   ============================================================ */
+
+/* ── Overlay ── */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 10, 5, 0.78);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
 }
 
-.detail-img {
+/* ── Outer shell — wide enough for two panels ── */
+.modal-content {
+    background: transparent;
+    width: min(1040px, 96vw);
+    /* Fixed height so both panels know exactly how tall they are,
+       which lets overflow-y:auto work on the left child */
+    height: min(680px, 90vh);
+    border-radius: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.55);
+
+    /* entrance animation */
+    animation: modalSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Close button (top-right corner of whole modal) ── */
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1.2rem;
+    z-index: 10;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    color: rgba(255,255,255,0.75);
+    background: rgba(0,0,0,0.25);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+.close-modal:hover { background: rgba(0,0,0,0.5); color: #fff; }
+
+/* ══════════════════════════════════════════════════════════
+   LEFT PANEL — cafe details (scrollable)
+   ══════════════════════════════════════════════════════════ */
+.modal-left {
+    flex: 0 0 50%;
+    /* min-height:0 lets the flex child shrink below its content
+       so overflow-y:auto actually scrolls instead of expanding */
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 2rem 0 0 2rem;
+    background: #fffaf6;
+    /* subtle warm scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #e0c4a8 transparent;
+}
+.modal-left::-webkit-scrollbar { width: 5px; }
+.modal-left::-webkit-scrollbar-track { background: transparent; }
+.modal-left::-webkit-scrollbar-thumb { background: #e0c4a8; border-radius: 99px; }
+
+/* Hero image at the top of left panel */
+.modal-hero {
     width: 100%;
-    height: 220px;
+    height: 210px;
     background-size: cover;
-    border-radius: 1.2rem;
-    margin-bottom: 1rem;
+    background-position: center;
+    flex-shrink: 0;
+    border-radius: 2rem 0 0 0;
+    position: relative;
 }
 
-.detail-title {
-    font-size: 1.8rem;
+/* Subtle gradient scrim so text over image is readable */
+.modal-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.35) 100%);
+    border-radius: 2rem 0 0 0;
+}
+
+.modal-left-body {
+    padding: 1.4rem 1.6rem 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    /* No flex:1 here — we want natural height so the parent can scroll */
+}
+
+.modal-cafe-name {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #2b1a0e;
+    line-height: 1.2;
+}
+
+.modal-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    color: #f4b942;
+}
+
+.modal-rating-row span {
+    color: #6a5242;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.modal-divider {
+    height: 1px;
+    background: #f0e0d0;
+    margin: 0.3rem 0;
+}
+
+.modal-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: #4a3728;
+    line-height: 1.5;
+}
+
+.modal-info-row i {
+    color: #c47b4a;
+    font-size: 0.95rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+}
+
+.modal-info-row strong {
+    color: #2b1a0e;
+    margin-right: 4px;
+}
+
+/* Facility pills */
+.modal-facilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.facility-pill {
+    background: #fdf0e6;
+    border: 1px solid #f0d5be;
+    color: #8b5630;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Bottom action buttons in left panel */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-reserve {
+    flex: 1;
+    min-width: 130px;
+    padding: 10px 18px;
+    background: #F7BF09;
+    color: #2b1a0e;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.85rem;
     font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: filter 0.2s, transform 0.15s;
+}
+.btn-reserve:hover { filter: brightness(1.08); transform: scale(1.02); }
+
+.btn-close-left {
+    padding: 10px 18px;
+    background: #f3e4d6;
+    color: #7a5540;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-close-left:hover { background: #e8d0bb; }
+
+
+/* ══════════════════════════════════════════════════════════
+   RIGHT PANEL — Google Maps / distance calculator
+   Map preview fills the top half.
+   Controls (input, result, buttons) are pinned at the bottom.
+   ══════════════════════════════════════════════════════════ */
+.modal-right {
+    flex: 0 0 50%;
+    background: #1c1410;
+    border-radius: 0 2rem 2rem 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Children: map-embed-wrap (flex:1, grows) then controls-footer (fixed) */
 }
 
-.rating-large {
-    font-size: 1.2rem;
-    margin: 0.5rem 0;
+/* Header strip */
+.map-panel-header {
+    padding: 1.1rem 1.4rem 0.9rem;
+    background: #231810;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
 }
 
-hr {
-    margin: 1rem 0;
-    border-color: #ede0d4;
+.map-panel-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f5e6d8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
+.map-panel-title i { color: #c47b4a; }
+
+.map-panel-dest {
+    font-size: 0.75rem;
+    color: #9e7d67;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Origin input row */
+.map-origin-row {
+    padding: 0.9rem 1.4rem;
+    background: #231810;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+}
+
+.map-origin-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #9e7d67;
+    margin-bottom: 6px;
+}
+
+.map-origin-input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.map-origin-input {
+    flex: 1;
+    background: #2e1f16;
+    border: 1.5px solid rgba(196,123,74,0.3);
+    border-radius: 50px;
+    padding: 9px 14px;
+    color: #f5e6d8;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.map-origin-input::placeholder { color: #6b4f3e; }
+.map-origin-input:focus { border-color: #c47b4a; }
+
+.btn-calc-distance {
+    background: #c47b4a;
+    border: none;
+    border-radius: 50px;
+    padding: 9px 16px;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-calc-distance:hover { background: #a55f36; transform: scale(1.03); }
+.btn-calc-distance:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Use my location button */
+.btn-use-location {
+    background: none;
+    border: 1.5px solid rgba(196,123,74,0.4);
+    border-radius: 50px;
+    padding: 6px 12px;
+    color: #c47b4a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 7px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s;
+}
+.btn-use-location:hover { background: rgba(196,123,74,0.08); }
+
+/* Distance result card */
+.distance-result {
+    margin: 0.9rem 1.4rem 0;
+    background: #2e1f16;
+    border-radius: 1rem;
+    padding: 1rem 1.2rem;
+    display: none;   /* shown via JS */
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid rgba(196,123,74,0.2);
+    flex-shrink: 0;
+}
+
+.distance-result.visible { display: flex; }
+
+.dist-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: #d4b49a;
+}
+
+.dist-row i {
+    color: #c47b4a;
+    width: 18px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.dist-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #f5e6d8;
+}
+
+.dist-label {
+    font-size: 0.72rem;
+    color: #9e7d67;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Error / loading state */
+.map-status {
+    margin: 0.6rem 1.4rem 0;
+    font-size: 0.78rem;
+    color: #c0765e;
+    min-height: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* Google Maps open buttons */
+.map-btn-row {
+    padding: 0.9rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-gmaps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 0;
+    border-radius: 50px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: filter 0.2s, transform 0.15s;
+}
+.btn-gmaps:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+.btn-gmaps-directions {
+    background: #4285f4;
+    color: #fff;
+}
+
+.btn-gmaps-place {
+    background: #2e1f16;
+    color: #c47b4a;
+    border: 1.5px solid rgba(196,123,74,0.35);
+}
+
+/* Embedded map preview (iframe) — GROWS to fill top of right panel */
+.map-embed-wrap {
+    flex: 1;          /* takes all remaining vertical space above the footer */
+    overflow: hidden;
+    position: relative;
+    min-height: 200px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.map-embed-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+.map-embed-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #6b4f3e;
+    font-size: 0.82rem;
+    text-align: center;
+    padding: 1rem;
+    background: #1c1410;
+}
+
+.map-embed-placeholder i {
+    font-size: 2.5rem;
+    color: #4a3020;
+}
+
+/* ── Controls footer — fixed height, sits below the map ── */
+.map-controls-footer {
+    flex-shrink: 0;
+    overflow-y: auto;
+    background: #1c1410;
+    scrollbar-width: thin;
+    scrollbar-color: #3a2518 transparent;
+}
+
+/* ── Responsive: stack panels vertically on mobile ── */
+@media (max-width: 720px) {
+    .modal-content {
+        flex-direction: column;
+        height: 92vh;
+        border-radius: 1.4rem;
+    }
+
+    .modal-left  {
+        flex: 0 0 auto;
+        max-height: 52vh;
+        border-radius: 1.4rem 1.4rem 0 0;
+    }
+    .modal-right {
+        flex: 1;
+        min-height: 0;
+        border-radius: 0 0 1.4rem 1.4rem;
+    }
+    .modal-hero  { height: 150px; border-radius: 1.4rem 1.4rem 0 0; }
+    .map-embed-wrap { min-height: 160px; }
+}
+
 
 .footer-note {
     text-align: center;
@@ -425,6 +922,8 @@ hr {
     .navbar { flex-direction: column; gap: 12px; }
 }
 i.fa, i.far, i.fas { margin-right: 4px; }
+
+
 
 
 

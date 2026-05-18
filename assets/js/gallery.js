@@ -2,173 +2,142 @@ import { db, storage } from './firebase-config.js';
 import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
-import { guardSession, sessionLogout } from './session.js';
 
 setupNavbar();
 let cafes = [];
 
-// Call guard function
-guardSession(['customer', 'admin']);
-
 // ---------- LOCAL FALLBACK DATA ----------
 const localCafes = [
     {
-        id: 1, name: "Bean & Bond", city: "skudai", address: "22, Jalan Hang Tuah, Skudai", description: "Smooth espresso, cozy work-friendly environment with fast WiFi and power outlets.",
-        openHour: "08:00", closeHour: "22:00", rating: 4.7, facilities: ["WiFi", "Power outlet"], image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=500&auto=format"
+        id: 1, name: "Bean & Bond", city: "skudai", address: "22, Jalan Hang Tuah, Skudai",
+        description: "Smooth espresso, cozy work-friendly environment with fast WiFi and power outlets.",
+        openHour: "08:00", closeHour: "22:00", rating: 4.7, facilities: ["WiFi", "Power outlet"],
+        image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=500&auto=format"
     },
     {
-        id: 2, name: "Kulai Artisan Coffee", city: "kulai", address: "No 5, Jalan Sendayan 1, Kulai", description: "Artisan brews, rustic interior and outdoor seating area.",
-        openHour: "09:30", closeHour: "21:00", rating: 4.3, facilities: ["WiFi", "Outdoor seating"], image: "https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=500&auto=format"
+        id: 2, name: "Kulai Artisan Coffee", city: "kulai", address: "No 5, Jalan Sendayan 1, Kulai",
+        description: "Artisan brews, rustic interior and outdoor seating area.",
+        openHour: "09:30", closeHour: "21:00", rating: 4.3, facilities: ["WiFi", "Outdoor seating"],
+        image: "https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=500&auto=format"
     },
     {
-        id: 3, name: "Masai Roast Lab", city: "masai", address: "88, Taman Megah Ria, Masai", description: "Specialty roasting, modern minimalist style and meeting friendly.",
-        openHour: "10:00", closeHour: "20:30", rating: 4.0, facilities:["WiFi", "Meeting equipment"], image: "https://images.unsplash.com/photo-1580933073521-dc49ac0d4e6a?w=500&auto=format"
+        id: 3, name: "Masai Roast Lab", city: "masai", address: "88, Taman Megah Ria, Masai",
+        description: "Specialty roasting, modern minimalist style and meeting friendly.",
+        openHour: "10:00", closeHour: "20:30", rating: 4.0, facilities: ["WiFi", "Meeting equipment"],
+        image: "https://images.unsplash.com/photo-1580933073521-dc49ac0d4e6a?w=500&auto=format"
     },
     {
-        id: 4, name: "Skudai Hideout", city: "skudai", address: "15, Jalan Emas, Taman Skudai Baru", description: "Secret garden cafe, perfect for study & chill, full facilities.",
-        openHour: "07:30", closeHour: "23:00", rating: 4.8, facilities: ["WiFi", "Power outlet", "Outdoor seating", "Meeting equipment"], image: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=500&auto=format"
+        id: 4, name: "Skudai Hideout", city: "skudai", address: "15, Jalan Emas, Taman Skudai Baru",
+        description: "Secret garden cafe, perfect for study & chill, full facilities.",
+        openHour: "07:30", closeHour: "23:00", rating: 4.8,
+        facilities: ["WiFi", "Power outlet", "Outdoor seating", "Meeting equipment"],
+        image: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=500&auto=format"
     },
     {
-        id: 5, name: "Kopi Kubu Kulai", city: "kulai", address: "12, Jalan Kilang, Kulai Besar", description: "Traditional kopi with modern twist, outdoor space & charging points.",
-        openHour: "08:00", closeHour: "22:30", rating: 4.2, facilities: ["WiFi", "Power outlet", "Outdoor seating"], image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&auto=format"
+        id: 5, name: "Kopi Kubu Kulai", city: "kulai", address: "12, Jalan Kilang, Kulai Besar",
+        description: "Traditional kopi with modern twist, outdoor space & charging points.",
+        openHour: "08:00", closeHour: "22:30", rating: 4.2,
+        facilities: ["WiFi", "Power outlet", "Outdoor seating"],
+        image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&auto=format"
     },
     {
-        id: 6, name: "Tide Coffee Masai", city: "masai", address: "34, Pangsapuri Seri Alam, Masai", description: "Beach vibe cafe, open until midnight, great for late night coffee.",
-        openHour: "12:00", closeHour: "00:00", rating: 4.5, facilities:["WiFi", "Power outlet"], image: "https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=500&auto=format"
+        id: 6, name: "Tide Coffee Masai", city: "masai", address: "34, Pangsapuri Seri Alam, Masai",
+        description: "Beach vibe cafe, open until midnight, great for late night coffee.",
+        openHour: "12:00", closeHour: "00:00", rating: 4.5, facilities: ["WiFi", "Power outlet"],
+        image: "https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=500&auto=format"
     },
     {
-        id: 7, name: "Work & Wonder Skudai", city: "skudai", address: "UTM area, 48, Jalan Kebudayaan", description: "Co-working cafe, high speed internet & meeting rooms.",
-        openHour: "09:00", closeHour: "20:00", rating: 4.6, facilities: ["WiFi", "Power outlet", "Meeting equipment"], image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format"
+        id: 7, name: "Work & Wonder Skudai", city: "skudai", address: "UTM area, 48, Jalan Kebudayaan",
+        description: "Co-working cafe, high speed internet & meeting rooms.",
+        openHour: "09:00", closeHour: "20:00", rating: 4.6,
+        facilities: ["WiFi", "Power outlet", "Meeting equipment"],
+        image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format"
     }
 ];
 
-// ---------- HELPER: GET IMAGE URL (from HTTPS, gs://, or path) ----------
+// ---------- IMAGE URL HELPER ----------
 async function getCafeImageUrl(imageInput) {
     if (!imageInput) return '';
-    if (typeof imageInput !== 'string') {
-        console.warn('getCafeImageUrl received non-string:', imageInput);
-        return '';
-    }
-    if (imageInput.startsWith('http://') || imageInput.startsWith('https://')) {
-        return imageInput;
-    }
-    let storagePath = imageInput;
+    if (typeof imageInput !== 'string') return '';
+    if (imageInput.startsWith('http://') || imageInput.startsWith('https://')) return imageInput;
     try {
-        // Prevent folder paths
-        if (storagePath.endsWith('/')) {
-            console.error('Invalid path: folder, not a file');
-            return '';
-        }
-        const imageRef = ref(storage, storagePath);
-        const url = await getDownloadURL(imageRef);
-        return url;
-    } catch (error) {
-        if (error.code === 'storage/object-not-found') {
-            console.error(`File not found: ${storagePath}`);
-        } else {
-            console.error('Error getting download URL:', error);
-        }
+        if (imageInput.endsWith('/')) return '';
+        return await getDownloadURL(ref(storage, imageInput));
+    } catch (e) {
+        console.error('Image URL error:', e);
         return '';
     }
 }
 
-// ---------- LOAD DATA FROM FIRESTORE ----------
+// ---------- LOAD FROM FIRESTORE ----------
 async function initializeData() {
     try {
-        console.log("Fetching data from Firestore...");
-        const querySnapshot = await getDocs(collection(db, "cafes"));
-        if (querySnapshot.empty) throw new Error("Collection in Firestore is empty.");
-        const firebaseData = [];
-        for (const doc of querySnapshot.docs) {
-            const cafe = { id: doc.id, ...doc.data() };
-            // Resolve image URL once and store it
+        const snapshot = await getDocs(collection(db, "cafes"));
+        if (snapshot.empty) throw new Error("Empty collection.");
+        const data = [];
+        for (const d of snapshot.docs) {
+            const cafe = { id: d.id, ...d.data() };
             cafe.image = await getCafeImageUrl(cafe.image);
-            firebaseData.push(cafe);
+            data.push(cafe);
         }
-        cafes = firebaseData;
-        console.log("✅ Successfully loaded and resolved image URLs.");
-    } catch (error) {
-        console.error("❌ Failed to load from Firebase. Error:", error);
-        // Use local fallback, also resolve their images
-        for (const cafe of localCafes) {
-            cafe.image = await getCafeImageUrl(cafe.image);
-        }
+        cafes = data;
+    } catch (err) {
+        console.error("Firebase failed, using local data:", err);
+        for (const c of localCafes) c.image = await getCafeImageUrl(c.image);
         cafes = localCafes;
     } finally {
         updateCafeList();
     }
 }
 
-// ---------- FILTER LOGIC ----------
-function filterCafes(location, searchName, timeSlot, selectedFacilities, minRatingValue) {
-    let filtered = [...cafes];
-    if (location !== 'all') filtered = filtered.filter(c => c.city === location);
-    if (searchName.trim() !== "") {
-        const term = searchName.trim().toLowerCase();
-        filtered = filtered.filter(c => c.name.toLowerCase().includes(term));
-    }
-    if (timeSlot) filtered = filtered.filter(c => isOpenDuringSlot(c, timeSlot));
-    if (selectedFacilities.length > 0) {
-        filtered = filtered.filter(cafe => selectedFacilities.every(facility => cafe.facilities.includes(facility)));
-    }
-    if (minRatingValue > 0) filtered = filtered.filter(cafe => cafe.rating >= minRatingValue);
-    return filtered;
+// ---------- FILTER ----------
+function filterCafes(location, searchName, timeSlot, facilities, minRating) {
+    let f = [...cafes];
+    if (location !== 'all') f = f.filter(c => c.city === location);
+    if (searchName.trim()) f = f.filter(c => c.name.toLowerCase().includes(searchName.trim().toLowerCase()));
+    if (timeSlot) f = f.filter(c => isOpenDuringSlot(c, timeSlot));
+    if (facilities.length) f = f.filter(c => facilities.every(x => c.facilities.includes(x)));
+    if (minRating > 0) f = f.filter(c => c.rating >= minRating);
+    return f;
 }
 
-// ---------- TIME CHECK ----------
-function isOpenDuringSlot(cafe, timeSlotStr) {
-    if (!timeSlotStr) return true;
-    const [startStr] = timeSlotStr.split('~');
-    const slotStart = startStr.trim();
-    const toMinutes = (t) => {
-        let [h, m] = t.split(':');
-        return parseInt(h) * 60 + parseInt(m);
-    };
-    const slotStartMin = toMinutes(slotStart);
-    const openMin = toMinutes(cafe.openHour);
-    const closeMin = toMinutes(cafe.closeHour);
-    return slotStartMin >= openMin && slotStartMin <= closeMin;
+function isOpenDuringSlot(cafe, ts) {
+    const [s] = ts.split('~');
+    const toMin = t => { const [h, m] = t.split(':'); return +h * 60 + +m; };
+    const slot = toMin(s.trim());
+    return slot >= toMin(cafe.openHour) && slot <= toMin(cafe.closeHour);
 }
 
-// ---------- STARS RENDER ----------
 function renderStars(rating) {
-    let fullStars = Math.floor(rating);
-    let half = rating % 1 >= 0.5;
-    let starsHtml = '';
-    for (let i = 0; i < fullStars; i++) starsHtml += '<i class="fas fa-star"></i>';
-    if (half) starsHtml += '<i class="fas fa-star-half-alt"></i>';
-    let empty = 5 - Math.ceil(rating);
-    for (let i = 0; i < empty; i++) starsHtml += '<i class="far fa-star"></i>';
-    return starsHtml + ` <span style="font-size:0.7rem;">(${rating})</span>`;
+    let html = '';
+    const full = Math.floor(rating);
+    for (let i = 0; i < full; i++) html += '<i class="fas fa-star"></i>';
+    if (rating % 1 >= 0.5) html += '<i class="fas fa-star-half-alt"></i>';
+    for (let i = 0; i < 5 - Math.ceil(rating); i++) html += '<i class="far fa-star"></i>';
+    return html + ` <span style="font-size:0.7rem;">(${rating})</span>`;
 }
 
-// ---------- UPDATE CAFE LIST (TRIGGERED BY FILTERS) ----------
 function updateCafeList() {
-    const location = document.getElementById('locationFilter').value;
-    const nameQuery = document.getElementById('nameSearch').value;
-    const timeSlot = document.getElementById('timeSlot').value;
-    const selectedFacilities = Array.from(document.querySelectorAll('#facilitiesFilterGroup input:checked')).map(cb => cb.value);
-    let minRating = parseFloat(document.getElementById('ratingFilterSelect').value);
-    if (isNaN(minRating)) minRating = 0;
-    const filtered = filterCafes(location, nameQuery, timeSlot, selectedFacilities, minRating);
-    renderCafeCards(filtered);
+    const location    = document.getElementById('locationFilter').value;
+    const nameQuery   = document.getElementById('nameSearch').value;
+    const timeSlot    = document.getElementById('timeSlot').value;
+    const facilities  = Array.from(document.querySelectorAll('#facilitiesFilterGroup input:checked')).map(cb => cb.value);
+    let minRating     = parseFloat(document.getElementById('ratingFilterSelect').value) || 0;
+    renderCafeCards(filterCafes(location, nameQuery, timeSlot, facilities, minRating));
 }
 
-// ---------- RENDER CARDS ----------
-async function renderCafeCards(filteredCafes) {
+async function renderCafeCards(filtered) {
     const container = document.getElementById('cafeGridContainer');
-    if (!filteredCafes.length) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding: 3rem;">🤷‍♀️ No cafes match your filters. Try different time or location!</div>`;
+    if (!filtered.length) {
+        container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;">🤷‍♀️ No cafes match your filters. Try different time or location!</div>`;
         return;
     }
-
-    // Build cards with placeholder background
-    container.innerHTML = filteredCafes.map(cafe => `
+    container.innerHTML = filtered.map(cafe => `
         <div class="cafe-card" data-id="${cafe.id}">
-            <div class="card-img" style="background-image: url(''); background-color: #f0f0f0;"></div>
+            <div class="card-img" style="background-color:#f0f0f0;"></div>
             <div class="card-info">
                 <div class="cafe-name">${cafe.name}</div>
-                <div class="cafe-location"><i class="fas fa-location-dot"></i> ${cafe.city.toUpperCase()} · ${cafe.address.substring(0, 30)}</div>
+                <div class="cafe-location"><i class="fas fa-location-dot"></i> ${cafe.city.toUpperCase()} · ${cafe.address.substring(0,30)}</div>
                 <div class="stars">${renderStars(cafe.rating)}</div>
                 <div><span class="open-badge"><i class="far fa-clock"></i> ${cafe.openHour} - ${cafe.closeHour}</span></div>
                 <div class="cafe-desc">${cafe.description}</div>
@@ -176,59 +145,394 @@ async function renderCafeCards(filteredCafes) {
         </div>
     `).join('');
 
-    // Set actual images (already resolved in initializeData, but just in case)
-    for (const cafe of filteredCafes) {
-        let imageUrl = cafe.image;
-        if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = await getCafeImageUrl(cafe.image);
-        }
+    for (const cafe of filtered) {
+        let url = cafe.image;
+        if (url && !url.startsWith('http')) url = await getCafeImageUrl(cafe.image);
         const card = document.querySelector(`.cafe-card[data-id="${cafe.id}"]`);
-        if (card && imageUrl) {
-            const imgDiv = card.querySelector('.card-img');
-            imgDiv.style.backgroundImage = `url('${imageUrl}')`;
-            imgDiv.style.backgroundColor = 'transparent';
+        if (card && url) {
+            const img = card.querySelector('.card-img');
+            img.style.backgroundImage = `url('${url}')`;
+            img.style.backgroundSize  = 'cover';
+            img.style.backgroundColor = 'transparent';
         }
     }
 
-    // Attach click event for modal
     document.querySelectorAll('.cafe-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            const id = parseInt(card.getAttribute('data-id'));
-            const cafe = cafes.find(c => c.id === id);
+        card.addEventListener('click', () => {
+            const cafe = cafes.find(c => String(c.id) === card.getAttribute('data-id'));
             if (cafe) showDetailModal(cafe);
         });
     });
 }
 
-// ---------- SHOW DETAIL MODAL ----------
+// =================================================================
+//  GOOGLE MAPS URL BUILDERS
+// =================================================================
+
+/**
+ * Place-search URL — opens the cafe location on Google Maps.
+ * @returns {string}
+ */
+function buildPlaceUrl(address, city) {
+    const q = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
+    return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
+/**
+ * Directions URL — from a given origin to the cafe.
+ * When origin is empty, Google Maps will ask the user for it.
+ * @returns {string}
+ */
+function buildDirectionsUrl(address, city, origin = '') {
+    const dest = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
+    const from = origin.trim() ? encodeURIComponent(origin.trim()) : '';
+    return `https://www.google.com/maps/dir/?api=1`
+         + (from ? `&origin=${from}` : '')
+         + `&destination=${dest}&travelmode=driving`;
+}
+
+/**
+ * Embed URL (no API key required — uses maps.google.com iframe embed).
+ */
+function buildEmbedUrl(address, city) {
+    const q = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
+    return `https://maps.google.com/maps?q=${q}&output=embed&z=16`;
+}
+
+/**
+ * Route embed URL — shows driving route in the iframe.
+ */
+function buildRouteEmbedUrl(originText, destAddress) {
+    return `https://maps.google.com/maps?saddr=${encodeURIComponent(originText)}&daddr=${encodeURIComponent(destAddress)}&output=embed`;
+}
+
+// =================================================================
+//  DISTANCE CALCULATOR
+//  Uses Nominatim (OSM) for geocoding + OSRM for road routing.
+//  Both are free and require no API key.
+// =================================================================
+
+/** Straight-line fallback (Haversine) in km */
+function haversineKm(a, b) {
+    const R = 6371, toRad = x => x * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+    const h = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(h));
+}
+
+/** Geocode address text → {lat, lng} via Nominatim */
+async function geocode(address) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+    const res  = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const data = await res.json();
+    if (!data.length) throw new Error(`"${address}" not found`);
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+}
+
+/** Road distance + duration via OSRM (free, no key) */
+async function getRouteInfo(origin, dest) {
+    try {
+        const url  = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=false`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        if (data.code === 'Ok' && data.routes.length) {
+            const r = data.routes[0];
+            return {
+                km:     (r.distance / 1000).toFixed(1),
+                mins:   Math.round(r.duration / 60),
+                source: 'road'
+            };
+        }
+    } catch (e) { console.warn('OSRM failed, using Haversine:', e); }
+    // Straight-line fallback
+    const km   = haversineKm(origin, dest).toFixed(1);
+    const mins = Math.round(km / 40 * 60);
+    return { km, mins, source: 'straight-line' };
+}
+
+// =================================================================
+//  SPLIT DETAIL MODAL
+// =================================================================
+
 async function showDetailModal(cafe) {
-    const modal = document.getElementById('detailModal');
+    const modal      = document.getElementById('detailModal');
     const contentDiv = document.getElementById('modalDynamicContent');
-    
-    // IMPORTANT: pass cafe.image (string), not the whole cafe
-    const imageUrl = await getCafeImageUrl(cafe.image);
+
+    const imageUrl    = await getCafeImageUrl(cafe.image);
+    const destAddress = `${cafe.address}, ${cafe.city}, Johor, Malaysia`;
+    const placeUrl    = buildPlaceUrl(cafe.address, cafe.city);
+    const dirUrl      = buildDirectionsUrl(cafe.address, cafe.city);
+    const embedUrl    = buildEmbedUrl(cafe.address, cafe.city);
+    const cityTitle   = cafe.city.charAt(0).toUpperCase() + cafe.city.slice(1);
+
+    const facilityIcons = {
+        'WiFi':              'fa-wifi',
+        'Power outlet':      'fa-plug',
+        'Outdoor seating':   'fa-umbrella-beach',
+        'Meeting equipment': 'fa-chalkboard-user',
+    };
+    const facilitiesHtml = (cafe.facilities || []).map(f =>
+        `<span class="facility-pill"><i class="fas ${facilityIcons[f] || 'fa-check'}"></i> ${f}</span>`
+    ).join('');
+
     contentDiv.innerHTML = `
-        <div class="detail-img" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center; height: 200px; border-radius: 12px 12px 0 0;"></div>
-        <div class="detail-title">${cafe.name}</div>
-        <div class="rating-large">${renderStars(cafe.rating)}</div>
-        <div><i class="fas fa-clock"></i> <strong>Opening Hours:</strong> ${cafe.openHour} - ${cafe.closeHour}</div>
-        <div><i class="fas fa-map-pin"></i> <strong>Location:</strong> ${cafe.address}, ${cafe.city}</div>
-        <hr>
-        <div><i class="fas fa-align-left"></i> <strong>Description:</strong></div>
-        <p style="margin-top:8px;">${cafe.description}</p>
-        <div style="margin-top:12px;"><i class="fas fa-microchip"></i> <strong>Facilities:</strong> ${cafe.facilities.join(', ')}</div>
-        <div style="margin-top:8px;"><i class="fas fa-star-of-life"></i> <strong>Review Star Rating:</strong> ${cafe.rating} / 5</div>
-        <hr>
-        <button id="closeModalBtn" style="background:#c47b4a; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer; margin-top:10px;"><i class="fas fa-times"></i> Close</button>
-        <button id="closeModalBtn" style="background:#F7BF09; border:node; padding:8px 16px; border-radius:30px; color:white; cursor:pointer; margin-top:10px;"><i class="fas fa-calendar-check"></i> Make a reservation</button>`;
+
+      <!-- ══════ LEFT — Cafe info ══════ -->
+      <div class="modal-left">
+
+        <div class="modal-hero"
+             style="background-image:url('${imageUrl}');"
+             role="img" aria-label="${cafe.name}"></div>
+
+        <div class="modal-left-body">
+
+          <div class="modal-cafe-name">${cafe.name}</div>
+
+          <div class="modal-rating-row">
+            ${renderStars(cafe.rating)}
+            <span>${cafe.rating} / 5</span>
+          </div>
+
+          <div class="modal-divider"></div>
+
+          <div class="modal-info-row">
+            <i class="fas fa-clock"></i>
+            <div><strong>Hours:</strong> ${cafe.openHour} – ${cafe.closeHour}</div>
+          </div>
+
+          <div class="modal-info-row">
+            <i class="fas fa-map-pin"></i>
+            <div><strong>Address:</strong> ${cafe.address}, ${cityTitle}, Johor</div>
+          </div>
+
+          <div class="modal-info-row">
+            <i class="fas fa-align-left"></i>
+            <div>${cafe.description}</div>
+          </div>
+
+          <div class="modal-info-row" style="flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <i class="fas fa-microchip" style="color:#c47b4a;width:16px;text-align:center;"></i>
+              <strong style="color:#2b1a0e;font-size:.88rem;">Facilities</strong>
+            </div>
+            <div class="modal-facilities">${facilitiesHtml || '<span style="color:#9e8070;font-size:.8rem;">None listed</span>'}</div>
+          </div>
+
+          <div class="modal-divider"></div>
+
+          <div class="modal-actions">
+            <button class="btn-reserve">
+              <i class="fas fa-calendar-check"></i> Make a Reservation
+            </button>
+            <button class="btn-close-left" id="modalCloseBtn">
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
+
+        </div>
+      </div><!-- /modal-left -->
+
+      <!-- ══════ RIGHT — Distance / Maps ══════ -->
+      <div class="modal-right">
+
+        <!-- ① MAP EMBED — grows to fill the top of the panel -->
+        <div class="map-embed-wrap">
+          <div class="map-embed-placeholder" id="mapPlaceholder">
+            <i class="fas fa-map"></i>
+            <span>Map preview loading…<br>Enter your location below for route directions.</span>
+          </div>
+          <iframe id="mapIframe"
+                  src="${embedUrl}"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                  title="Map for ${cafe.name}"
+                  style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>
+        </div>
+
+        <!-- ② CONTROLS FOOTER — pinned below the map -->
+        <div class="map-controls-footer">
+
+          <!-- Header strip -->
+          <div class="map-panel-header">
+            <div class="map-panel-title">
+              <i class="fas fa-map-location-dot"></i> Get Directions
+            </div>
+            <div class="map-panel-dest">
+              <i class="fas fa-flag-checkered" style="margin-right:5px;"></i>${destAddress}
+            </div>
+          </div>
+
+          <!-- Origin input -->
+          <div class="map-origin-row">
+            <div class="map-origin-label">
+              <i class="fas fa-location-arrow"></i> Your starting point
+            </div>
+            <div class="map-origin-input-wrap">
+              <input id="originInput" type="text" class="map-origin-input"
+                     placeholder="e.g. UTM Skudai, Midvalley KL…" />
+              <button class="btn-calc-distance" id="calcBtn">
+                <i class="fas fa-route"></i> Go
+              </button>
+            </div>
+            <button class="btn-use-location" id="useLocationBtn">
+              <i class="fas fa-crosshairs"></i> Use my current location
+            </button>
+          </div>
+
+          <!-- Status message -->
+          <div class="map-status" id="mapStatus"></div>
+
+          <!-- Distance result card -->
+          <div class="distance-result" id="distanceResult">
+            <div class="dist-row">
+              <i class="fas fa-road"></i>
+              <div>
+                <div class="dist-value" id="distValue">—</div>
+                <div class="dist-label">Distance</div>
+              </div>
+            </div>
+            <div class="dist-row">
+              <i class="fas fa-car"></i>
+              <div>
+                <div class="dist-value" id="timeValue">—</div>
+                <div class="dist-label">Est. driving time</div>
+              </div>
+            </div>
+            <div id="distSourceRow" style="font-size:0.72rem;color:#6b4f3e;margin-top:2px;padding-left:2px;"></div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="map-btn-row">
+            <a id="btnDirections" href="${dirUrl}" target="_blank" rel="noopener noreferrer"
+               class="btn-gmaps btn-gmaps-directions">
+              <i class="fab fa-google"></i> Open Google Maps — Directions
+            </a>
+            <a id="btnPlace" href="${placeUrl}" target="_blank" rel="noopener noreferrer"
+               class="btn-gmaps btn-gmaps-place">
+              <i class="fas fa-map-marker-alt"></i> View Location on Map
+            </a>
+          </div>
+
+        </div><!-- /map-controls-footer -->
+
+      </div><!-- /modal-right -->
+    `;
 
     modal.style.display = 'flex';
-    const closeSpan = modal.querySelector('.close-modal');
-    const closeBtn = contentDiv.querySelector('#closeModalBtn');
-    const closeModal = () => modal.style.display = 'none';
-    closeSpan.onclick = closeModal;
-    if (closeBtn) closeBtn.onclick = closeModal;
-    window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+    // ── Close handlers ──
+    const closeModal = () => { modal.style.display = 'none'; };
+    modal.querySelector('.close-modal').onclick = closeModal;
+    document.getElementById('modalCloseBtn').onclick = closeModal;
+    window.onclick = e => { if (e.target === modal) closeModal(); };
+
+    // ── Hide embed placeholder when iframe loads ──
+    const iframe      = document.getElementById('mapIframe');
+    const placeholder = document.getElementById('mapPlaceholder');
+    iframe.onload = () => { if (placeholder) placeholder.style.display = 'none'; };
+
+    // ── Cache frequently-used DOM refs ──
+    const originInput   = document.getElementById('originInput');
+    const calcBtn       = document.getElementById('calcBtn');
+    const mapStatus     = document.getElementById('mapStatus');
+    const distResult    = document.getElementById('distanceResult');
+    const distValue     = document.getElementById('distValue');
+    const timeValue     = document.getElementById('timeValue');
+    const distSourceRow = document.getElementById('distSourceRow');
+    const btnDirections = document.getElementById('btnDirections');
+
+    // ── Shared result renderer ──
+    function showRouteResult(km, mins, source, originText) {
+        distValue.textContent = `${km} km`;
+        timeValue.textContent  = mins >= 60
+            ? `${Math.floor(mins/60)}h ${mins % 60}m`
+            : `${mins} min`;
+        distSourceRow.innerHTML = source === 'road'
+            ? '<i class="fas fa-check-circle" style="color:#4caf50;margin-right:4px;"></i> Road distance (OSRM)'
+            : '<i class="fas fa-info-circle" style="color:#f4b942;margin-right:4px;"></i> Straight-line estimate';
+        distResult.classList.add('visible');
+        mapStatus.textContent = '';
+
+        // Update directions URL with actual origin
+        btnDirections.href = buildDirectionsUrl(cafe.address, cafe.city, originText);
+        // Swap iframe to route view
+        iframe.src = buildRouteEmbedUrl(originText, destAddress);
+        if (placeholder) placeholder.style.display = 'none';
+    }
+
+    // ── Calculate from a text origin ──
+    async function calcFromText(originText) {
+        if (!originText.trim()) {
+            mapStatus.textContent = '⚠️ Please enter a starting location.';
+            return;
+        }
+        mapStatus.textContent = '🔍 Locating addresses…';
+        calcBtn.disabled = true;
+        distResult.classList.remove('visible');
+        try {
+            const [originCoords, destCoords] = await Promise.all([
+                geocode(originText),
+                geocode(destAddress)
+            ]);
+            mapStatus.textContent = '🛣️ Calculating route…';
+            const { km, mins, source } = await getRouteInfo(originCoords, destCoords);
+            showRouteResult(km, mins, source, originText);
+        } catch (err) {
+            console.error(err);
+            mapStatus.textContent = '❌ Could not find that location. Try a more specific address.';
+            distResult.classList.remove('visible');
+        } finally {
+            calcBtn.disabled = false;
+        }
+    }
+
+    calcBtn.addEventListener('click', () => calcFromText(originInput.value));
+    originInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcFromText(originInput.value); });
+
+    // ── Use browser geolocation ──
+    document.getElementById('useLocationBtn').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            mapStatus.textContent = '❌ Geolocation not supported by your browser.';
+            return;
+        }
+        mapStatus.textContent = '📡 Detecting your location…';
+        calcBtn.disabled = true;
+        distResult.classList.remove('visible');
+
+        navigator.geolocation.getCurrentPosition(
+            async ({ coords: { latitude, longitude } }) => {
+                // Reverse-geocode to fill input
+                try {
+                    const rev  = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { headers: { 'Accept-Language': 'en' } });
+                    const data = await rev.json();
+                    originInput.value = data.display_name || `${latitude}, ${longitude}`;
+                } catch {
+                    originInput.value = `${latitude}, ${longitude}`;
+                }
+
+                mapStatus.textContent = '🛣️ Calculating route…';
+                try {
+                    const destCoords = await geocode(destAddress);
+                    const { km, mins, source } = await getRouteInfo({ lat: latitude, lng: longitude }, destCoords);
+                    showRouteResult(km, mins, source, `${latitude},${longitude}`);
+                    // Also update directions button with lat/lng (more precise)
+                    btnDirections.href = buildDirectionsUrl(cafe.address, cafe.city, `${latitude},${longitude}`);
+                } catch (err) {
+                    console.error(err);
+                    mapStatus.textContent = '❌ Route calculation failed.';
+                } finally {
+                    calcBtn.disabled = false;
+                }
+            },
+            err => {
+                mapStatus.textContent = '❌ Location access denied or timed out.';
+                calcBtn.disabled = false;
+                console.warn('Geolocation error:', err);
+            },
+            { timeout: 10000 }
+        );
+    });
 }
 
 // ---------- CAROUSEL ----------
@@ -240,31 +544,25 @@ function nextSlide() {
     currentSlide = (currentSlide + 1) % slides.length;
     slides[currentSlide].classList.add('active');
 }
-
 if (slides.length) setInterval(nextSlide, 4500);
 
-// ---------- SET DEFAULT DATE ----------
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('datePicker').value = today;
+// ---------- DEFAULT DATE ----------
+document.getElementById('datePicker').value = new Date().toISOString().split('T')[0];
 
 // ---------- EVENT LISTENERS ----------
 document.getElementById('searchBtn').addEventListener('click', updateCafeList);
 document.getElementById('clearFiltersBtn').addEventListener('click', () => {
-    document.getElementById('locationFilter').value = 'all';
-    document.getElementById('nameSearch').value = '';
-    document.getElementById('timeSlot').value = '';
+    document.getElementById('locationFilter').value    = 'all';
+    document.getElementById('nameSearch').value        = '';
+    document.getElementById('timeSlot').value          = '';
     document.getElementById('ratingFilterSelect').value = '0';
     document.querySelectorAll('#facilitiesFilterGroup input').forEach(cb => cb.checked = false);
     updateCafeList();
 });
+document.querySelectorAll('#facilitiesFilterGroup input, #ratingFilterSelect')
+    .forEach(el => el.addEventListener('change', updateCafeList));
+document.getElementById('locationFilter').addEventListener('change', updateCafeList);
+document.getElementById('nameSearch').addEventListener('input', updateCafeList);
+document.getElementById('timeSlot').addEventListener('change', updateCafeList);
 
-document.querySelectorAll('#facilitiesFilterGroup input, #ratingFilterSelect').forEach(el => {
-    el.addEventListener('change', () => updateCafeList());
-});
-
-document.getElementById('locationFilter').addEventListener('change', () => updateCafeList());
-document.getElementById('nameSearch').addEventListener('input', () => updateCafeList());
-document.getElementById('timeSlot').addEventListener('change', () => updateCafeList());
-
-// Start
 initializeData();
