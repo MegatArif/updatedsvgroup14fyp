@@ -8,7 +8,7 @@ import { guardSession, sessionLogout } from './session.js';
 setupNavbar();
 let cafes = [];
 
-// Call guard function
+// ---------- CALL GUARD FUNCTION ----------
 guardSession(['customer', 'admin']);
 
 // ---------- LOCAL FALLBACK DATA ----------
@@ -170,23 +170,19 @@ async function renderCafeCards(filtered) {
     });
 }
 
-// =================================================================
-//  GOOGLE MAPS URL BUILDERS
-// =================================================================
+// ---------- GOOGLE MAPS URL BUILDERS ----------
 
 /**
  * Place-search URL — opens the cafe location on Google Maps.
- * @returns {string}
  */
 function buildPlaceUrl(address, city) {
     const q = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
     return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
-/**
+/*
  * Directions URL — from a given origin to the cafe.
  * When origin is empty, Google Maps will ask the user for it.
- * @returns {string}
  */
 function buildDirectionsUrl(address, city, origin = '') {
     const dest = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
@@ -196,28 +192,24 @@ function buildDirectionsUrl(address, city, origin = '') {
          + `&destination=${dest}&travelmode=driving`;
 }
 
-/**
- * Embed URL (no API key required — uses maps.google.com iframe embed).
- */
+/* Embed URL (no API key required — uses maps.google.com iframe embed). */
 function buildEmbedUrl(address, city) {
     const q = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
     return `https://maps.google.com/maps?q=${q}&output=embed&z=16`;
 }
 
-/**
- * Route embed URL — shows driving route in the iframe.
- */
+/* Route embed URL — shows driving route in the iframe. */
 function buildRouteEmbedUrl(originText, destAddress) {
     return `https://maps.google.com/maps?saddr=${encodeURIComponent(originText)}&daddr=${encodeURIComponent(destAddress)}&output=embed`;
 }
 
-// =================================================================
-//  DISTANCE CALCULATOR
-//  Uses Nominatim (OSM) for geocoding + OSRM for road routing.
-//  Both are free and require no API key.
-// =================================================================
 
-/** Straight-line fallback (Haversine) in km */
+
+// ---------- DISTANCE CALCULATOR ----------
+/* Uses Nominatim (OSM) for geocoding + OSRM for road routing. */
+/* Both are free and require no API key. */
+
+/* Straight-line fallback (Haversine) in km */
 function haversineKm(a, b) {
     const R = 6371, toRad = x => x * Math.PI / 180;
     const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
@@ -225,7 +217,7 @@ function haversineKm(a, b) {
     return R * 2 * Math.asin(Math.sqrt(h));
 }
 
-/** Geocode address text → {lat, lng} via Nominatim */
+/* Geocode address text → {lat, lng} via Nominatim */
 async function geocode(address) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
     const res  = await fetch(url, { headers: { 'Accept-Language': 'en' } });
@@ -234,7 +226,7 @@ async function geocode(address) {
     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
 }
 
-/** Road distance + duration via OSRM (free, no key) */
+/* Road distance + duration via OSRM (free, no key) */
 async function getRouteInfo(origin, dest) {
     try {
         const url  = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=false`;
@@ -255,10 +247,7 @@ async function getRouteInfo(origin, dest) {
     return { km, mins, source: 'straight-line' };
 }
 
-// =================================================================
-//  SPLIT DETAIL MODAL
-// =================================================================
-
+// ---------- SPLIT DETAIL MODAL ----------
 async function showDetailModal(cafe) {
     const modal      = document.getElementById('detailModal');
     const contentDiv = document.getElementById('modalDynamicContent');
@@ -425,19 +414,19 @@ async function showDetailModal(cafe) {
     `;
 
     modal.style.display = 'flex';
-
-    // ── Close handlers ──
+    
+    // ---------- Close handlers ----------
     const closeModal = () => { modal.style.display = 'none'; };
     modal.querySelector('.close-modal').onclick = closeModal;
     document.getElementById('modalCloseBtn').onclick = closeModal;
     window.onclick = e => { if (e.target === modal) closeModal(); };
 
-    // ── Hide embed placeholder when iframe loads ──
+    // ---------- Hide embed placeholder when iframe loads ----------
     const iframe      = document.getElementById('mapIframe');
     const placeholder = document.getElementById('mapPlaceholder');
     iframe.onload = () => { if (placeholder) placeholder.style.display = 'none'; };
 
-    // ── Cache frequently-used DOM refs ──
+    // ---------- Cache frequently-used DOM refs ----------
     const originInput   = document.getElementById('originInput');
     const calcBtn       = document.getElementById('calcBtn');
     const mapStatus     = document.getElementById('mapStatus');
@@ -447,7 +436,7 @@ async function showDetailModal(cafe) {
     const distSourceRow = document.getElementById('distSourceRow');
     const btnDirections = document.getElementById('btnDirections');
 
-    // ── Shared result renderer ──
+    // ---------- Shared result renderer ----------
     function showRouteResult(km, mins, source, originText) {
         distValue.textContent = `${km} km`;
         timeValue.textContent  = mins >= 60
@@ -466,7 +455,7 @@ async function showDetailModal(cafe) {
         if (placeholder) placeholder.style.display = 'none';
     }
 
-    // ── Calculate from a text origin ──
+    // ---------- Calculate from a text origin ----------
     async function calcFromText(originText) {
         if (!originText.trim()) {
             mapStatus.textContent = '⚠️ Please enter a starting location.';
@@ -495,7 +484,7 @@ async function showDetailModal(cafe) {
     calcBtn.addEventListener('click', () => calcFromText(originInput.value));
     originInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcFromText(originInput.value); });
 
-    // ── Use browser geolocation ──
+    // ---------- Use browser geolocation ----------
     document.getElementById('useLocationBtn').addEventListener('click', () => {
         if (!navigator.geolocation) {
             mapStatus.textContent = '❌ Geolocation not supported by your browser.';

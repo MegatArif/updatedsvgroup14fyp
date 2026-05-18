@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-
   
 * {
     margin: 0;
@@ -7,7 +6,6 @@
     box-sizing: border-box;
     font-family: 'Arial', sans-serif;
 }   
-
 
 :root{
     --CreamWhite: hsl(33, 82%, 98%); /* bg-body */
@@ -33,6 +31,9 @@
     --LightStone: hsl(30, 30%, 90%); /* hr-color */
 } 
 
+/* ==============================
+   Main Body
+   ==============================*/
 body{
     background: var(--CreamWhite);
     color: var(--DarkBrown);
@@ -73,10 +74,12 @@ body{
   gap: 6px;
 }
 
+ /* red on hover to signal logout */
 .nav-logout-btn:hover {
-  color: #e53935;  /* red on hover to signal logout */
+  color: #e53935;  
   opacity: 1;
 }
+
 /*picture slide and search bar part*/
 .hero-section{
     position:relative;
@@ -115,7 +118,6 @@ body{
 }
 
 /* Search bar in the middle */
-
 .search-card {
     position:absolute;
     top:50%;
@@ -358,7 +360,9 @@ body{
     color: #3b2a1f;
 }
 
-/* showDetailModel part*/
+/* ==============================
+   CSS for showDetailModel ( <think> i still Don't touch this part </think>) 
+   ==============================*/
 
 /* Overlay */
 .modal {
@@ -411,11 +415,6 @@ body{
     transition: background 0.2s, color 0.2s;
 }
 .close-modal:hover { background: rgba(0,0,0,0.5); color: #fff; }
-
-/* ============================================================
-   SPLIT MODAL — append this block to the end of gallery.css
-   Left 50% = cafe details  |  Right 50% = distance / maps
-   ============================================================ */
 
 /* ── Overlay ── */
 .modal {
@@ -841,7 +840,7 @@ body{
 
 /* Embedded map preview (iframe) — GROWS to fill top of right panel */
 .map-embed-wrap {
-    flex: 1;          /* takes all remaining vertical space above the footer */
+    flex: 1;          
     overflow: hidden;
     position: relative;
     min-height: 200px;
@@ -908,7 +907,9 @@ body{
     .map-embed-wrap { min-height: 160px; }
 }
  
-/* showDetailModel part*/
+/* ==============================
+   CSS for showDetailModel ( <think> i still Don't touch this part </think>) 
+   ==============================*/
 
 .footer-note {
     text-align: center;
