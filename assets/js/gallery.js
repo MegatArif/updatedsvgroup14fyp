@@ -3,13 +3,8 @@ import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
 
-import { guardSession, sessionLogout } from './session.js';
-
 setupNavbar();
 let cafes = [];
-
-// ---------- CALL GUARD FUNCTION ----------
-guardSession(['customer', 'admin']);
 
 // ---------- LOCAL FALLBACK DATA ----------
 const localCafes = [
@@ -170,46 +165,54 @@ async function renderCafeCards(filtered) {
     });
 }
 
-// ---------- GOOGLE MAPS URL BUILDERS ----------
+// =================================================================
+//  GOOGLE MAPS URL BUILDERS
+// =================================================================
 
 /**
  * Place-search URL — opens the cafe location on Google Maps.
+ * @returns {string}
  */
 function buildPlaceUrl(address, city) {
-    const q = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
+    const q = encodeURIComponent(`${address}, ${city}`);
     return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
-/*
+/**
  * Directions URL — from a given origin to the cafe.
  * When origin is empty, Google Maps will ask the user for it.
+ * @returns {string}
  */
 function buildDirectionsUrl(address, city, origin = '') {
-    const dest = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
+    const dest = encodeURIComponent(`${address}, ${city}`);
     const from = origin.trim() ? encodeURIComponent(origin.trim()) : '';
     return `https://www.google.com/maps/dir/?api=1`
          + (from ? `&origin=${from}` : '')
          + `&destination=${dest}&travelmode=driving`;
 }
 
-/* Embed URL (no API key required — uses maps.google.com iframe embed). */
+/**
+ * Embed URL (no API key required — uses maps.google.com iframe embed).
+ */
 function buildEmbedUrl(address, city) {
-    const q = encodeURIComponent(`${address}, ${city}, Johor, Malaysia`);
+    const q = encodeURIComponent(`${address}, ${city}`);
     return `https://maps.google.com/maps?q=${q}&output=embed&z=16`;
 }
 
-/* Route embed URL — shows driving route in the iframe. */
+/**
+ * Route embed URL — shows driving route in the iframe.
+ */
 function buildRouteEmbedUrl(originText, destAddress) {
     return `https://maps.google.com/maps?saddr=${encodeURIComponent(originText)}&daddr=${encodeURIComponent(destAddress)}&output=embed`;
 }
 
+// =================================================================
+//  DISTANCE CALCULATOR
+//  Uses Nominatim (OSM) for geocoding + OSRM for road routing.
+//  Both are free and require no API key.
+// =================================================================
 
-
-// ---------- DISTANCE CALCULATOR ----------
-/* Uses Nominatim (OSM) for geocoding + OSRM for road routing. */
-/* Both are free and require no API key. */
-
-/* Straight-line fallback (Haversine) in km */
+/** Straight-line fallback (Haversine) in km */
 function haversineKm(a, b) {
     const R = 6371, toRad = x => x * Math.PI / 180;
     const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
@@ -217,7 +220,7 @@ function haversineKm(a, b) {
     return R * 2 * Math.asin(Math.sqrt(h));
 }
 
-/* Geocode address text → {lat, lng} via Nominatim */
+/** Geocode address text → {lat, lng} via Nominatim */
 async function geocode(address) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
     const res  = await fetch(url, { headers: { 'Accept-Language': 'en' } });
@@ -226,7 +229,7 @@ async function geocode(address) {
     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
 }
 
-/* Road distance + duration via OSRM (free, no key) */
+/** Road distance + duration via OSRM (free, no key) */
 async function getRouteInfo(origin, dest) {
     try {
         const url  = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=false`;
@@ -247,17 +250,36 @@ async function getRouteInfo(origin, dest) {
     return { km, mins, source: 'straight-line' };
 }
 
-// ---------- SPLIT DETAIL MODAL ----------
+// =================================================================
+//  SPLIT DETAIL MODAL
+// =================================================================
+
+// Map the camelCase city filter keys → real place names for geocoding & display.
+// Without this, "johorBahru" goes into the geocode query and Nominatim can't find it.
+const CITY_NAMES = {
+    skudai:     'Skudai',
+    kulai:      'Kulai',
+    masai:      'Masai',
+    tangkak:    'Tangkak',
+    potian:     'Pontian',
+    segamat:    'Segamat',
+    muar:       'Muar',
+    kluang:     'Kluang',
+    batuPahat:  'Batu Pahat',
+    johorBahru: 'Johor Bahru',
+};
+
 async function showDetailModal(cafe) {
     const modal      = document.getElementById('detailModal');
     const contentDiv = document.getElementById('modalDynamicContent');
 
-    const imageUrl    = await getCafeImageUrl(cafe.image);
-    const destAddress = `${cafe.address}, ${cafe.city}, Johor, Malaysia`;
-    const placeUrl    = buildPlaceUrl(cafe.address, cafe.city);
-    const dirUrl      = buildDirectionsUrl(cafe.address, cafe.city);
-    const embedUrl    = buildEmbedUrl(cafe.address, cafe.city);
-    const cityTitle   = cafe.city.charAt(0).toUpperCase() + cafe.city.slice(1);
+    const imageUrl  = await getCafeImageUrl(cafe.image);
+    // Use the human-readable city name so Nominatim geocoding works correctly
+    const cityTitle = CITY_NAMES[cafe.city] || cafe.city;
+    const destAddress = `${cafe.address}`;
+    const placeUrl    = buildPlaceUrl(cafe.address);
+    const dirUrl      = buildDirectionsUrl(cafe.address);
+    const embedUrl    = buildEmbedUrl(cafe.address);
 
     const facilityIcons = {
         'WiFi':              'fa-wifi',
@@ -296,7 +318,7 @@ async function showDetailModal(cafe) {
 
           <div class="modal-info-row">
             <i class="fas fa-map-pin"></i>
-            <div><strong>Address:</strong> ${cafe.address}, ${cityTitle}, Johor</div>
+            <div><strong>Address:</strong> ${cafe.address}</div>
           </div>
 
           <div class="modal-info-row">
@@ -414,19 +436,19 @@ async function showDetailModal(cafe) {
     `;
 
     modal.style.display = 'flex';
-    
-    // ---------- Close handlers ----------
+
+    // ── Close handlers ──
     const closeModal = () => { modal.style.display = 'none'; };
     modal.querySelector('.close-modal').onclick = closeModal;
     document.getElementById('modalCloseBtn').onclick = closeModal;
     window.onclick = e => { if (e.target === modal) closeModal(); };
 
-    // ---------- Hide embed placeholder when iframe loads ----------
+    // ── Hide embed placeholder when iframe loads ──
     const iframe      = document.getElementById('mapIframe');
     const placeholder = document.getElementById('mapPlaceholder');
     iframe.onload = () => { if (placeholder) placeholder.style.display = 'none'; };
 
-    // ---------- Cache frequently-used DOM refs ----------
+    // ── Cache frequently-used DOM refs ──
     const originInput   = document.getElementById('originInput');
     const calcBtn       = document.getElementById('calcBtn');
     const mapStatus     = document.getElementById('mapStatus');
@@ -436,7 +458,7 @@ async function showDetailModal(cafe) {
     const distSourceRow = document.getElementById('distSourceRow');
     const btnDirections = document.getElementById('btnDirections');
 
-    // ---------- Shared result renderer ----------
+    // ── Shared result renderer ──
     function showRouteResult(km, mins, source, originText) {
         distValue.textContent = `${km} km`;
         timeValue.textContent  = mins >= 60
@@ -449,13 +471,13 @@ async function showDetailModal(cafe) {
         mapStatus.textContent = '';
 
         // Update directions URL with actual origin
-        btnDirections.href = buildDirectionsUrl(cafe.address, cafe.city, originText);
+        btnDirections.href = buildDirectionsUrl(cafe.address, originText);
         // Swap iframe to route view
         iframe.src = buildRouteEmbedUrl(originText, destAddress);
         if (placeholder) placeholder.style.display = 'none';
     }
 
-    // ---------- Calculate from a text origin ----------
+    // ── Calculate from a text origin ──
     async function calcFromText(originText) {
         if (!originText.trim()) {
             mapStatus.textContent = '⚠️ Please enter a starting location.';
@@ -484,7 +506,7 @@ async function showDetailModal(cafe) {
     calcBtn.addEventListener('click', () => calcFromText(originInput.value));
     originInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcFromText(originInput.value); });
 
-    // ---------- Use browser geolocation ----------
+    // ── Use browser geolocation ──
     document.getElementById('useLocationBtn').addEventListener('click', () => {
         if (!navigator.geolocation) {
             mapStatus.textContent = '❌ Geolocation not supported by your browser.';
@@ -496,25 +518,40 @@ async function showDetailModal(cafe) {
 
         navigator.geolocation.getCurrentPosition(
             async ({ coords: { latitude, longitude } }) => {
-                // Reverse-geocode to fill input
+                // ── The coordinate string we use for routing & URLs ──
+                // Always use raw lat,lng — never the verbose display_name,
+                // which Nominatim cannot reliably reverse-geocode back.
+                const coordString = `${latitude},${longitude}`;
+
+                // Fill the input with a human-readable label (display only, not geocoded again)
                 try {
-                    const rev  = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, { headers: { 'Accept-Language': 'en' } });
+                    const rev  = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+                        { headers: { 'Accept-Language': 'en' } }
+                    );
                     const data = await rev.json();
-                    originInput.value = data.display_name || `${latitude}, ${longitude}`;
+                    // Show a short label: road + suburb if available, otherwise coords
+                    const addr = data.address || {};
+                    const shortLabel = [addr.road, addr.suburb || addr.village || addr.town || addr.city]
+                        .filter(Boolean).join(', ') || coordString;
+                    originInput.value = shortLabel;
                 } catch {
-                    originInput.value = `${latitude}, ${longitude}`;
+                    originInput.value = coordString;
                 }
 
                 mapStatus.textContent = '🛣️ Calculating route…';
                 try {
+                    // Geocode only the destination — origin is already lat/lng
                     const destCoords = await geocode(destAddress);
-                    const { km, mins, source } = await getRouteInfo({ lat: latitude, lng: longitude }, destCoords);
-                    showRouteResult(km, mins, source, `${latitude},${longitude}`);
-                    // Also update directions button with lat/lng (more precise)
-                    btnDirections.href = buildDirectionsUrl(cafe.address, cafe.city, `${latitude},${longitude}`);
+                    const { km, mins, source } = await getRouteInfo(
+                        { lat: latitude, lng: longitude },
+                        destCoords
+                    );
+                    // Pass coordString (not display_name) so embed & directions URLs are precise
+                    showRouteResult(km, mins, source, coordString);
                 } catch (err) {
                     console.error(err);
-                    mapStatus.textContent = '❌ Route calculation failed.';
+                    mapStatus.textContent = '❌ Route calculation failed. Please try again.';
                 } finally {
                     calcBtn.disabled = false;
                 }
