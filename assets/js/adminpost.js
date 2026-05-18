@@ -20,6 +20,11 @@ import {
   deleteObject
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
+import { guardSession, sessionLogout } from './session.js';
+
+// Call guardFunction
+guardSession(['admin']);
+
 // LOAD POSTS
 
 function loadAdminPosts() {

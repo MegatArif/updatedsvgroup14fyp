@@ -2,9 +2,13 @@ import { db, storage } from './firebase-config.js';
 import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
+import { guardSession, sessionLogout } from './session.js';
 
 setupNavbar();
 let cafes = [];
+
+// Call guard function
+guardSession(['customer', 'admin']);
 
 // ---------- LOCAL FALLBACK DATA ----------
 const localCafes = [
@@ -157,6 +161,7 @@ async function renderCafeCards(filteredCafes) {
         container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding: 3rem;">🤷‍♀️ No cafes match your filters. Try different time or location!</div>`;
         return;
     }
+
     // Build cards with placeholder background
     container.innerHTML = filteredCafes.map(cafe => `
         <div class="cafe-card" data-id="${cafe.id}">
@@ -199,6 +204,7 @@ async function renderCafeCards(filteredCafes) {
 async function showDetailModal(cafe) {
     const modal = document.getElementById('detailModal');
     const contentDiv = document.getElementById('modalDynamicContent');
+    
     // IMPORTANT: pass cafe.image (string), not the whole cafe
     const imageUrl = await getCafeImageUrl(cafe.image);
     contentDiv.innerHTML = `

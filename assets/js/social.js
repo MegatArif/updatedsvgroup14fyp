@@ -32,6 +32,11 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
+import { guardSession, sessionLogout } from './session.js';
+
+// Call guardFunction 
+guardSession(['customer']);
+
 const auth = getAuth(app); // initialize auth
 
 // =====================

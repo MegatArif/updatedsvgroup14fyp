@@ -201,7 +201,7 @@ document.getElementById('change-password').addEventListener('submit', async (e) 
 });
 
 // =====================
-// CHANGE EMAIL (real)
+// CHANGE EMAIL 
 // =====================
 
 document.getElementById('change-email').addEventListener('submit', async (e) => {
