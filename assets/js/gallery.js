@@ -3,8 +3,13 @@ import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
 
+import { guardSession, sessionLogout } from './session.js';
+
 setupNavbar();
 let cafes = [];
+
+// Call guard function
+guardSession(['customer', 'admin']);
 
 // ---------- LOCAL FALLBACK DATA ----------
 const localCafes = [

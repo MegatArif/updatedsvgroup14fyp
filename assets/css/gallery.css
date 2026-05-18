@@ -358,7 +358,7 @@ body{
     color: #3b2a1f;
 }
 
-/* modal (detail page) */
+/* showDetailModel part*/
 
 /* Overlay */
 .modal {
@@ -907,7 +907,8 @@ body{
     .modal-hero  { height: 150px; border-radius: 1.4rem 1.4rem 0 0; }
     .map-embed-wrap { min-height: 160px; }
 }
-
+ 
+/* showDetailModel part*/
 
 .footer-note {
     text-align: center;
