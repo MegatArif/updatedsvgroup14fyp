@@ -107,8 +107,7 @@ function loadAdminPosts() {
   });
 }
 
-
-// DELETE POST
+// ---------- DELETE POST ----------
 async function deletePost(postId) {
 
   if (!confirm("Delete this post?")) return;
