@@ -1,7 +1,8 @@
 import { db, storage } from './firebase-config.js';
 import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
+import { showToast } from './toast.js';
 
 setupNavbar();
 let cafes = [];
@@ -59,7 +60,9 @@ const localCafes = [
     }
 ];
 
-// ---------- IMAGE URL HELPER ----------
+// =================================================================
+//  IMAGE URL HELPER
+// =================================================================
 async function getCafeImageUrl(imageInput) {
     if (!imageInput) return '';
     if (typeof imageInput !== 'string') return '';
@@ -73,14 +76,16 @@ async function getCafeImageUrl(imageInput) {
     }
 }
 
-// ---------- LOAD FROM FIRESTORE ----------
+// =================================================================
+//  LOAD FROM FIRESTORE 
+// =================================================================
 async function initializeData() {
     try {
         const snapshot = await getDocs(collection(db, "cafes"));
         if (snapshot.empty) throw new Error("Empty collection.");
         const data = [];
         for (const d of snapshot.docs) {
-            const cafe = { id: d.id, ...d.data() };
+            const cafe = { ...d.data(), id: d.id };
             cafe.image = await getCafeImageUrl(cafe.image);
             data.push(cafe);
         }
@@ -94,7 +99,9 @@ async function initializeData() {
     }
 }
 
-// ---------- FILTER ----------
+// =================================================================
+//  FILTER 
+// =================================================================
 function filterCafes(location, searchName, timeSlot, facilities, minRating) {
     let f = [...cafes];
     if (location !== 'all') f = f.filter(c => c.city === location);
@@ -167,6 +174,34 @@ async function renderCafeCards(filtered) {
             if (cafe) showDetailModal(cafe);
         });
     });
+}
+
+// =================================================================
+//  DELETE RESTAURANT (admin only)
+// =================================================================
+async function deleteRestaurant(cafe) {
+    const confirmed = confirm(
+        `⚠️ Delete "${cafe.name}"?\n\nThis will permanently remove this restaurant from the database. This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+        await deleteDoc(doc(db, 'cafes', cafe.id));
+
+        // Remove from local array and re-render
+        cafes = cafes.filter(c => c.id !== cafe.id);
+        updateCafeList();
+
+        // Close modal
+        document.getElementById('detailModal').style.display = 'none';
+
+        // Use centralized toast notification
+        showToast(`✅ "${cafe.name}" has been deleted.`, 'success', 3500);
+
+    } catch (err) {
+        console.error('Delete restaurant failed:', err);
+        showToast('❌ Failed to delete restaurant. Please try again.', 'error', 4000);
+    }
 }
 
 // =================================================================
@@ -341,9 +376,14 @@ async function showDetailModal(cafe) {
           <div class="modal-divider"></div>
 
           <div class="modal-actions">
-            <button class="btn-reserve">
-              <i class="fas fa-calendar-check"></i> Make a Reservation
-            </button>
+            ${sessionStorage.getItem('userRole') === 'admin'
+              ? `<button class="btn-delete-restaurant" id="btnDeleteRestaurant">
+                   <i class="fas fa-trash-alt"></i> Delete Restaurant
+                 </button>`
+              : `<button class="btn-reserve">
+                   <i class="fas fa-calendar-check"></i> Make a Reservation
+                 </button>`
+            }
             <button class="btn-close-left" id="modalCloseBtn">
               <i class="fas fa-times"></i> Close
             </button>
@@ -446,6 +486,12 @@ async function showDetailModal(cafe) {
     modal.querySelector('.close-modal').onclick = closeModal;
     document.getElementById('modalCloseBtn').onclick = closeModal;
     window.onclick = e => { if (e.target === modal) closeModal(); };
+
+    // ── Admin: wire up Delete Restaurant button ──
+    const deleteBtn = document.getElementById('btnDeleteRestaurant');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => deleteRestaurant(cafe));
+    }
 
     // ── Hide embed placeholder when iframe loads ──
     const iframe      = document.getElementById('mapIframe');

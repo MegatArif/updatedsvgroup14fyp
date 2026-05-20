@@ -918,6 +918,63 @@ body{
     background: #fff7f0;
 }
 
+/* ── Admin: Delete Restaurant button ── */
+.btn-delete-restaurant {
+    flex: 1;
+    min-width: 130px;
+    padding: 10px 18px;
+    background: #e53935;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(229, 57, 53, 0.35);
+    letter-spacing: 0.02em;
+}
+.btn-delete-restaurant:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(229, 57, 53, 0.5);
+}
+.btn-delete-restaurant:active {
+    transform: scale(0.98);
+}
+
+/* ── Admin delete toast notification ── */
+.admin-delete-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.85rem 1.6rem;
+    border-radius: 50px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-left: 4px solid #e53935;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.admin-delete-toast i { color: #e53935; }
+.admin-delete-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
 @media (max-width: 780px) {
     .search-card { width: 92%; padding: 1rem; }
     .filter-panel { flex-direction: column; align-items: stretch; }
