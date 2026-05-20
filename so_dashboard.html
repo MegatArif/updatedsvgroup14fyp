@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="assets/css/navbar.css"/>
+  <link rel="stylesheet" href="assets/css/so.css"/>
+</head>
+<body>
+
+  <!-- ── NAVBAR ─────────────────────────────────────────────── -->
+  <div class="navbar">
+  <div class="logo-area">
+    <i class="fas fa-mug-hot logo-icon"></i>
+    <span class="logo-text">CafeHunt</span>
+  </div>
+  <div class="nav-links">
+    <!-- Populated by navbar.js -->
+  </div>
+</div>
+
+
+  <!-- ── PAGE CONTENT ───────────────────────────────────────── -->
+  <div class="title-row">
+  <h1 class="page-title">Shop Owner Dashboard</h1>
+  <div class="clock-badge">
+    <i class="ti ti-clock"></i>
+    <span id="clock"></span>
+  </div>
+</div>
+    <!-- STAT CARDS (3 cards: Total Reservations, Confirmed, Pending) -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-emoji">📋</span>
+          <span class="stat-label">Total Reservations</span>
+        </div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-emoji">✅</span>
+          <span class="stat-label">Confirmed</span>
+        </div>
+        <div class="stat-value" id="statConfirmed">0</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-emoji">⏳</span>
+          <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-value" id="statPending">0</div>
+      </div>
+    </div>
+
+    <!-- History RESERVATIONS TABLE -->
+    <section class="panel" id="section-overview">
+      <div class="panel-header">
+        <span class="panel-emoji">⏰</span>
+        <h2 class="panel-title">Pending Reservations</h2>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Date/Time</th>
+              <th>Guests</th>
+              <th>Status</th>
+              <th>Actions</th> 
+            </tr>
+          </thead>
+          <tbody id="reservationsBody">
+            <tr class="empty-row">
+              <td colspan="7">No reservations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+  <div class="panel-header">
+    <span class="panel-emoji">🎟️</span>
+    <h2 class="panel-title">Completed Reservations</h2>
+  </div>
+  <div class="comp-grid" id="compGrid"></div>
+</section>
+
+        
+
+  </div><!-- /page-wrapper -->
+
+  <script type="module" src="assets/js/so.js"></script>
+</body>
+</html>

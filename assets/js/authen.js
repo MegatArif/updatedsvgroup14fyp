@@ -421,7 +421,7 @@ function validateUsername(name) {
     }
     sessionStorage.setItem('userRole', 'shopowner'); 
     showToast('Welcome back! Redirecting...', 'success', 2000);
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+    setTimeout(() => { window.location.href = 'so_dashboard.html'; }, 2000);
  
   } catch (error) {
     console.error('Login error:', error);

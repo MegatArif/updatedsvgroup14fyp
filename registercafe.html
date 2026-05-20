@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CafeHunt – Register Your Cafe</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
+  <link rel="stylesheet" href="assets/css/navibar.css"/>
+  <link rel="stylesheet" href="assets/css/register-cafe.css"/>
+</head>
+<body>
+
+  
+
+  <!-- PAGE -->
+  <div class="reg-wrapper">
+
+    <!-- HERO HEADER -->
+    <div class="reg-hero">
+      <div class="reg-hero-icon"><i class="fas fa-store"></i></div>
+      <div>
+        <h1 class="reg-hero-title">Register Your Cafe</h1>
+        <p class="reg-hero-sub">List your cafe on CafeHunt and reach thousands of customers</p>
+      </div>
+    </div>
+
+    <div class="reg-body">
+
+      <!-- LEFT: FORM -->
+      <div class="reg-form-col">
+
+        <!-- SECTION 1: Basic Info -->
+        <div class="form-section">
+          <div class="section-label">
+            <span class="section-num">01</span>
+            <span class="section-title">Basic Information</span>
+          </div>
+
+          <div class="field-grid">
+            <div class="field-group full">
+              <label>Cafe Name <span class="req">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-mug-hot field-icon"></i>
+                <input type="text" id="cafeName" placeholder="e.g. Bean & Bond" required/>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Open Hour <span class="req">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-clock field-icon"></i>
+                <input type="time" id="openHour" required/>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Close Hour <span class="req">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-clock field-icon"></i>
+                <input type="time" id="closeHour" required/>
+              </div>
+            </div>
+
+            <div class="field-group full">
+              <label>Description <span class="req">*</span></label>
+              <div class="input-wrap textarea-wrap">
+                <i class="fas fa-align-left field-icon textarea-icon"></i>
+                <textarea id="description" rows="3" placeholder="Describe your cafe's vibe, specialty, atmosphere…" required></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Location -->
+        <div class="form-section">
+          <div class="section-label">
+            <span class="section-num">02</span>
+            <span class="section-title">Location</span>
+          </div>
+
+          <div class="field-grid">
+            <div class="field-group full">
+              <label>Full Address <span class="req">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-map-marker-alt field-icon"></i>
+                <input type="text" id="address" placeholder="e.g. 22, Jalan Hang Tuah, Skudai" required/>
+              </div>
+            </div>
+
+            <div class="field-group full">
+              <label>City <span class="req">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-city field-icon"></i>
+                <input type="text" id="city" placeholder="e.g. Johor Bahru" required/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Facilities -->
+        <div class="form-section">
+          <div class="section-label">
+            <span class="section-num">03</span>
+            <span class="section-title">Facilities</span>
+          </div>
+          <p class="section-hint">Select all that apply to your cafe</p>
+
+          <div class="facilities-grid">
+            <label class="facility-pill">
+              <input type="checkbox" value="WiFi"/>
+              <span class="pill-inner"><i class="fas fa-wifi"></i> WiFi</span>
+            </label>
+            <label class="facility-pill">
+              <input type="checkbox" value="Power outlet"/>
+              <span class="pill-inner"><i class="fas fa-plug"></i> Power outlet</span>
+            </label>
+            <label class="facility-pill">
+              <input type="checkbox" value="Outdoor seating"/>
+              <span class="pill-inner"><i class="fas fa-umbrella-beach"></i> Outdoor seating</span>
+            </label>
+            <label class="facility-pill">
+              <input type="checkbox" value="Meeting equipment"/>
+              <span class="pill-inner"><i class="fas fa-chalkboard-user"></i> Meeting equipment</span>
+            </label>
+            
+          </div>
+        </div>
+
+        <!-- SECTION 4: Photo -->
+        <div class="form-section">
+          <div class="section-label">
+            <span class="section-num">04</span>
+            <span class="section-title">Cafe Photo</span>
+          </div>
+
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="cafeImage" accept="image/*" hidden/>
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              <i class="fas fa-cloud-arrow-up upload-icon"></i>
+              <p class="upload-text">Click or drag to upload a photo</p>
+              <p class="upload-hint">JPG, PNG, WEBP — max 5MB</p>
+            </div>
+            <img id="imagePreview" class="image-preview hidden" alt="Preview"/>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <button class="submit-btn" id="submitBtn">
+          <span id="submitLabel"><i class="fas fa-paper-plane"></i> Submit Registration</span>
+          <span id="submitSpinner" class="hidden"><i class="fas fa-spinner fa-spin"></i> Uploading…</span>
+        </button>
+
+        <!-- STATUS MESSAGE -->
+        <div class="status-msg hidden" id="statusMsg"></div>
+
+      </div><!-- /form-col -->
+
+      <!-- RIGHT: PREVIEW CARD -->
+      <div class="reg-preview-col">
+        <div class="preview-sticky">
+          <p class="preview-label"><i class="fas fa-eye"></i> Live Preview</p>
+
+          <div class="preview-card">
+            <div class="preview-img-wrap">
+              <img id="previewImg" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80" alt="Cafe"/>
+              <div class="preview-img-overlay"></div>
+            </div>
+
+            <div class="preview-info">
+              <h2 class="preview-name" id="previewName">Your Cafe Name</h2>
+
+              <div class="preview-stars">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                <i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                <span class="preview-rating">New listing</span>
+              </div>
+
+              <div class="preview-meta">
+                <div class="preview-meta-row">
+                  <i class="fas fa-clock"></i>
+                  <span id="previewHours">–– : ––  –  –– : ––</span>
+                </div>
+                <div class="preview-meta-row">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span id="previewAddress">Your address</span>
+                </div>
+                <div class="preview-meta-row">
+                  <i class="fas fa-align-left"></i>
+                  <span id="previewDesc">Your description will appear here.</span>
+                </div>
+              </div>
+
+              <div class="preview-facilities-row" id="previewFacilities">
+                <!-- injected by JS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-tip">
+            <i class="fas fa-lightbulb"></i>
+            Fields update the preview in real time
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /reg-body -->
+  </div><!-- /reg-wrapper -->
+
+  <script type="module" src="assets/js/register-cafe.js"></script>
+</body>
+</html>
