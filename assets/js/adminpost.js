@@ -25,85 +25,90 @@ import { guardSession, sessionLogout } from './session.js';
 // Call guardFunction
 guardSession(['admin']);
 
-// LOAD POSTS
-
+// ---------- LOAD POSTS ----------
 function loadAdminPosts() {
-// Get posts ordered by latest
+
+  // Get posts ordered by latest
   const q = query(collection(db, "posts"), orderBy("createAt", "desc"));
-// Listen for realtime updates
+
+  // Listen for realtime updates
   onSnapshot(q, async (snapshot) => {
 
-    const adminFeed = document.getElementById("admin-feed");
-    const totalPosts = document.getElementById("total-posts");
-// Clear old posts
-    adminFeed.innerHTML = "";
-// Update total posts count
-    totalPosts.innerText = snapshot.size;
-// Loop through all posts
-    for (const docSnap of snapshot.docs) {
+  const adminFeed = document.getElementById("admin-feed");
+  const totalPosts = document.getElementById("total-posts");
 
-      const post = docSnap.data();
-      const postId = docSnap.id;
+  // Clear old posts
+  adminFeed.innerHTML = "";
 
-      let username = "Unknown User";
+  // Update total posts count
+  totalPosts.innerText = snapshot.size;
 
-      try {
-        // fetch user data
-        if (post.userId) {
-          const userSnap = await getDoc(doc(db, "Customers", post.userId));
-          const userData = userSnap.data();
-          username = userData?.username || "Unknown User"; // get username from firebase
-        }
-      } catch (err) {
-        console.warn("User fetch failed", err);
+  // Loop through all posts
+  for (const docSnap of snapshot.docs) {
+
+    const post = docSnap.data();
+    const postId = docSnap.id;
+
+    let username = "Unknown User";
+
+    try {
+      // Fetch user data
+      if (post.userId) {
+        const userSnap = await getDoc(doc(db, "Customers", post.userId));
+        const userData = userSnap.data();
+        username = userData?.username || "Unknown User"; // get username from firebase
       }
-
-      // FIX: clickable location
-      const locationHTML = post.locationName
-        ? `
-          <div class="post-location">
-            📍 <a href="${post.locationLink}" target="_blank" rel="noopener noreferrer">
-              ${post.locationName}
-            </a>
-          </div>
-        `
-        : "";
-// Post Card HTML
-      const card = `
-        <div class="post-card">
-
-          <div class="post-header">
-            <b>${username}</b>
-
-            <button class="delete-btn"
-              onclick="deletePost('${postId}')">
-              🗑 Delete
-            </button>
-          </div>
-
-          <div class="post-content">
-            ${post.content}
-          </div>
-
-          <img src="${post.imageURL}" class="post-image">
-
-          ${locationHTML}
-
-          <div class="post-time">
-            ${post.createAt ? post.createAt.toDate().toLocaleString() : ""}
-          </div>
-
-        </div>
-      `;
-
-      adminFeed.innerHTML += card;
+    } catch (err) {
+      console.warn("User fetch failed", err);
     }
+
+  // Clickable location
+  const locationHTML = post.locationName
+    ? `
+      <div class="post-location">
+        📍 <a href="${post.locationLink}" target="_blank" rel="noopener noreferrer">
+          ${post.locationName}
+        </a>
+      </div>
+    `
+    : "";
+
+  // Post Card HTML
+  const card = `
+    <div class="post-card">
+
+      <div class="post-header">
+        <b>${username}</b>
+
+        <button class="delete-btn"
+          onclick="deletePost('${postId}')">
+          🗑 Delete
+        </button>
+      </div>
+
+      <div class="post-content">
+        ${post.content}
+      </div>
+
+      <img src="${post.imageURL}" class="post-image">
+
+      ${locationHTML}
+
+      <div class="post-time">
+        ${post.createAt ? post.createAt.toDate().toLocaleString() : ""}
+      </div>
+
+    </div>
+  `;
+
+  adminFeed.innerHTML += card;
+  }
+  //TODO check below
   });
 }
 
 
 // DELETE POST
-
 async function deletePost(postId) {
 
   if (!confirm("Delete this post?")) return;

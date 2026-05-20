@@ -6,6 +6,10 @@ import { setupNavbar } from './navbar.js';
 setupNavbar();
 let cafes = [];
 
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['customer','admin']);
+
 // ---------- LOCAL FALLBACK DATA ----------
 const localCafes = [
     {
