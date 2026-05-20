@@ -6,7 +6,7 @@ import {
   signInWithEmailAndPassword, 
   sendEmailVerification, 
   sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { showToast } from './toast.js'
 
   const ADMIN_EMAILS = [
@@ -46,6 +46,30 @@ import { showToast } from './toast.js'
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
   
     // Close on button or backdrop click
+    overlay.querySelector('.email-overlay-close').addEventListener('click', () => closeOverlay(overlay));
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(overlay); });
+  }
+
+  /* ── PENDING APPROVAL OVERLAY ── */
+  function showPendingOverlay() {
+    document.querySelector('.email-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'email-overlay';
+    overlay.innerHTML = `
+      <div class="email-overlay-box">
+        <i class="email-overlay-icon verify ri-time-line"></i>
+        <div class="email-overlay-title">Awaiting Approval</div>
+        <div class="email-overlay-msg">
+          Your cafe registration is currently <span>under review</span>.<br>
+          Our team will approve your listing shortly. You'll gain full dashboard access once approved.
+        </div>
+        <button class="email-overlay-close blue">Got it</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
+
     overlay.querySelector('.email-overlay-close').addEventListener('click', () => closeOverlay(overlay));
     overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(overlay); });
   }
@@ -414,13 +438,33 @@ function validateUsername(name) {
     // Check email verified
     if (!user.emailVerified) {
       showToast('Please verify your email before logging in.', 'error', 5000);
-      // Resend verification
       await sendEmailVerification(user);
       showEmailOverlay('verify', email);
       return;
     }
+
+    // ── Fetch ShopOwner document to check cafe registration & approval status ──
+    const ownerDoc = await getDoc(doc(db, "ShopOwner", user.uid));
+    const ownerData = ownerDoc.exists() ? ownerDoc.data() : {};
+
+    // STEP 1: Has the owner ever submitted a cafe registration?
+    if (!ownerData.cafeRegistered) {
+      sessionStorage.setItem('userRole', 'shopowner');
+      showToast('Welcome! Please register your cafe to get started.', 'info', 3000);
+      setTimeout(() => { window.location.href = 'registercafe.html'; }, 2500);
+      return;
+    }
+
+    // STEP 2: Cafe registered but not yet approved
+    if (ownerData.cafeRegistered && !ownerData.approved) {
+      showToast('Your cafe is pending approval. Please wait for our team to review it.', 'error', 5000);
+      showPendingOverlay();
+      return;
+    }
+
+    // STEP 3: Approved — go to dashboard
     sessionStorage.setItem('userRole', 'shopowner'); 
-    showToast('Welcome back! Redirecting...', 'success', 2000);
+    showToast('Welcome back! Redirecting to your dashboard...', 'success', 2000);
     setTimeout(() => { window.location.href = 'so_dashboard.html'; }, 2000);
  
   } catch (error) {
@@ -437,6 +481,7 @@ function validateUsername(name) {
     showToast(msg, 'error');
   }
 }
+
   async function registerShopOwner() {
   const phone           = document.getElementById('o-phone').value;
   const email           = document.getElementById('o-regemail').value;
@@ -463,11 +508,14 @@ function validateUsername(name) {
     
     await sendEmailVerification(user);
 
+    // cafeRegistered: false and approved: false — both set at account creation
     await setDoc(doc(db, "ShopOwner", user.uid), {
-      email:     email,
-      phone:     phone,
-      userType:  'shopowner',
-      createdAt: new Date()
+      email:           email,
+      phone:           phone,
+      userType:        'shopowner',
+      cafeRegistered:  false,   // will be set true when they submit registercafe.html
+      approved:        false,   // will be set true by admin
+      createdAt:       new Date()
     });
 
     showEmailOverlay('verify', email);

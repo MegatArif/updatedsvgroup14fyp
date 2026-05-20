@@ -1,6 +1,6 @@
 // assets/js/register-cafe.js
 
-import { db, storage } from "./firebase-config.js";
+import { db, storage, app } from "./firebase-config.js";
 import {
   collection,
   addDoc,
@@ -8,12 +8,17 @@ import {
   query,
   orderBy,
   limit,
+  doc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
   ref,
   uploadBytes,
-  getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+import {
+  getAuth,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { showToast } from "./toast.js";
 
 
@@ -24,6 +29,9 @@ const facilityIcons = {
   "Outdoor seating":   "fa-umbrella-beach",
   "Meeting equipment": "fas fa-chalkboard-user",
 };
+
+/* ── AUTH ────────────────────────────────────────────────────── */
+const auth = getAuth(app);
 
 /* ── DOM REFS ────────────────────────────────────────────────── */
 const nameEl       = document.getElementById("cafeName");
@@ -52,7 +60,6 @@ function updatePreview() {
   const close = fmt(closeEl.value);
   document.getElementById("previewHours").textContent = `${open}  –  ${close}`;
 
-  // facilities
   const checked = [...document.querySelectorAll(".facility-pill input:checked")]
     .map(cb => cb.value);
   document.getElementById("previewFacilities").innerHTML = checked.length
@@ -112,7 +119,6 @@ async function getNextId() {
     const last = snap.docs[0].data().id;
     return (typeof last === "number" ? last : parseInt(last) || 0) + 1;
   } catch {
-    // fallback: count + 1
     const snap = await getDocs(collection(db, "cafes"));
     return snap.size + 1;
   }
@@ -133,11 +139,9 @@ function validate() {
 submitBtn.addEventListener("click", async () => {
   if (!validate()) return;
 
-  // Selected facilities
   const facilities = [...document.querySelectorAll(".facility-pill input:checked")]
     .map(cb => cb.value);
 
-  // Set loading state
   submitBtn.disabled = true;
   submitLabel.classList.add("hidden");
   submitSpin.classList.remove("hidden");
@@ -146,7 +150,6 @@ submitBtn.addEventListener("click", async () => {
     const nextId = await getNextId();
     let imagePath = "";
 
-    // Upload image if selected
     const file = imageInput.files[0];
     if (file) {
       const ext        = file.name.split(".").pop();
@@ -156,7 +159,7 @@ submitBtn.addEventListener("click", async () => {
       imagePath = storePath;
     }
 
-    // Build Firestore document — default rating seeded at 4
+    // Build Firestore cafe document — default rating seeded at 4
     const cafeDoc = {
       id:          nextId,
       name:        nameEl.value.trim(),
@@ -167,29 +170,44 @@ submitBtn.addEventListener("click", async () => {
       city:        cityEl.value.trim(),
       facilities:  facilities,
       image:       imagePath,
-      rating:      4,           
-      ratingCount: 1,           
-      ratingSum:   4,          
+      rating:      4,
+      ratingCount: 1,
+      ratingSum:   4,
       ratingBreakdown: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 0 },
     };
 
     await addDoc(collection(db, "cafes"), cafeDoc);
 
-    showToast(`🎉 "${nameEl.value.trim()}" has been registered! It will appear on CafeHunt once approved.`, "success", 5000);
+    // Flag the shop owner's Firestore doc as having submitted a cafe
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      await updateDoc(doc(db, "ShopOwner", currentUser.uid), {
+        cafeRegistered: true,
+        // approved remains false — admin must flip it
+      });
+    }
 
-    // Reset form
-    [nameEl, openEl, closeEl, descEl, addressEl, cityEl].forEach(el => el.value = "");
-    document.querySelectorAll(".facility-pill input").forEach(cb => cb.checked = false);
-    imageInput.value = "";
-    imgPreview.classList.add("hidden");
-    placeholder.classList.remove("hidden");
-    document.getElementById("previewImg").src = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80";
-    updatePreview();
+    // Lock button and show toast before signing out
+    submitLabel.classList.remove("hidden");
+    submitSpin.classList.add("hidden");
+    submitLabel.textContent = "✅ Submitted — Signing you out…";
+
+    showToast(
+      `🎉 "${nameEl.value.trim()}" submitted! Signing you out — log back in after approval to access your dashboard.`,
+      "success",
+      3500
+    );
+
+    // Sign out after the toast has had time to read
+    setTimeout(async () => {
+      await signOut(auth);
+      sessionStorage.clear();
+      window.location.href = "index.html";  // ← your login page
+    }, 3500);
 
   } catch (err) {
     console.error("Registration error:", err);
     showToast("Something went wrong. Please try again.", "error");
-  } finally {
     submitBtn.disabled = false;
     submitLabel.classList.remove("hidden");
     submitSpin.classList.add("hidden");
