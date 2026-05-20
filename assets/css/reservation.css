@@ -1,0 +1,168 @@
+body {
+  margin: 0;
+  font-family: "Poppins", Arial, sans-serif;
+
+  background: #fffaf3; /* ☀️ 奶油白 */
+
+  color: #3a2f28;
+}
+
+.page {
+  padding: 50px;
+  display: flex;
+  justify-content: center;
+}
+
+.reservation-panel {
+  width: 920px;
+}
+
+/* TITLE */
+.title {
+  font-size: 42px;
+  font-weight: 800;
+  margin-bottom: 30px;
+
+  color: #e3b07a; /* ☀️ 浅焦糖 */
+}
+
+/* SECTION */
+.section {
+  margin-bottom: 35px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  color: #b8906d;
+}
+
+/* CARD */
+.reservation-card {
+  background: #ffffff;
+
+  border: 1px solid #f0e3d3;
+  border-radius: 16px;
+
+  padding: 18px;
+  margin-bottom: 12px;
+
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+
+  transition: 0.2s ease;
+}
+
+.reservation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+/* TOP */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-top h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.location {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #8c7a6b;
+}
+
+/* STATUS */
+.status {
+  display: inline-flex;
+  align-items: center;
+
+  height: 22px;
+  padding: 0 10px;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+}
+
+/* ACTIVE */
+.status-active {
+  background: #fff2d9;
+  color: #c98b3b;
+  border: 1px solid #f6e0b5;
+}
+
+/* EXPIRED / COMPLETED */
+.status-past {
+  background: #f7f1e8;
+  color: #a7927f;
+  border: 1px solid #eadcc9;
+}
+
+/* INFO */
+.booking-info {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.info-box {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+
+  background: #fffaf3;
+  border: 1px solid #f2e6d8;
+}
+
+.info-box span {
+  font-size: 11px;
+  color: #b49a85;
+}
+
+.info-box strong {
+  font-size: 14px;
+}
+
+/* BUTTON */
+.receipt-btn {
+  margin-top: 12px;
+  padding: 10px 14px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #f6d7a7;
+  color: #3a2f28;
+
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.receipt-btn:hover {
+  background: #f8e0bb;
+}
+
+/* TOAST */
+#toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+
+  background: rgba(60,50,45,0.9);
+  color: #fff;
+
+  padding: 10px 14px;
+  border-radius: 10px;
+
+  opacity: 0;
+  transition: 0.3s;
+}
