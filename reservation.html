@@ -1,106 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>My Reservations</title>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0"/>
+
+  <title>My Reservations</title>
 
 <link rel="stylesheet" href="assets/css/reservation.css">
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+
 </head>
 
 <body>
 
-<div class="page">
-  <div class="reservation-panel">
+  <div class="page">
 
-    <h1 class="title">My Reservations</h1>
+    <div class="reservation-panel">
 
-    <!-- ACTIVE -->
-    <div class="section">
+      <!-- TITLE -->
+      <h1 class="title">
+        My Reservations
+      </h1>
 
-      <div class="section-header">
-        <i class="fa-solid fa-mug-hot"></i>
-        <h2>Active Reservations</h2>
-      </div>
+      <!-- ========================= -->
+      <!-- ACTIVE RESERVATIONS -->
+      <!-- ========================= -->
 
-      <div class="reservation-card"
-        data-cafe="After Rain Cafe"
-        data-location="Johor Bahru"
-        data-date="20 May 2026"
-        data-time="7:30 PM"
-        data-guests="2"
-        data-status="ACTIVE">
+      <div class="section">
 
-        <div class="card-top">
-          <div>
-            <h3>After Rain Cafe</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Johor Bahru</p>
+        <div class="section-header">
+
+          <div class="section-icon">
+            <i class="fa-solid fa-mug-hot"></i>
           </div>
 
-          <span class="status status-active">ACTIVE</span>
-        </div>
-
-        <div class="booking-info">
-          <div class="info-box"><span>Date:</span><strong>20 May 2026</strong></div>
-          <div class="info-box"><span>Time:</span><strong>7:30 PM</strong></div>
-          <div class="info-box"><span>Guests:</span><strong>2 Pax</strong></div>
-        </div>
-
-        <button class="receipt-btn" onclick="downloadReceipt(this)">
-          <i class="fa-solid fa-download"></i> Download Receipt
-        </button>
-
-      </div>
-    </div>
-
-    <!-- PAST -->
-    <div class="section">
-
-      <div class="section-header">
-        <i class="fa-regular fa-clock"></i>
-        <h2>Past Reservations</h2>
-      </div>
-
-      <div class="reservation-card"
-        data-cafe="Bean Story Cafe"
-        data-location="Kuala Lumpur"
-        data-date="12 May 2026"
-        data-time="4:00 PM"
-        data-guests="4"
-        data-status="COMPLETED">
-
-        <div class="card-top">
           <div>
-            <h3>Bean Story Cafe</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Kuala Lumpur</p>
+            <h2>Active Reservations</h2>
+            <p>
+              Your upcoming cafe bookings
+            </p>
           </div>
 
-          <span class="status status-past">COMPLETED</span>
         </div>
 
-        <div class="booking-info">
-          <div class="info-box"><span>Date:</span><strong>12 May 2026</strong></div>
-          <div class="info-box"><span>Time:</span><strong>4:00 PM</strong></div>
-          <div class="info-box"><span>Guests:</span><strong>4 Pax</strong></div>
-        </div>
-
-        <button class="receipt-btn" onclick="downloadReceipt(this)">
-          <i class="fa-solid fa-download"></i> Download Receipt
-        </button>
+        <!-- REALTIME ACTIVE CARDS -->
+        <div id="activeReservations"></div>
 
       </div>
+
+
+      <!-- ========================= -->
+      <!-- COMPLETED RESERVATIONS -->
+      <!-- ========================= -->
+
+      <div class="section">
+
+        <div class="section-header">
+
+          <div class="section-icon">
+            <i class="fa-regular fa-clock"></i>
+          </div>
+
+          <div>
+            <h2>Completed Reservations</h2>
+            <p>
+              Your past cafe experiences
+            </p>
+          </div>
+
+        </div>
+
+        <!-- REALTIME PAST CARDS -->
+        <div id="pastReservations"></div>
+
+      </div>
+
     </div>
 
   </div>
-</div>
-
-<div id="toast"></div>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/js/reservation.js"></script>
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+  <!-- RESERVATION JS -->
+  <script type="module"
+          src="assets/js/reservation.js"></script>
 
 </body>
 </html>
