@@ -52,7 +52,7 @@ function loadReservations() {
   console.log("🔥 loadReservations running");
 
   const q = query(
-    collection(db, "reservation"), // 🔥 FIX HERE
+    collection(db, "reservation"), 
     where("username", "==", currentUser.username)
   );
 
@@ -85,7 +85,6 @@ function loadReservations() {
 // ============================
 function renderReservation(data) {
 
-  // 🔥 safer time parsing (important)
   const reservationDate = new Date(`${data.date}T${data.time}`);
   const now = new Date();
 
@@ -202,13 +201,14 @@ doc.rect(0, 0, 80, 22, "F");
   doc.setFontSize(6);
 
   let y = 28;
+//fix//
+doc.text(data.cafe, 40, y, { align: "center" });
+y += 4;
 
-  doc.text("Grind.JB Cafe System", 40, y, { align: "center" });
-  y += 4;
-  doc.text("Kluang Mall Branch", 40, y, { align: "center" });
-  y += 6;
+doc.text(data.location, 40, y, { align: "center" });
+y += 6;
+ 
 
-  // dashed line effect
   doc.setDrawColor(150);
   doc.line(5, y, 75, y);
   y += 8;
