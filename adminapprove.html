@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CafeHunt – Admin Approval</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
+  <link rel="stylesheet" href="assets/css/navbar.css"/>
+  <link rel="stylesheet" href="assets/css/adminApprove.css"/>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo-area">
+    <i class="fas fa-mug-hot logo-icon"></i>
+    <span class="logo-text">CafeHunt</span>
+  </div>
+  <div class="nav-links"></div>
+</div>
+
+<div class="page-wrapper">
+
+  <div class="title-row">
+    <div>
+      <h1 class="page-title"><i class="fas fa-clipboard-check"></i> Cafe Approval</h1>
+      <p class="page-sub">Review and approve incoming shop owner registrations</p>
+    </div>
+    <div class="stat-pills">
+      <span class="pill pill-pending"><span id="countPending">0</span> Pending</span>
+      <span class="pill pill-approved"><span id="countApproved">0</span> Approved</span>
+      <span class="pill pill-rejected"><span id="countRejected">0</span> Rejected</span>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="pending"><i class="fas fa-hourglass-half"></i> Pending</button>
+    <button class="tab-btn" data-tab="approved"><i class="fas fa-circle-check"></i> Approved</button>
+    <button class="tab-btn" data-tab="rejected"><i class="fas fa-circle-xmark"></i> Rejected</button>
+    <button class="tab-btn" data-tab="all"><i class="fas fa-list"></i> All</button>
+  </div>
+
+  <div class="search-row">
+    <div class="search-wrap">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by email or cafe name…"/>
+    </div>
+    <button class="btn-refresh" id="refreshBtn">
+      <i class="fas fa-rotate-right"></i> Refresh
+    </button>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <div class="empty-state hidden" id="emptyState">
+    <i class="fas fa-inbox"></i>
+    <p>No registrations found</p>
+  </div>
+
+  <div class="loading-state" id="loadingState">
+    <div class="spinner"></div>
+    <p>Loading registrations…</p>
+  </div>
+
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailOverlay">
+  <div class="modal-box">
+    <button class="modal-close-btn" id="modalCloseBtn"><i class="fas fa-xmark"></i></button>
+
+    <div class="modal-header-section">
+      <div class="modal-cafe-img-wrap" id="modalImgWrap">
+        <i class="fas fa-store modal-cafe-icon-placeholder"></i>
+      </div>
+      <div class="modal-header-text">
+        <div class="modal-cafe-name" id="modalCafeName">—</div>
+        <div class="modal-owner-email" id="modalOwnerEmail">—</div>
+        <div id="modalStatusBadge"></div>
+      </div>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <div class="modal-detail-grid">
+      <div class="detail-item">
+        <span class="detail-label"><i class="fas fa-clock"></i> Hours</span>
+        <span class="detail-val" id="modalHours">—</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Address</span>
+        <span class="detail-val" id="modalAddress">—</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="fas fa-city"></i> City</span>
+        <span class="detail-val" id="modalCity">—</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="fas fa-phone"></i> Phone</span>
+        <span class="detail-val" id="modalPhone">—</span>
+      </div>
+      <div class="detail-item full">
+        <span class="detail-label"><i class="fas fa-align-left"></i> Description</span>
+        <span class="detail-val" id="modalDesc">—</span>
+      </div>
+      <div class="detail-item full">
+        <span class="detail-label"><i class="fas fa-microchip"></i> Facilities</span>
+        <div class="detail-facilities" id="modalFacilities"></div>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label"><i class="fas fa-calendar"></i> Submitted</span>
+        <span class="detail-val" id="modalSubmitted">—</span>
+      </div>
+      <div class="detail-item" id="modalReasonRow" style="display:none">
+        <span class="detail-label"><i class="fas fa-comment-dots"></i> Rejection Reason</span>
+        <span class="detail-val" id="modalReason">—</span>
+      </div>
+    </div>
+
+    <div class="rejection-area hidden" id="rejectionArea">
+      <label class="rejection-label">
+        <i class="fas fa-comment-dots"></i> Rejection Reason
+        <span class="optional">(optional)</span>
+      </label>
+      <textarea id="rejectionReason" class="rejection-textarea"
+        placeholder="e.g. Incomplete information, invalid address…" maxlength="300"></textarea>
+    </div>
+
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon"></div>
+    <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+    <div class="confirm-msg"   id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="btn-confirm-cancel" id="confirmCancel">Cancel</button>
+      <button class="btn-confirm-ok"     id="confirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="assets/js/adminApprove.js"></script>
+</body>
+</html>

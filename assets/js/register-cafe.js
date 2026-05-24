@@ -5,9 +5,6 @@ import {
   collection,
   addDoc,
   getDocs,
-  query,
-  orderBy,
-  limit,
   doc,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -111,17 +108,17 @@ function previewFile(file) {
 }
 
 /* ── GET NEXT ID ─────────────────────────────────────────────── */
+// Uses total doc count + 1 — avoids needing a composite index on "id"
+// and handles gaps in the sequence (e.g. id jumps from 4 → 6).
 async function getNextId() {
-  try {
-    const q = query(collection(db, "cafes"), orderBy("id", "desc"), limit(1));
-    const snap = await getDocs(q);
-    if (snap.empty) return 1;
-    const last = snap.docs[0].data().id;
-    return (typeof last === "number" ? last : parseInt(last) || 0) + 1;
-  } catch {
-    const snap = await getDocs(collection(db, "cafes"));
-    return snap.size + 1;
-  }
+  const snap = await getDocs(collection(db, "cafes"));
+  // Find the highest existing numeric id and add 1
+  let maxId = 0;
+  snap.forEach(d => {
+    const n = parseInt(d.data().id) || 0;
+    if (n > maxId) maxId = n;
+  });
+  return maxId + 1;
 }
 
 /* ── VALIDATE ────────────────────────────────────────────────── */
@@ -160,29 +157,36 @@ submitBtn.addEventListener("click", async () => {
     }
 
     // Build Firestore cafe document — default rating seeded at 4
+    const currentUser = auth.currentUser;
+
     const cafeDoc = {
-      id:          nextId,
-      name:        nameEl.value.trim(),
-      openHour:    openEl.value,
-      closeHour:   closeEl.value,
-      description: descEl.value.trim(),
-      address:     addressEl.value.trim(),
-      city:        cityEl.value.trim(),
-      facilities:  facilities,
-      image:       imagePath,
-      rating:      4,
-      ratingCount: 1,
-      ratingSum:   4,
+      id:            nextId,
+      name:          nameEl.value.trim(),
+      openHour:      openEl.value,
+      closeHour:     closeEl.value,
+      description:   descEl.value.trim(),
+      address:       addressEl.value.trim(),
+      city:          cityEl.value.trim(),
+      facilities:    facilities,
+      image:         imagePath,
+      rating:        4,
+      ratingCount:   1,
+      ratingSum:     4,
       ratingBreakdown: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 0 },
+      // ── approval fields ──────────────────────────────
+      approveStatus: "pending",          // gallery filters on this
+      ownerId:       currentUser?.uid || "",  // links cafe → ShopOwner
+      ownerEmail:    currentUser?.email || "",
     };
 
-    await addDoc(collection(db, "cafes"), cafeDoc);
+    const cafeRef = await addDoc(collection(db, "cafes"), cafeDoc);
 
     // Flag the shop owner's Firestore doc as having submitted a cafe
-    const currentUser = auth.currentUser;
+    // Also store the cafe's Firestore doc ID so adminapproval.js can find it
     if (currentUser) {
       await updateDoc(doc(db, "ShopOwner", currentUser.uid), {
         cafeRegistered: true,
+        cafeDocId:      cafeRef.id,   // ← adminapproval.js uses this
         // approved remains false — admin must flip it
       });
     }

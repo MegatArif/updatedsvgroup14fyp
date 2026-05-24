@@ -38,7 +38,7 @@ export function setupNavbar() {
 
     ${/* ── APPROVAL: admin only ── */
     isAdmin ? `
-      <a href="#" id="nav-approval">
+      <a href="adminapprove.html" id="nav-approval">
         <i class="fas fa-clipboard-check"></i> Approval
       </a>
     ` : ''}

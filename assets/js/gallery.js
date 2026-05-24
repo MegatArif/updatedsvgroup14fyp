@@ -1,6 +1,6 @@
 import { db, storage } from './firebase-config.js';
 import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-import { collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
 import { showToast } from './toast.js';
 
@@ -86,6 +86,9 @@ async function initializeData() {
         const data = [];
         for (const d of snapshot.docs) {
             const cafe = { ...d.data(), id: d.id };
+            // Only show cafes approved by admin.
+            // Cafes without approveStatus (legacy data) are shown by default.
+            if (cafe.approveStatus && cafe.approveStatus !== 'approved') continue;
             cafe.image = await getCafeImageUrl(cafe.image);
             data.push(cafe);
         }
@@ -186,16 +189,44 @@ async function deleteRestaurant(cafe) {
     if (!confirmed) return;
 
     try {
+        // 1. Delete the cafe doc from Firestore
         await deleteDoc(doc(db, 'cafes', cafe.id));
 
-        // Remove from local array and re-render
+        // 2. Reset the linked ShopOwner doc so the owner is no longer
+        //    approved and can re-register a new cafe.
+        //    Match by ownerId (new registrations) or ownerEmail (legacy).
+        try {
+            let ownerDocId = cafe.ownerId || null;
+
+            // Fallback: find owner by email if ownerId not stored (legacy cafes)
+            if (!ownerDocId && cafe.ownerEmail) {
+                const ownerSnap = await getDocs(
+                    query(collection(db, 'ShopOwner'), where('email', '==', cafe.ownerEmail))
+                );
+                if (!ownerSnap.empty) ownerDocId = ownerSnap.docs[0].id;
+            }
+
+            if (ownerDocId) {
+                await updateDoc(doc(db, 'ShopOwner', ownerDocId), {
+                    cafeRegistered: false,
+                    approved:       false,
+                    rejected:       false,
+                    cafeDocId:      '',
+                    rejectionNote:  '',
+                });
+            }
+        } catch (ownerErr) {
+            // Non-fatal — cafe is deleted; owner cleanup failed silently
+            console.warn('ShopOwner reset failed (non-fatal):', ownerErr);
+        }
+
+        // 3. Remove from local array and re-render
         cafes = cafes.filter(c => c.id !== cafe.id);
         updateCafeList();
 
-        // Close modal
+        // 4. Close modal
         document.getElementById('detailModal').style.display = 'none';
 
-        // Use centralized toast notification
         showToast(`✅ "${cafe.name}" has been deleted.`, 'success', 3500);
 
     } catch (err) {
@@ -380,7 +411,7 @@ async function showDetailModal(cafe) {
               ? `<button class="btn-delete-restaurant" id="btnDeleteRestaurant">
                    <i class="fas fa-trash-alt"></i> Delete Restaurant
                  </button>`
-              : `<button class="btn-reserve">
+              : `<button class="btn-reserve" id= "btnReservation">
                    <i class="fas fa-calendar-check"></i> Make a Reservation
                  </button>`
             }
@@ -486,6 +517,23 @@ async function showDetailModal(cafe) {
     modal.querySelector('.close-modal').onclick = closeModal;
     document.getElementById('modalCloseBtn').onclick = closeModal;
     window.onclick = e => { if (e.target === modal) closeModal(); };
+
+    // ── Reservation redirect (for customers) ──
+    const reserveBtn = document.getElementById('btnReservation');
+    if (reserveBtn) {
+        reserveBtn.addEventListener('click', () => {
+            // Pass cafe data via URL parameters
+            const params = new URLSearchParams({
+                id: cafe.id,
+                name: cafe.name,
+                address: cafe.address,
+                city: cafe.city,
+                openHour: cafe.openHour,
+                closeHour: cafe.closeHour
+            });
+            window.location.href = `reservation.html?${params.toString()}`;
+        });
+    }
 
     // ── Admin: wire up Delete Restaurant button ──
     const deleteBtn = document.getElementById('btnDeleteRestaurant');
