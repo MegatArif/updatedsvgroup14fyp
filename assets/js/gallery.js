@@ -531,7 +531,7 @@ async function showDetailModal(cafe) {
                 openHour: cafe.openHour,
                 closeHour: cafe.closeHour
             });
-            window.location.href = `reservation.html?${params.toString()}`;
+            window.location.href = `bookingform.html?${params.toString()}`;
         });
     }
 
