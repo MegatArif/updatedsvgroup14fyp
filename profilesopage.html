@@ -54,12 +54,15 @@
             </aside>
 
             <div class="profile-content card">
-                <div class="tabs">
+                <div class="tabs" id="tab-bar">
                     <button class="tab-btn active" data-target="personal-info">Personal Information</button>
                     <button class="tab-btn" data-target="change-email">Change Email</button>
                     <button class="tab-btn" data-target="change-password">Change Password</button>
+                    <!-- Shop Settings tab — shown only for ShopOwners -->
+                    <button class="tab-btn hidden" id="shop-tab-btn" data-target="shop-settings">🏪 Shop Settings</button>
                 </div>
 
+                <!-- ===================== PERSONAL INFO ===================== -->
                 <form id="personal-info" class="tab-content active form-layout">
                     <div class="form-group">
                         <label>Username</label>
@@ -78,13 +81,13 @@
                         </div>
                     </div>
 
-                    
                     <div class="text-right">
                         <button type="submit" id="save-profile-btn" class="btn btn-primary">💾 Save Changes</button>
-                        <button type="submit" id="log-up-btn" class="btn btn-primary">🔺 Log Out</button>
+                        <button type="button" id="log-up-btn" class="btn btn-primary">🔺 Log Out</button>
                     </div>
                 </form>
 
+                <!-- ===================== CHANGE PASSWORD ===================== -->
                 <form id="change-password" class="tab-content hidden form-layout">
                     <div class="form-group">
                         <label>Current Password</label>
@@ -104,7 +107,8 @@
                     </div>
                 </form>
 
-                 <form id="change-email" class="tab-content hidden form-layout">
+                <!-- ===================== CHANGE EMAIL ===================== -->
+                <form id="change-email" class="tab-content hidden form-layout">
                     <div class="form-group">
                         <label>New Email Address</label>
                         <input type="email" id="new-email" required>
@@ -117,6 +121,90 @@
                         <button type="submit" class="btn btn-primary">Update Email</button>
                     </div>
                 </form>
+
+                <!-- ===================== SHOP SETTINGS (ShopOwner only) ===================== -->
+                <form id="shop-settings" class="tab-content hidden form-layout">
+
+                    <!-- Shop Name — READ ONLY -->
+                    <div class="form-group">
+                        <label>Shop Name <span class="badge badge-muted">Cannot be changed</span></label>
+                        <input type="text" id="shop-name" readonly class="bg-secondary" placeholder="Your shop name">
+                    </div>
+
+                    <!-- Address -->
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="shop-address" placeholder="e.g. No. 12, Jalan Utama">
+                    </div>
+
+                    <!-- City -->
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="shop-city" placeholder="e.g. Kuala Lumpur">
+                    </div>
+
+                    <!-- Open / Close Hours -->
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label>Open Hour</label>
+                            <input type="time" id="shop-open-hour">
+                        </div>
+                        <div class="form-group">
+                            <label>Close Hour</label>
+                            <input type="time" id="shop-close-hour">
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="shop-description" rows="3" placeholder="Describe your cafe..."></textarea>
+                    </div>
+
+                    <!-- Facilities -->
+                    <div class="form-group">
+                        <label>Facilities</label>
+                        <small class="text-muted">Check all that apply to your cafe.</small>
+                        <div id="facilities-checkboxes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem;margin-top:.5rem;">
+                            <!-- Checkboxes injected by JS -->
+                        </div>
+                        <!-- Custom facility input -->
+                        <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+                            <input type="text" id="custom-facility-input" placeholder="Add custom facility…" style="flex:1;">
+                            <button type="button" id="add-facility-btn" class="btn btn-outline">+ Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Shop Image -->
+                    <div class="form-group">
+                        <label>Shop Image</label>
+                        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                            <img id="shop-image-preview" src="" alt="Shop Image"
+                                 style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border-color,#ddd);display:none;">
+                            <div>
+                                <input type="file" id="shop-image-upload" accept="image/jpeg,image/png,image/webp" hidden>
+                                <button type="button" id="trigger-shop-image" class="btn btn-outline">📷 Change Shop Image</button>
+                                <div id="shop-image-progress" class="progress-bar hidden" style="margin-top:.5rem;"><div class="progress-fill"></div></div>
+                                <small class="text-muted" style="display:block;margin-top:.25rem;">JPG, PNG, WEBP — max 5 MB</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
+                        <!-- Danger zone on the left -->
+                        <button type="button" id="delete-shop-btn" class="btn btn-danger">
+                            🗑️ Delete Shop &amp; Unregister
+                        </button>
+                        <!-- Save on the right -->
+                        <button type="submit" id="save-shop-btn" class="btn btn-primary">💾 Save Shop Changes</button>
+                    </div>
+
+                    <!-- Approval status notice -->
+                    <div id="shop-status-notice" class="guidelines-box mt-2 bg-secondary text-dark hidden">
+                        <p id="shop-status-text"></p>
+                    </div>
+                </form>
+
             </div>
         </div>
     </main>

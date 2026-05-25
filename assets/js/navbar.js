@@ -32,7 +32,7 @@ export function setupNavbar() {
 
     ${/* ── RESERVATIONS: customer only ── */
     isCustomer ? `
-      <a href="reservations.html" id="nav-reservations">
+      <a href="reservation.html" id="nav-reservations">
         <i class="fas fa-calendar-check"></i> Reservations
       </a>
     ` : ''}
@@ -58,7 +58,7 @@ export function setupNavbar() {
 
     ${/* ── PROFILE: everyone except admin ── */
     !isAdmin ? `
-      <a href="profilepage.html" id="nav-profile">
+      <a href="${isShopOwner ? 'profilesopage.html' : 'profilepage.html'}" id="nav-profile">
         <i class="fas fa-user"></i> Profile
       </a>
     ` : ''}
@@ -85,9 +85,9 @@ export function setupNavbar() {
     "socialpage.html":    "nav-post",
     "adminpost.html":     "nav-post",
     "profilepage.html":   "nav-profile",
-    "so.html":            "nav-dashboard",
+    "profilesopage.html": "nav-profileso",
     "so_dashboard.html":  "nav-dashboard",
-    "reservations.html":  "nav-reservations",
+    "reservation.html":  "nav-reservations",
   };
 
   const activeId = activeMap[currentPage];
