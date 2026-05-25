@@ -1,27 +1,105 @@
 /* ═══════════════════════════════════════════════════════
    so.js  —  Shop Owner Dashboard
    Depends on:
-     assets/js/toast.js   → showToast()
-     assets/js/navbar.js  → setupNavbar()
+     assets/js/toast.js        → showToast()
+     assets/js/navbar.js       → setupNavbar()
+     assets/js/firebase-config.js → db, app
 ═══════════════════════════════════════════════════════ */
 
 import { showToast }   from "./toast.js";
 import { setupNavbar } from "./navbar.js";
+import { db, app }     from "./firebase-config.js";
+
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  orderBy,
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+const auth = getAuth(app);
 
 /* ═══════════════════════════════════════════════════════
-   DATA
-   Replace with your real Firestore/API calls as needed.
+   STATE
+   reservations[] — populated from Firestore
+   Each item shape (mirrors your Firestore fields):
+   {
+     id,          ← Firestore document ID
+     createdAt,   ← Firestore Timestamp
+     date,        ← "2026-05-25"
+     guests,      ← "3 People"
+     time,        ← "21:00"
+     userId,
+     username,
+     status,      ← "pending" | "confirmed" | "rejected" | "completed"
+   }
 ═══════════════════════════════════════════════════════ */
-let reservations = [
-  { id:"R001", customer:"Sarah Lim",   datetime:"2026-05-19 12:30", guests:4, amount:"RM 53.00", status:"completed" },
-  { id:"R002", customer:"Jason Yong",  datetime:"2026-05-18 19:00", guests:6, amount:"RM 94.34", status:"completed" },
-  { id:"R003", customer:"Ahmad Razif", datetime:"2026-05-20 14:00", guests:2, amount:null,        status:"pending"   },
-  { id:"R004", customer:"Nurul Ain",   datetime:"2026-05-21 19:00", guests:5, amount:null,        status:"pending"   },
-  { id:"R005", customer:"Ravi Kumar",  datetime:"2026-05-22 12:00", guests:3, amount:null,        status:"pending"   },
-];
+let reservations = [];
 
-// Per-reservation notes stored in memory: { "R001": [{text, date}, …] }
+// Per-reservation notes stored in memory: { "<docId>": [{text, date}, …] }
 const notes = {};
+
+/* ═══════════════════════════════════════════════════════
+   FIRESTORE — LOAD RESERVATIONS FOR THIS OWNER'S CAFE
+═══════════════════════════════════════════════════════ */
+async function loadReservations(user) {
+  try {
+    // 1. Get this owner's cafe name so we can filter reservations
+    const cafesSnap = await getDocs(
+      query(collection(db, "cafes"), where("ownerId", "==", user.uid))
+    );
+
+    if (cafesSnap.empty) {
+      showToast("No cafe registered to this account.", "error");
+      return;
+    }
+
+    const cafeName = cafesSnap.docs[0].data().name || "";
+
+    // 2. Query reservations where cafe == cafeName
+    //    (matches the "cafe" field in your Firestore screenshot)
+    const resQuery = query(
+      collection(db, "reservation"),
+      where("cafe", "==", cafeName),
+      
+    );
+
+    const snap = await getDocs(resQuery);
+
+    reservations = snap.docs.map((d) => ({
+      id:        d.id,
+      createdAt: d.data().createdAt ?? null,
+      date:      d.data().date      ?? "",
+      guests:    d.data().guests    ?? "",
+      time:      d.data().time      ?? "",
+      userId:    d.data().userId    ?? "",
+      username:  d.data().username  ?? "",
+      status:    d.data().status    ?? "pending",   // default pending if field missing
+    }));
+
+    reservations.sort((a, b) => {
+    const tA = a.createdAt?.seconds ?? 0;
+    const tB = b.createdAt?.seconds ?? 0;
+    return tB - tA;
+  });
+
+    renderStats();
+    renderPendingTable();
+    renderCompletedCards();
+
+  } catch (err) {
+  console.error("loadReservations:", err.code, err.message); // show full error
+  showToast("Failed to load reservations.", "error");
+}
+}
 
 /* ═══════════════════════════════════════════════════════
    CLOCK
@@ -36,7 +114,7 @@ function startClock() {
     const s    = String(now.getSeconds()).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12 || 12;
-    el.textContent = `${String(h).padStart(2,"0")}:${m}:${s} ${ampm}`;
+    el.textContent = `${String(h).padStart(2, "0")}:${m}:${s} ${ampm}`;
   };
   tick();
   setInterval(tick, 1000);
@@ -72,37 +150,40 @@ function animateCount(elId, target) {
 ═══════════════════════════════════════════════════════ */
 function makeBadge(status) {
   const map = {
-    pending:   { cls:"badge-pending",   icon:"fa-clock",        label:"Pending"   },
-    confirmed: { cls:"badge-confirmed", icon:"fa-circle-check", label:"Confirmed" },
-    rejected:  { cls:"badge-rejected",  icon:"fa-circle-xmark", label:"Rejected"  },
-    completed: { cls:"badge-completed", icon:"fa-check-double", label:"Completed" },
+    pending:   { cls: "badge-pending",   icon: "fa-clock",        label: "Pending"   },
+    confirmed: { cls: "badge-confirmed", icon: "fa-circle-check", label: "Confirmed" },
+    rejected:  { cls: "badge-rejected",  icon: "fa-circle-xmark", label: "Rejected"  },
+    completed: { cls: "badge-completed", icon: "fa-check-double", label: "Completed" },
   };
   const c = map[status] || map.pending;
   return `<span class="badge ${c.cls}"><i class="fas ${c.icon}"></i>${c.label}</span>`;
 }
 
 /* ═══════════════════════════════════════════════════════
-   PENDING TABLE  (Approve / Reject actions)
+   PENDING TABLE
+   Shows all non-completed reservations.
+   Columns: ID (short), Customer, Date, Time, Guests, Status, Actions
 ═══════════════════════════════════════════════════════ */
 function renderPendingTable() {
   const tbody = document.getElementById("reservationsBody");
   if (!tbody) return;
 
-  // Show all non-completed reservations (pending / confirmed / rejected)
   const rows = reservations.filter(r => r.status !== "completed");
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No reservations.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No reservations.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(r => {
+    const shortId = r.id.slice(-6).toUpperCase();
+
     const actionCell = r.status === "pending"
       ? `<div class="action-btns">
            <button class="btn-approve" onclick="updateStatus('${r.id}','confirmed')">
              <i class="fas fa-check"></i> Approve
            </button>
-           <button class="btn-reject" onclick="updateStatus('${r.id}','rejected')">
+           <button class="btn-reject"  onclick="updateStatus('${r.id}','rejected')">
              <i class="fas fa-xmark"></i> Reject
            </button>
          </div>`
@@ -110,10 +191,11 @@ function renderPendingTable() {
 
     return `
       <tr id="row-${r.id}">
-        <td><strong>${r.id}</strong></td>
-        <td>${r.customer}</td>
-        <td>${r.datetime}</td>
-        <td>${r.guests}</td>
+        <td><strong title="${r.id}">${shortId}</strong></td>
+        <td>${escapeHtml(r.username)}</td>
+        <td>${r.date}</td>
+        <td>${r.time}</td>
+        <td>${escapeHtml(r.guests)}</td>
         <td id="badge-${r.id}">${makeBadge(r.status)}</td>
         <td id="action-${r.id}">${actionCell}</td>
       </tr>`;
@@ -121,40 +203,49 @@ function renderPendingTable() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   APPROVE / REJECT  (exposed globally for onclick)
+   APPROVE / REJECT — writes status back to Firestore
 ═══════════════════════════════════════════════════════ */
-window.updateStatus = function(id, newStatus) {
+window.updateStatus = async function(id, newStatus) {
   const r = reservations.find(x => x.id === id);
   if (!r) return;
 
-  r.status = newStatus;
+  try {
+    // Update Firestore first
+    await updateDoc(doc(db, "reservation", id), { status: newStatus });
 
-  // Update badge cell in-place
-  const badgeEl = document.getElementById(`badge-${id}`);
-  if (badgeEl) badgeEl.innerHTML = makeBadge(newStatus);
+    // Then update local state
+    r.status = newStatus;
 
-  // Swap action buttons → resolved label
-  const actionEl = document.getElementById(`action-${id}`);
-  if (actionEl)
-    actionEl.innerHTML = `<span class="resolved-label">${newStatus === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
+    // Update badge cell in-place
+    const badgeEl = document.getElementById(`badge-${id}`);
+    if (badgeEl) badgeEl.innerHTML = makeBadge(newStatus);
 
-  // Brief row flash
-  const rowEl = document.getElementById(`row-${id}`);
-  if (rowEl) {
-    rowEl.style.transition = "background .4s";
-    rowEl.style.background  = newStatus === "confirmed" ? "#eaf5ec" : "#fdf2f2";
-    setTimeout(() => { rowEl.style.background = ""; }, 1400);
+    // Swap action buttons → resolved label
+    const actionEl = document.getElementById(`action-${id}`);
+    if (actionEl)
+      actionEl.innerHTML = `<span class="resolved-label">${newStatus === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
+
+    // Brief row flash
+    const rowEl = document.getElementById(`row-${id}`);
+    if (rowEl) {
+      rowEl.style.transition = "background .4s";
+      rowEl.style.background  = newStatus === "confirmed" ? "#eaf5ec" : "#fdf2f2";
+      setTimeout(() => { rowEl.style.background = ""; }, 1400);
+    }
+
+    renderStats();
+
+    showToast(
+      newStatus === "confirmed"
+        ? `Reservation approved.`
+        : `Reservation rejected.`,
+      newStatus === "confirmed" ? "success" : "error"
+    );
+
+  } catch (err) {
+    console.error("updateStatus:", err);
+    showToast("Failed to update reservation status.", "error");
   }
-
-  renderStats();
-
-  // ── showToast from your toast.js ───────────────────
-  showToast(
-    newStatus === "confirmed"
-      ? `Reservation ${id} has been approved.`
-      : `Reservation ${id} has been rejected.`,
-    newStatus === "confirmed" ? "success" : "error"
-  );
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -164,7 +255,8 @@ function renderCompletedCards() {
   const grid = document.getElementById("compGrid");
   if (!grid) return;
 
-  const done = reservations.filter(r => r.status === "completed");
+  // In renderCompletedCards()
+const done = reservations.filter(r => r.status === "completed" || r.status === "confirmed");
 
   if (!done.length) {
     grid.innerHTML = `<p style="color:var(--text-muted);font-style:italic;padding:10px 0;">No completed reservations yet.</p>`;
@@ -174,23 +266,27 @@ function renderCompletedCards() {
   grid.innerHTML = done.map(r => {
     const count     = (notes[r.id] || []).length;
     const noteBadge = count > 0 ? `<span class="note-count-badge">${count}</span>` : "";
+    const shortId   = r.id.slice(-6).toUpperCase();
+
     return `
       <div class="comp-card" id="card-${r.id}">
         <div class="comp-card-top">
           <div>
-            <div class="comp-card-id">${r.id}</div>
-            <div class="comp-card-name">${r.customer}</div>
+            <div class="comp-card-id" title="${r.id}">${shortId}</div>
+            <div class="comp-card-name">${escapeHtml(r.username)}</div>
           </div>
+          
           ${makeBadge(r.status)}
         </div>
         <div class="comp-card-meta">
-          <span><i class="fas fa-calendar-alt"></i>${r.datetime}</span>
-          <span><i class="fas fa-users"></i>${r.guests} guests &nbsp;·&nbsp; ${r.amount ?? "—"}</span>
+          <span><i class="fas fa-calendar-alt"></i>${r.date} &nbsp;·&nbsp; ${r.time}</span>
+          <span><i class="fas fa-users"></i>${escapeHtml(r.guests)}</span>
         </div>
         <div class="comp-card-actions">
-          <button class="btn" onclick="handleReceipt('${r.id}')">
-            <i class="fas fa-receipt"></i> Receipt
-          </button>
+        <button class="btn" onclick="handleReceipt('${r.id}')">
+          <i class="fas fa-receipt"></i> Receipt
+        </button>
+        <div class="comp-card-actions">
           <button class="btn" id="noteBtn-${r.id}" onclick="openNotesModal('${r.id}')">
             <i class="fas fa-pen"></i> Note ${noteBadge}
           </button>
@@ -198,24 +294,6 @@ function renderCompletedCards() {
       </div>`;
   }).join("");
 }
-
-/* ═══════════════════════════════════════════════════════
-   RECEIPT
-═══════════════════════════════════════════════════════ */
-window.handleReceipt = function(id) {
-  const r = reservations.find(x => x.id === id);
-  if (!r) return;
-  alert(
-    `━━━━━━━━━━━━━━━━━━━━━━━\n`  +
-    `  RECEIPT  —  ${r.id}\n`    +
-    `━━━━━━━━━━━━━━━━━━━━━━━\n`  +
-    `Customer : ${r.customer}\n` +
-    `Date     : ${r.datetime}\n` +
-    `Guests   : ${r.guests}\n`   +
-    `Total    : ${r.amount ?? "N/A"}\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━`
-  );
-};
 
 /* ═══════════════════════════════════════════════════════
    NOTES MODAL
@@ -226,8 +304,9 @@ window.openNotesModal = function(id) {
   activeNoteId = id;
   const r = reservations.find(x => x.id === id);
 
-  document.getElementById("modalSubtitle").textContent = `${r.id}  ·  ${r.customer}`;
-  document.getElementById("modalTitle").textContent    = "Reservation Notes";
+  document.getElementById("modalSubtitle").textContent =
+    `${r.id.slice(-6).toUpperCase()}  ·  ${r.username}`;
+  document.getElementById("modalTitle").textContent = "Reservation Notes";
 
   const ta = document.getElementById("noteTextarea");
   ta.value = "";
@@ -276,9 +355,9 @@ window.saveNote = function() {
 
   const now  = new Date();
   const date =
-    now.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" }) +
+    now.toLocaleDateString("en-MY", { day: "2-digit", month: "short", year: "numeric" }) +
     "  " +
-    now.toLocaleTimeString("en-MY", { hour:"2-digit", minute:"2-digit" });
+    now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" });
 
   notes[activeNoteId].unshift({ text, date });
 
@@ -287,7 +366,6 @@ window.saveNote = function() {
   renderNotesList(activeNoteId);
   refreshNoteButton(activeNoteId);
 
-  // ── showToast from your toast.js ───────────────────
   showToast("Note saved successfully.", "success");
 };
 
@@ -297,20 +375,17 @@ window.deleteNote = function(index) {
   notes[activeNoteId].splice(index, 1);
   renderNotesList(activeNoteId);
   refreshNoteButton(activeNoteId);
-
-  // ── showToast from your toast.js ───────────────────
   showToast("Note deleted.", "info");
 };
 
 function refreshNoteButton(id) {
-  const btn   = document.getElementById(`noteBtn-${id}`);
+  const btn = document.getElementById(`noteBtn-${id}`);
   if (!btn) return;
   const count = (notes[id] || []).length;
   const badge = count > 0 ? `<span class="note-count-badge">${count}</span>` : "";
   btn.innerHTML = `<i class="fas fa-pen"></i> Note ${badge}`;
 }
 
-// Exposed globally so the inline oninput= on the textarea can call it
 window.updateCharCount = function() {
   const ta  = document.getElementById("noteTextarea");
   const el  = document.getElementById("charCount");
@@ -321,7 +396,7 @@ window.updateCharCount = function() {
 };
 
 function escapeHtml(str) {
-  return str
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -338,7 +413,6 @@ function injectNotesModal() {
   overlay.id        = "notesOverlay";
   overlay.className = "modal-overlay";
 
-  // Close on backdrop click
   overlay.addEventListener("click", e => {
     if (e.target === overlay) closeNotesModal();
   });
@@ -357,7 +431,6 @@ function injectNotesModal() {
       </div>
 
       <div class="modal-body">
-
         <div>
           <div class="notes-section-label">Saved Notes</div>
           <div class="notes-list" id="notesList">
@@ -382,26 +455,80 @@ function injectNotesModal() {
             </button>
           </div>
         </div>
-
       </div>
     </div>`;
 
   document.body.appendChild(overlay);
 
-  // Close on Escape
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeNotesModal();
   });
 }
+  window.handleReceipt = function(id) {
+  const r = reservations.find(x => x.id === id);
+  if (!r) return;
 
+  const { jsPDF } = window.jspdf;
+  const pdfdoc = new jsPDF({ unit: "mm", format: [80, 170] });
+
+  // HEADER
+  pdfdoc.setFillColor(227, 176, 122);
+  pdfdoc.rect(0, 0, 80, 22, "F");
+  pdfdoc.setTextColor(60, 40, 30);
+  pdfdoc.setFont("helvetica", "bold");
+  pdfdoc.setFontSize(14);
+  pdfdoc.text("CAFEHUNT", 40, 10, { align: "center" });
+  pdfdoc.setFontSize(7);
+  pdfdoc.text("OFFICIAL RESERVATION RECEIPT", 40, 16, { align: "center" });
+
+  let y = 30;
+  pdfdoc.setTextColor(120);
+  pdfdoc.setFontSize(7);
+  pdfdoc.text(r.username, 40, y, { align: "center" });
+  y += 8;
+
+  pdfdoc.setDrawColor(220, 190, 160);
+  pdfdoc.line(5, y, 75, y);
+  y += 10;
+
+  const row = (k, v) => {
+    pdfdoc.setTextColor(120);
+    pdfdoc.setFont("helvetica", "bold");
+    pdfdoc.text(k, 5, y);
+    pdfdoc.setTextColor(60, 40, 30);
+    pdfdoc.setFont("helvetica", "normal");
+    pdfdoc.text(String(v), 30, y);
+    y += 8;
+  };
+
+  row("Customer", r.username);
+  row("Date",     r.date);
+  row("Time",     r.time);
+  row("Guests",   r.guests);
+
+  y += 5;
+  pdfdoc.setFillColor(255, 242, 217);
+  pdfdoc.rect(5, y - 4, 70, 10, "F");
+  pdfdoc.setTextColor(150, 90, 40);
+  pdfdoc.setFont("helvetica", "bold");
+  pdfdoc.text(`STATUS : ${r.status.toUpperCase()}`, 40, y + 2, { align: "center" });
+
+  pdfdoc.save(`CafeHunt_${r.id}_${Date.now()}.pdf`);
+};
 /* ═══════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-  setupNavbar();           // ← your navbar.js
+  setupNavbar();
   startClock();
-  renderStats();
-  renderPendingTable();
-  renderCompletedCards();
   injectNotesModal();
+
+  // Wait for auth, then load real data
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loadReservations(user);
+    } else {
+      window.location.href = "index.html";
+    }
+  });
 });
