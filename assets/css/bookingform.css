@@ -1,0 +1,197 @@
+/* --- Design Tokens & Resets --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #F3E8DF;
+  color: #A28F70;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* --- Shared Card Styles --- */
+.card {
+  background-color: #F3E4C9;
+  border: 2px solid #A28F70;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  padding: 40px 30px;
+  box-shadow: 0 10px 30px rgba(162, 143, 112, 0.15);
+  transition: all 0.4s ease-in-out;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.card-header h1 {
+  .card-header h1 {
+  font-size: 2.2rem;       /* Made it slightly larger/bolder */
+  font-weight: 700;       /* Maximum thickness */
+  color: #000000;          /* Pure pitch black */
+  letter-spacing: normal;  /* Removed the letter spacing gaps */
+  text-transform: none;    /* Allowed lowercase letters like "(marshid)" */
+}
+}
+
+.card-header p {
+  font-size: 0.95rem;
+  color: #A98B76;
+  margin-top: 5px;
+}
+
+/* --- Form Group & Inputs --- */
+.form-group {
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  color: #A28F70;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper svg {
+  position: absolute;
+  left: 15px;
+  width: 20px;
+  height: 20px;
+  fill: #A28F70;
+  pointer-events: none;
+}
+
+.form-control {
+  width: 100%;
+  padding: 14px 14px 14px 45px;
+  background-color: #F3E8DF;
+  border: 1.5px solid #A28F70;
+  border-radius: 8px;
+  color: #A28F70;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-control::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: sepia(40%) saturate(200%) brightness(70%) hue-rotate(10deg);
+}
+
+.form-control:focus {
+  border-color: #A98B76;
+  box-shadow: 0 0 0 3px rgba(169, 139, 118, 0.2);
+}
+
+/* --- Button / CTA --- */
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  background-color: #A98B76;
+  color: #F3E8DF;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  margin-top: 10px;
+}
+
+.btn-submit:hover {
+  background-color: #937764;
+}
+
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
+/* --- Confirmation View Styles --- */
+.hidden {
+  display: none !important;
+}
+
+.success-icon {
+  margin: 0 auto 20px auto;
+  width: 60px;
+  height: 60px;
+  background-color: #A98B76;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.success-icon svg {
+  width: 32px;
+  height: 32px;
+  fill: #F3E4C9;
+}
+
+.summary-details {
+  background-color: #F3E8DF;
+  border: 1px dashed #A28F70;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(162, 143, 112, 0.2);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 0.95rem;
+  color: #A98B76;
+  font-weight: 700;
+}
+
+.notice {
+  font-size: 0.8rem;
+  text-align: center;
+  color: #A98B76;
+  line-height: 1.4;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 480px) {
+  .card {
+    padding: 30px 20px;
+  }
+  .card-header h1 {
+    font-size: 1.5rem;
+  }
+}
