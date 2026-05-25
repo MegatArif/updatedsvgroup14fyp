@@ -203,6 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle redirection back to the main menu or home page
   returnMenuBtn.addEventListener('click', () => {
-    window.location.href = 'index.html'; // Adjust this to your actual main menu or dashboard URL
+    window.location.href = 'gallery.html'; 
   });
 });
