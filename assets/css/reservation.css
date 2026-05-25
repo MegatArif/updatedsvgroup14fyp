@@ -2,7 +2,7 @@ body {
   margin: 0;
   font-family: "Poppins", Arial, sans-serif;
 
-  background: #fffaf3; /* ☀️ 奶油白 */
+  background: #fffaf3; 
 
   color: #3a2f28;
 }
@@ -23,7 +23,7 @@ body {
   font-weight: 800;
   margin-bottom: 30px;
 
-  color: #e3b07a; /* ☀️ 浅焦糖 */
+  color: #e3b07a; 
 }
 
 /* SECTION */
