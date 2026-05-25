@@ -730,6 +730,27 @@ body {
   cursor: pointer;
   transition: filter .15s, transform .1s;
 }
+
+.nav-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: hsl(32, 23%, 29%);
+  font-family: inherit;
+  padding: 0;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-logout-btn:hover {
+  color: #e53935;  /* red on hover to signal logout */
+  opacity: 1;
+}
+
 .btn-confirm-ok:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .btn-confirm-ok.danger { background: var(--red); }
 

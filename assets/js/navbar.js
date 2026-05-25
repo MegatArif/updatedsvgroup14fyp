@@ -1,5 +1,3 @@
-// assets/js/navbar.js
-
 import {
   getAuth,
   signOut
@@ -14,6 +12,7 @@ export function setupNavbar() {
 
   const isAdmin     = role === 'admin';
   const isShopOwner = role === 'shopowner';
+  const isCustomer  = role === 'customer';
 
   navbarEl.innerHTML = `
 
@@ -28,6 +27,13 @@ export function setupNavbar() {
     !isShopOwner ? `
       <a href="#" id="nav-post">
         <i class="fas fa-plus-circle"></i> Post
+      </a>
+    ` : ''}
+
+    ${/* ── RESERVATIONS: customer only ── */
+    isCustomer ? `
+      <a href="reservations.html" id="nav-reservations">
+        <i class="fas fa-calendar-check"></i> Reservations
       </a>
     ` : ''}
 
@@ -75,11 +81,13 @@ export function setupNavbar() {
   const currentPage = window.location.pathname.split("/").pop();
 
   const activeMap = {
-    "gallery.html":     "nav-explore",
-    "socialpage.html":  "nav-post",
-    "adminpost.html":   "nav-post",
-    "profilepage.html": "nav-profile",
-    "so.html":          "nav-dashboard",
+    "gallery.html":       "nav-explore",
+    "socialpage.html":    "nav-post",
+    "adminpost.html":     "nav-post",
+    "profilepage.html":   "nav-profile",
+    "so.html":            "nav-dashboard",
+    "so_dashboard.html":  "nav-dashboard",
+    "reservations.html":  "nav-reservations",
   };
 
   const activeId = activeMap[currentPage];
