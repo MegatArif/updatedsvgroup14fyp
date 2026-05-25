@@ -14,6 +14,9 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
+import { setupNavbar } from './navbar.js';
+setupNavbar();
+
 const auth = getAuth(app);
 
 // ============================
