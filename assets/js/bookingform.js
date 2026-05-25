@@ -121,8 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Get the cafe name from the URL query parameters (e.g., ?cafe=Cafe+Name)
   const urlParams = new URLSearchParams(window.location.search);
-  const selectedCafe = urlParams.get('cafe') || "Cafe Pronto"; // Fallback to default
-  const selectedLocation = urlParams.get('location') || "Main Branch"; // Fallback to default
+  const selectedCafe = urlParams.get('name') || "Cafe Pronto"; // Fallback to default
+  const selectedLocation = urlParams.get('city') || "Main Branch"; // Fallback to default
 
   // Update the UI subtitle to reflect the selected cafe
   if (cafeSubtitle) {
