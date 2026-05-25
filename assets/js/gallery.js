@@ -331,7 +331,7 @@ const CITY_NAMES = {
     kulai:      'Kulai',
     masai:      'Masai',
     tangkak:    'Tangkak',
-    potian:     'Pontian',
+    pontian:     'Pontian',
     segamat:    'Segamat',
     muar:       'Muar',
     kluang:     'Kluang',

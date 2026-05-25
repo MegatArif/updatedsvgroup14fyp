@@ -79,6 +79,31 @@ import { showToast } from './toast.js'
     overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
   }
 
+  /* ── REJECTED OVERLAY ── */
+  function showRejectedOverlay(reason) {
+    document.querySelector('.email-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'email-overlay';
+    overlay.innerHTML = `
+      <div class="email-overlay-box">
+        <i class="email-overlay-icon reset ri-close-circle-line" style="color:#e53935;"></i>
+        <div class="email-overlay-title">Registration Rejected</div>
+        <div class="email-overlay-msg">
+          Unfortunately, your cafe registration has been <span>rejected</span> by our team.<br><br>
+          ${reason ? `<strong>Reason:</strong> "${reason}"<br><br>` : ''}
+          You may re-register your cafe after addressing the issue.
+        </div>
+        <button class="email-overlay-close" style="background:#e53935;">Got it</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
+
+    overlay.querySelector('.email-overlay-close').addEventListener('click', () => closeOverlay(overlay));
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(overlay); });
+  }
+
   /* ── GSAP entrance ── */
   const tl = gsap.timeline();
   tl.fromTo(card,
@@ -455,7 +480,17 @@ function validateUsername(name) {
       return;
     }
 
-    // STEP 2: Cafe registered but not yet approved
+    // STEP 2a: Cafe registered but REJECTED by admin
+    if (ownerData.cafeRegistered && ownerData.rejected) {
+      const reason = ownerData.rejectionNote
+        ? `Reason: "${ownerData.rejectionNote}"`
+        : 'Please contact support for more information.';
+      showToast('Your cafe registration was rejected. ' + reason, 'error', 6000);
+      showRejectedOverlay(ownerData.rejectionNote || '');
+      return;
+    }
+
+    // STEP 2b: Cafe registered but still pending (not yet approved or rejected)
     if (ownerData.cafeRegistered && !ownerData.approved) {
       showToast('Your cafe is pending approval. Please wait for our team to review it.', 'error', 5000);
       showPendingOverlay();
