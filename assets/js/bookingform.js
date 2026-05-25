@@ -1,6 +1,8 @@
-import { auth, db } from './firebase-config.js';
+import { app, db } from './firebase-config.js';
 import { collection, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+const auth = getAuth(app);
 
 // --- Toast System Initialization ---
 const toastStyle = document.createElement('style');
