@@ -2,112 +2,117 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8" />
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0"/>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Reservations</title>
 
-<link rel="stylesheet" href="assets/css/reservation.css">
-<link rel="stylesheet" href="./assets/css/navbar.css">
-  <!-- Font Awesome -->
+  <link rel="stylesheet" href="assets/css/reservation.css">
+  <link rel="stylesheet" href="./assets/css/navbar.css">
+
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
-
 </head>
 
 <body>
-  <!-- navigation bar -->
+
+<!-- ================= NAVBAR (保留完整) ================= -->
 <div class="navbar">
   <div class="logo-area">
     <i class="fas fa-mug-hot logo-icon"></i>
     <span class="logo-text">CafeHunt</span>
   </div>
   <div class="nav-links">
-    <!-- Populated by navbar.js -->
+    <!-- navbar.js 会自动填 -->
   </div>
 </div>
 
-  <div class="page">
+<div class="page">
 
-    <div class="reservation-panel">
+  <div class="reservation-panel">
 
-      <!-- TITLE -->
-      <h1 class="title">
-        My Reservations
-      </h1>
+    <h1 class="title">My Reservations</h1>
 
-      <!-- ========================= -->
-      <!-- ACTIVE RESERVATIONS -->
-      <!-- ========================= -->
-
-      <div class="section">
-
-        <div class="section-header">
-
-          <div class="section-icon">
-            <i class="fa-solid fa-mug-hot"></i>
-          </div>
-
-          <div>
-            <h2>Active Reservations</h2>
-            <p>
-              Your upcoming cafe bookings
-            </p>
-          </div>
-
+    <!-- ================= PENDING ================= -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fa-solid fa-hourglass-start"></i>
         </div>
-
-        <!-- REALTIME ACTIVE CARDS -->
-        <div id="activeReservations"></div>
-
-      </div>
-
-
-      <!-- ========================= -->
-      <!-- COMPLETED RESERVATIONS -->
-      <!-- ========================= -->
-
-      <div class="section">
-
-        <div class="section-header">
-
-          <div class="section-icon">
-            <i class="fa-regular fa-clock"></i>
-          </div>
-
-          <div>
-            <h2>Completed Reservations</h2>
-            <p>
-              Your past cafe experiences
-            </p>
-          </div>
-
+        <div>
+          <h2 class="title-pending">Pending</h2>
+          <p>Waiting for confirmation</p>
         </div>
-
-        <!-- REALTIME PAST CARDS -->
-        <div id="pastReservations"></div>
-
       </div>
+      <div id="pendingList"></div>
+    </div>
 
+    <!-- ================= ACCEPTED ================= -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <div>
+          <h2 class="title-accept">Accepted</h2>
+          <p>Your booking is confirmed</p>
+        </div>
+      </div>
+      <div id="acceptList"></div>
+    </div>
+
+    <!-- ================= REJECTED ================= -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fa-solid fa-xmark"></i>
+        </div>
+        <div>
+          <h2 class="title-reject">Rejected</h2>
+          <p>Booking not approved</p>
+        </div>
+      </div>
+      <div id="rejectList"></div>
+    </div>
+
+    <!-- ================= COMPLETED ================= -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fa-solid fa-flag-checkered"></i>
+        </div>
+        <div>
+          <h2 class="title-completed">Completed</h2>
+          <p>Finished visits</p>
+        </div>
+      </div>
+      <div id="completedList"></div>
+    </div>
+
+    <!-- ================= EXPIRED ================= -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fa-regular fa-clock"></i>
+        </div>
+        <div>
+          <h2 class="title-expired">Expired</h2>
+          <p>Missed reservations</p>
+        </div>
+      </div>
+      <div id="expiredList"></div>
     </div>
 
   </div>
+</div>
 
+<!-- TOAST -->
+<div id="toast"></div>
 
-  <!-- TOAST -->
-  <div id="toast"></div>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-
-  <!-- jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-
-  <!-- RESERVATION JS -->
-  <script type="module"
-          src="assets/js/reservation.js"></script>
+<!-- YOUR JS -->
+<script type="module" src="assets/js/reservation.js"></script>
 
 </body>
 </html>

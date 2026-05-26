@@ -1,45 +1,34 @@
 import { db, app } from "./firebase-config.js";
-
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  getDoc,
-  doc
+  collection, query, where, onSnapshot, getDoc, doc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 import {
-  getAuth,
-  onAuthStateChanged
+  getAuth, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-import { setupNavbar } from './navbar.js';
+import { setupNavbar } from "./navbar.js";
+
 setupNavbar();
 
 const auth = getAuth(app);
 
-// ============================
-// CONTAINERS
-// ============================
-const activeContainer = document.getElementById("activeReservations");
-const pastContainer = document.getElementById("pastReservations");
+// 5 LISTS
+const containers = {
+  pending: document.getElementById("pendingList"),
+  accept: document.getElementById("acceptList"),
+  reject: document.getElementById("rejectList"),
+  completed: document.getElementById("completedList"),
+  expired: document.getElementById("expiredList"),
+};
 
-// ============================
-// STATE
-// ============================
 let currentUser = null;
+let allReservations = [];
 
-// ============================
-// AUTH LISTENER (IMPORTANT)
-// ============================
+// AUTH
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    console.error("❌ No user logged in");
-    return;
-  }
+  if (!user) return;
 
-  // get profile from Firestore
   const snap = await getDoc(doc(db, "Customers", user.uid));
   const data = snap.exists() ? snap.data() : {};
 
@@ -48,101 +37,73 @@ onAuthStateChanged(auth, async (user) => {
     username: data.username || user.email
   };
 
-  console.log("👤 Logged in:", currentUser);
-
   loadReservations();
 });
 
-// ============================
-// LOAD RESERVATIONS
-// ============================
+// LOAD
 function loadReservations() {
-  if (!currentUser) return;
-
   const q = query(
     collection(db, "reservation"),
     where("userId", "==", currentUser.userId)
   );
 
   onSnapshot(q, (snapshot) => {
-    activeContainer.innerHTML = "";
-    pastContainer.innerHTML = "";
 
-    if (snapshot.empty) {
-      activeContainer.innerHTML = `
-        <p style="color:#c98b3b;font-weight:600;">
-          No reservations found
-        </p>
-      `;
-      return;
-    }
+    Object.values(containers).forEach(c => c.innerHTML = "");
 
-    snapshot.forEach((docSnap) => {
-      renderReservation(docSnap.data());
-    });
+    allReservations = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    allReservations.forEach(render);
   });
 }
 
-// ============================
-// RENDER RESERVATION
-// ============================
-function renderReservation(data) {
-
-  const reservationDate = new Date(`${data.date}T${data.time}`);
+// STATUS LOGIC
+function getStatus(r) {
   const now = new Date();
+  const time = new Date(`${r.date}T${r.time}`);
 
-  const isActive = reservationDate > now;
+  if (r.status === "pending") return "pending";
+  if (r.status === "confirmed") return "accept";
+  if (r.status === "rejected") return "reject";
+  if (r.status === "completed") return "completed";
 
-  const statusText = isActive ? "ACTIVE" : "COMPLETED";
-  const statusClass = isActive ? "status-active" : "status-past";
+  if (time < now) return "expired";
 
-  const container = isActive ? activeContainer : pastContainer;
+  return "pending";
+}
+
+// RENDER
+function render(r) {
+
+  const status = getStatus(r);
+  const container = containers[status];
+
+  if (!container) return;
 
   container.innerHTML += `
-    <div class="reservation-card"
-      data-cafe="${data.cafe}"
-      data-location="${data.location}"
-      data-date="${data.date}"
-      data-time="${data.time}"
-      data-guests="${data.guests}"
-      data-status="${statusText}"
-    >
+    <div class="reservation-card">
 
       <div class="card-top">
-
         <div>
-          <h3>${data.cafe}</h3>
-
-          <p class="location">
-            <i class="fa-solid fa-location-dot"></i>
-            ${data.location}
-          </p>
+          <h3>${r.cafe}</h3>
+          <div class="location">${r.location}</div>
         </div>
 
-        <span class="status ${statusClass}">
-          ${statusText}
+        <span class="status status-${status}">
+          ${status.toUpperCase()}
         </span>
-
       </div>
 
       <div class="booking-info">
-        <div class="info-box">
-          <span>Date</span>
-          <strong>${data.date}</strong>
-        </div>
-
-        <div class="info-box">
-          <span>Time</span>
-          <strong>${data.time}</strong>
-        </div>
-
-        <div class="info-box">
-          <span>Guests</span>
-          <strong>${data.guests} Pax</strong>
-        </div>
+        <div class="info-box"><span>Date</span><strong>${r.date}</strong></div>
+        <div class="info-box"><span>Time</span><strong>${r.time}</strong></div>
+        <div class="info-box"><span>Guests</span><strong>${r.guests}</strong></div>
       </div>
 
-      <button class="receipt-btn" onclick="downloadReceipt(this)">
+      <button class="receipt-btn" onclick="downloadPDF('${r.id}')">
         <i class="fa-solid fa-download"></i>
         Download Receipt
       </button>
@@ -151,83 +112,98 @@ function renderReservation(data) {
   `;
 }
 
-// ============================
-// PDF RECEIPT (UNCHANGED)
-// ============================
-window.downloadReceipt = function (btn) {
+window.downloadPDF = function(id) {
 
-  const card = btn.closest(".reservation-card");
-
-  const data = {
-    cafe: card.dataset.cafe,
-    location: card.dataset.location,
-    date: card.dataset.date,
-    time: card.dataset.time,
-    guests: card.dataset.guests,
-    status: card.dataset.status
-  };
+  const r = allReservations.find(x => x.id === id);
+  if (!r) return;
 
   const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: [80, 180] });
 
-  const doc = new jsPDF({
-    unit: "mm",
-    format: [80, 170]
-  });
+  const status = getStatus(r);
 
-  // HEADER
+  /* ================= FIX (关键修复) ================= */
+  doc.setCharSpace(0);
+  doc.setLineHeightFactor(1.2);
+
+  /* ================= HEADER ================= */
   doc.setFillColor(227, 176, 122);
-  doc.rect(0, 0, 80, 22, "F");
+  doc.rect(0, 0, 80, 25, "F");
 
   doc.setTextColor(60, 40, 30);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("CAFEHUNT", 40, 10, { align: "center" });
+  doc.text("CAFEHUNT", 40, 11, { align: "center" });
 
   doc.setFontSize(7);
-  doc.text("OFFICIAL RESERVATION RECEIPT", 40, 16, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.text("OFFICIAL RESERVATION RECEIPT", 40, 18, { align: "center" });
 
-  let y = 30;
+  /* ================= BODY ================= */
+  let y = 35;
 
-  doc.setTextColor(120);
-  doc.setFontSize(7);
+  const row = (label, value) => {
+    doc.setTextColor(120);
+    doc.setFont("helvetica", "bold");
+    doc.text(label, 5, y);
 
-  doc.text(data.cafe, 40, y, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.text(String(value ?? "-"), 30, y);
+
+    y += 7;
+  };
+
+  row("Customer", r.username);
+  row("Cafe", r.cafe);
+  row("Location", r.location);
+  row("Date", r.date);
+  row("Time", r.time);
+  row("Guests", r.guests);
+
   y += 5;
 
-  doc.text(data.location, 40, y, { align: "center" });
-  y += 8;
-
+  /* ================= DIVIDER ================= */
   doc.setDrawColor(220, 190, 160);
   doc.line(5, y, 75, y);
   y += 10;
 
-  // DETAILS
-  const row = (k, v) => {
-    doc.setTextColor(120);
-    doc.setFont("helvetica", "bold");
-    doc.text(k, 5, y);
+  /* ================= STATUS BOX ================= */
+  let color = [247, 241, 232];
 
-    doc.setTextColor(60, 40, 30);
-    doc.setFont("helvetica", "normal");
-    doc.text(String(v), 30, y);
+  if (status === "pending")   color = [255, 242, 217];
+  if (status === "accept")    color = [230, 247, 230];
+  if (status === "reject")    color = [255, 229, 229];
+  if (status === "completed") color = [230, 240, 255];
+  if (status === "expired")   color = [247, 241, 232];
 
-    y += 8;
-  };
+  doc.setFillColor(...color);
+  doc.rect(5, y, 70, 12, "F");
 
-  row("Cafe", data.cafe);
-  row("Location", data.location);
-  row("Date", data.date);
-  row("Time", data.time);
-  row("Guests", data.guests);
-
-  y += 5;
-
-  doc.setFillColor(255, 242, 217);
-  doc.rect(5, y - 4, 70, 10, "F");
-
-  doc.setTextColor(150, 90, 40);
+  doc.setTextColor(60, 40, 30);
   doc.setFont("helvetica", "bold");
-  doc.text(`STATUS : ${data.status}`, 40, y + 2, { align: "center" });
+  doc.setFontSize(10);
 
-  doc.save(`CafeHunt_${Date.now()}.pdf`);
+  doc.text(
+    `STATUS: ${status.toUpperCase()}`,
+    40,
+    y + 8,
+    { align: "center" }
+  );
+
+  y += 18;
+
+  /* ================= FOOTER ================= */
+  doc.setFontSize(7);
+  doc.setTextColor(150);
+  doc.setFont("helvetica", "normal");
+
+  doc.text(
+    "Thank you for choosing CafeHunt",
+    40,
+    y,
+    { align: "center" }
+  );
+
+  /* ================= SAVE ================= */
+  doc.save(`CafeHunt_${r.id}.pdf`);
 };

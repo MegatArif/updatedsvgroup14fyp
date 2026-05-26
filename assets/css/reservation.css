@@ -1,9 +1,7 @@
 body {
   margin: 0;
   font-family: "Poppins", Arial, sans-serif;
-
-  background: #fffaf3; 
-
+  background: #fffaf3;
   color: #3a2f28;
 }
 
@@ -17,16 +15,13 @@ body {
   width: 920px;
 }
 
-/* TITLE */
 .title {
   font-size: 42px;
   font-weight: 800;
   margin-bottom: 30px;
-
-  color: #e3b07a; 
+  color: #e3b07a;
 }
 
-/* SECTION */
 .section {
   margin-bottom: 35px;
 }
@@ -36,78 +31,30 @@ body {
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
-
   color: #b8906d;
 }
 
 /* CARD */
 .reservation-card {
-  background: #ffffff;
-
+  background: #fff;
   border: 1px solid #f0e3d3;
   border-radius: 16px;
-
   padding: 18px;
   margin-bottom: 12px;
-
   box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-
-  transition: 0.2s ease;
 }
 
-.reservation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-}
-
-/* TOP */
 .card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.card-top h3 {
-  margin: 0;
-  font-size: 20px;
-}
-
 .location {
-  margin: 3px 0 0;
   font-size: 13px;
   color: #8c7a6b;
 }
 
-/* STATUS */
-.status {
-  display: inline-flex;
-  align-items: center;
-
-  height: 22px;
-  padding: 0 10px;
-
-  font-size: 10px;
-  font-weight: 600;
-
-  border-radius: 999px;
-  letter-spacing: 0.5px;
-}
-
-/* ACTIVE */
-.status-active {
-  background: #fff2d9;
-  color: #c98b3b;
-  border: 1px solid #f6e0b5;
-}
-
-/* EXPIRED / COMPLETED */
-.status-past {
-  background: #f7f1e8;
-  color: #a7927f;
-  border: 1px solid #eadcc9;
-}
-
-/* INFO */
 .booking-info {
   display: flex;
   gap: 10px;
@@ -118,51 +65,75 @@ body {
   flex: 1;
   padding: 12px;
   border-radius: 12px;
-
   background: #fffaf3;
   border: 1px solid #f2e6d8;
 }
 
-.info-box span {
-  font-size: 11px;
-  color: #b49a85;
+/* STATUS */
+.status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-.info-box strong {
-  font-size: 14px;
-}
+.status-pending { background:#fff2d9;color:#c98b3b; }
+.status-accept { background:#e6f7e6;color:#2e7d32; }
+.status-reject { background:#ffe5e5;color:#c62828; }
+.status-completed { background:#e6f0ff;color:#1565c0; }
+.status-expired { background:#f7f1e8;color:#a7927f; }
 
-/* BUTTON */
+/* ⭐ BUTTON FIXED */
 .receipt-btn {
   margin-top: 12px;
-  padding: 10px 14px;
+  padding: 10px 16px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
 
-  background: #f6d7a7;
+  background: linear-gradient(135deg, #f6d7a7, #e3b07a);
   color: #3a2f28;
 
   font-weight: 600;
+  font-size: 13px;
+
   cursor: pointer;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: 0.2s;
 }
 
 .receipt-btn:hover {
-  background: #f8e0bb;
+  transform: translateY(-2px);
 }
 
-/* TOAST */
-#toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
+/* ===== SECTION TITLE COLORS ===== */
 
-  background: rgba(60,50,45,0.9);
-  color: #fff;
+.title-pending {
+  color: #c98b3b;
+}
 
-  padding: 10px 14px;
-  border-radius: 10px;
+.title-accept {
+  color: #2e7d32;
+}
 
-  opacity: 0;
-  transition: 0.3s;
+.title-reject {
+  color: #c62828;
+}
+
+.title-completed {
+  color: #1565c0;
+}
+
+.title-expired {
+  color: #8c7a6b;
+}
+
+
+.section-header p {
+  opacity: 0.75;
 }
