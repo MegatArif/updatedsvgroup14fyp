@@ -676,7 +676,12 @@ function nextSlide() {
 if (slides.length) setInterval(nextSlide, 4500);
 
 // ---------- DEFAULT DATE ----------
-document.getElementById('datePicker').value = new Date().toISOString().split('T')[0];
+const datePicker = document.getElementById('datePicker');
+if (datePicker) {
+    const today = new Date().toISOString().split('T')[0];
+    datePicker.setAttribute('min', today);
+}
+
 
 // ---------- EVENT LISTENERS ----------
 document.getElementById('searchBtn').addEventListener('click', updateCafeList);
