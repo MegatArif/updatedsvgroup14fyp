@@ -80,14 +80,13 @@ async function getCafeImageUrl(imageInput) {
 //  LOAD FROM FIRESTORE 
 // =================================================================
 async function initializeData() {
+    setLoading(true);   
     try {
         const snapshot = await getDocs(collection(db, "cafes"));
         if (snapshot.empty) throw new Error("Empty collection.");
         const data = [];
         for (const d of snapshot.docs) {
             const cafe = { ...d.data(), id: d.id };
-            // Only show cafes approved by admin.
-            // Cafes without approveStatus (legacy data) are shown by default.
             if (cafe.approveStatus && cafe.approveStatus !== 'approved') continue;
             cafe.image = await getCafeImageUrl(cafe.image);
             data.push(cafe);
@@ -98,6 +97,7 @@ async function initializeData() {
         for (const c of localCafes) c.image = await getCafeImageUrl(c.image);
         cafes = localCafes;
     } finally {
+        setLoading(false);  
         updateCafeList();
     }
 }
@@ -682,6 +682,11 @@ if (datePicker) {
     datePicker.setAttribute('min', today);
 }
 
+// ---------- UI HELPER ----------
+function setLoading(show) {
+  const loader = document.getElementById("loadingState");
+  if (loader) loader.style.display = show ? "flex" : "none";
+}
 
 // ---------- EVENT LISTENERS ----------
 document.getElementById('searchBtn').addEventListener('click', updateCafeList);
@@ -698,5 +703,6 @@ document.querySelectorAll('#facilitiesFilterGroup input, #ratingFilterSelect')
 document.getElementById('locationFilter').addEventListener('change', updateCafeList);
 document.getElementById('nameSearch').addEventListener('input', updateCafeList);
 document.getElementById('timeSlot').addEventListener('change', updateCafeList);
+const loadingState  = document.getElementById("loadingState");
 
 initializeData();
