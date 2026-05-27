@@ -137,3 +137,40 @@ body {
 .section-header p {
   opacity: 0.75;
 }
+
+.status-cancel {
+  background:#f5e1e1;
+  color:#9b2226;
+}
+
+.title-cancel {
+  color:#9b2226;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.cancel-btn {
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #c62828;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.cancel-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}

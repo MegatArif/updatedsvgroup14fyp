@@ -1,10 +1,18 @@
 import { db, app } from "./firebase-config.js";
+
 import {
-  collection, query, where, onSnapshot, getDoc, doc
+  collection,
+  query,
+  where,
+  onSnapshot,
+  getDoc,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 import {
-  getAuth, onAuthStateChanged
+  getAuth,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
 import { setupNavbar } from "./navbar.js";
@@ -13,24 +21,29 @@ setupNavbar();
 
 const auth = getAuth(app);
 
-// 5 LISTS
+// ================= LISTS =================
 const containers = {
   pending: document.getElementById("pendingList"),
   accept: document.getElementById("acceptList"),
   reject: document.getElementById("rejectList"),
   completed: document.getElementById("completedList"),
   expired: document.getElementById("expiredList"),
+  cancel: document.getElementById("cancelList"),
 };
 
 let currentUser = null;
 let allReservations = [];
 
-// AUTH
+// ================= AUTH =================
 onAuthStateChanged(auth, async (user) => {
+
   if (!user) return;
 
   const snap = await getDoc(doc(db, "Customers", user.uid));
-  const data = snap.exists() ? snap.data() : {};
+
+  const data = snap.exists()
+    ? snap.data()
+    : {};
 
   currentUser = {
     userId: user.uid,
@@ -40,8 +53,9 @@ onAuthStateChanged(auth, async (user) => {
   loadReservations();
 });
 
-// LOAD
+// ================= LOAD =================
 function loadReservations() {
+
   const q = query(
     collection(db, "reservation"),
     where("userId", "==", currentUser.userId)
@@ -49,7 +63,9 @@ function loadReservations() {
 
   onSnapshot(q, (snapshot) => {
 
-    Object.values(containers).forEach(c => c.innerHTML = "");
+    Object.values(containers).forEach(c => {
+      if (c) c.innerHTML = "";
+    });
 
     allReservations = snapshot.docs.map(d => ({
       id: d.id,
@@ -60,90 +76,209 @@ function loadReservations() {
   });
 }
 
-// STATUS LOGIC
+// ================= STATUS LOGIC =================
 function getStatus(r) {
+
   const now = new Date();
-  const time = new Date(`${r.date}T${r.time}`);
+  const bookingTime = new Date(`${r.date}T${r.time}`);
 
-  if (r.status === "pending") return "pending";
-  if (r.status === "confirmed") return "accept";
-  if (r.status === "rejected") return "reject";
-  if (r.status === "completed") return "completed";
 
-  if (time < now) return "expired";
+  const dbStatus = (r.status || "").toLowerCase();
+
+
+  if (dbStatus === "cancelled") {
+    return "cancel";
+  }
+
+  if (dbStatus === "rejected") {
+    return "reject";
+  }
+
+ 
+  if (dbStatus === "confirmed") {
+
+    if (bookingTime < now) {
+      return "completed";
+    }
+
+    return "accept";
+  }
+
+
+  if (dbStatus === "" || dbStatus === "pending") {
+
+
+    if (bookingTime < now) {
+      return "expired";
+    }
+
+    return "pending";
+  }
 
   return "pending";
 }
 
-// RENDER
+// ================= RENDER =================
 function render(r) {
 
   const status = getStatus(r);
+
   const container = containers[status];
 
   if (!container) return;
 
+  // 只有 pending / accept 才能 cancel
+  const canCancel =
+    status === "pending" ||
+    status === "accept";
+
   container.innerHTML += `
+
     <div class="reservation-card">
 
       <div class="card-top">
+
         <div>
           <h3>${r.cafe}</h3>
-          <div class="location">${r.location}</div>
+          <div class="location">
+            ${r.location}
+          </div>
         </div>
 
         <span class="status status-${status}">
           ${status.toUpperCase()}
         </span>
+
       </div>
 
       <div class="booking-info">
-        <div class="info-box"><span>Date</span><strong>${r.date}</strong></div>
-        <div class="info-box"><span>Time</span><strong>${r.time}</strong></div>
-        <div class="info-box"><span>Guests</span><strong>${r.guests}</strong></div>
+
+        <div class="info-box">
+          <span>Date</span>
+          <strong>${r.date}</strong>
+        </div>
+
+        <div class="info-box">
+          <span>Time</span>
+          <strong>${r.time}</strong>
+        </div>
+
+        <div class="info-box">
+          <span>Guests</span>
+          <strong>${r.guests}</strong>
+        </div>
+
       </div>
 
-      <button class="receipt-btn" onclick="downloadPDF('${r.id}')">
-        <i class="fa-solid fa-download"></i>
-        Download Receipt
-      </button>
+      <div class="button-group">
+
+        <button
+          class="receipt-btn"
+          onclick="downloadPDF('${r.id}')"
+        >
+          <i class="fa-solid fa-download"></i>
+          Download Receipt
+        </button>
+
+        ${
+          canCancel
+          ?
+          `
+            <button
+              class="cancel-btn"
+              onclick="cancelReservation('${r.id}')"
+            >
+              <i class="fa-solid fa-ban"></i>
+              Cancel
+            </button>
+          `
+          :
+          ""
+        }
+
+      </div>
 
     </div>
   `;
 }
 
+// ================= CANCEL =================
+window.cancelReservation = async function(id) {
+
+  const confirmCancel = confirm(
+    "Are you sure you want to cancel this reservation?"
+  );
+
+  if (!confirmCancel) return;
+
+  try {
+
+    await updateDoc(
+      doc(db, "reservation", id),
+      {
+        status: "cancelled"
+      }
+    );
+
+    alert("Reservation cancelled");
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Failed to cancel reservation");
+  }
+};
+
+// ================= PDF =================
 window.downloadPDF = function(id) {
 
   const r = allReservations.find(x => x.id === id);
+
   if (!r) return;
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "mm", format: [80, 180] });
+
+  const doc = new jsPDF({
+    unit: "mm",
+    format: [80, 180]
+  });
 
   const status = getStatus(r);
 
-  /* ================= FIX (关键修复) ================= */
   doc.setCharSpace(0);
   doc.setLineHeightFactor(1.2);
 
-  /* ================= HEADER ================= */
+  // HEADER
   doc.setFillColor(227, 176, 122);
   doc.rect(0, 0, 80, 25, "F");
 
   doc.setTextColor(60, 40, 30);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("CAFEHUNT", 40, 11, { align: "center" });
+
+  doc.text(
+    "CAFEHUNT",
+    40,
+    11,
+    { align: "center" }
+  );
 
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text("OFFICIAL RESERVATION RECEIPT", 40, 18, { align: "center" });
 
-  /* ================= BODY ================= */
+  doc.text(
+    "OFFICIAL RESERVATION RECEIPT",
+    40,
+    18,
+    { align: "center" }
+  );
+
   let y = 35;
 
   const row = (label, value) => {
+
     doc.setTextColor(120);
+
     doc.setFont("helvetica", "bold");
     doc.text(label, 5, y);
 
@@ -162,24 +297,39 @@ window.downloadPDF = function(id) {
 
   y += 5;
 
-  /* ================= DIVIDER ================= */
   doc.setDrawColor(220, 190, 160);
   doc.line(5, y, 75, y);
+
   y += 10;
 
-  /* ================= STATUS BOX ================= */
   let color = [247, 241, 232];
 
-  if (status === "pending")   color = [255, 242, 217];
-  if (status === "accept")    color = [230, 247, 230];
-  if (status === "reject")    color = [255, 229, 229];
-  if (status === "completed") color = [230, 240, 255];
-  if (status === "expired")   color = [247, 241, 232];
+  if (status === "pending") {
+    color = [255, 242, 217];
+  }
+
+  if (status === "accept") {
+    color = [230, 247, 230];
+  }
+
+  if (status === "reject") {
+    color = [255, 229, 229];
+  }
+
+  if (status === "completed") {
+    color = [230, 240, 255];
+  }
+
+  if (status === "cancel") {
+    color = [245, 225, 225];
+  }
 
   doc.setFillColor(...color);
+
   doc.rect(5, y, 70, 12, "F");
 
   doc.setTextColor(60, 40, 30);
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
 
@@ -192,9 +342,10 @@ window.downloadPDF = function(id) {
 
   y += 18;
 
-  /* ================= FOOTER ================= */
   doc.setFontSize(7);
+
   doc.setTextColor(150);
+
   doc.setFont("helvetica", "normal");
 
   doc.text(
@@ -204,6 +355,5 @@ window.downloadPDF = function(id) {
     { align: "center" }
   );
 
-  /* ================= SAVE ================= */
   doc.save(`CafeHunt_${r.id}.pdf`);
 };
