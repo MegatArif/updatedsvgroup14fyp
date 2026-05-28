@@ -304,7 +304,6 @@ input[type="time"] { padding-left: 36px; }
 .status-msg.error   { background: var(--error-bg);   color: var(--error); }
 
 /* ─── PREVIEW COLUMN ─────────────────────────────────────────── */
-.reg-preview-col { }
 .preview-sticky {
   position: sticky;
   top: 90px;
