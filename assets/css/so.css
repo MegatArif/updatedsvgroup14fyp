@@ -211,7 +211,8 @@ body > .panel      { max-width: 1060px; margin: 0 auto; padding: 24px 26px 26px;
 .badge-confirmed { background: var(--confirmed-bg); color: var(--confirmed-txt); border: 1px solid #a8d8b0; }
 .badge-rejected  { background: var(--rejected-bg);  color: var(--rejected-txt);  border: 1px solid #f0a8a8; }
 .badge-completed { background: var(--completed-bg); color: var(--completed-txt); border: 1px solid #a8c4f0; }
-
+.badge-expired  { background: #fff3cd; color: #856404; }
+.badge-cancel   { background: #f0f0f0; color: #6c757d; }
 /* ── APPROVE / REJECT BUTTONS ──────────────────────────── */
 .action-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 

@@ -77,41 +77,25 @@ function loadReservations() {
 }
 
 // ================= STATUS LOGIC =================
+// customer reservation js — getStatus()
 function getStatus(r) {
-
   const now = new Date();
   const bookingTime = new Date(`${r.date}T${r.time}`);
-
-
   const dbStatus = (r.status || "").toLowerCase();
 
+  if (dbStatus === "cancelled" || dbStatus === "cancel") return "cancel";  // handle both
+  if (dbStatus === "rejected")  return "reject";
+  if (dbStatus === "expired")   return "expired";
 
-  if (dbStatus === "cancelled") {
-    return "cancel";
-  }
-
-  if (dbStatus === "rejected") {
-    return "reject";
-  }
-
- 
-  if (dbStatus === "confirmed") {
-
-    if (bookingTime < now) {
-      return "completed";
-    }
-
+  if (dbStatus === "accepted") {         
+    if (bookingTime < now) return "completed";
     return "accept";
   }
 
+  if (dbStatus === "completed") return "completed";
 
   if (dbStatus === "" || dbStatus === "pending") {
-
-
-    if (bookingTime < now) {
-      return "expired";
-    }
-
+    if (bookingTime < now) return "expired";
     return "pending";
   }
 
@@ -213,12 +197,7 @@ window.cancelReservation = async function(id) {
 
   try {
 
-    await updateDoc(
-      doc(db, "reservation", id),
-      {
-        status: "cancelled"
-      }
-    );
+    await updateDoc(doc(db, "reservation", id), { status: "cancel" });  // was "cancelled"
 
     alert("Reservation cancelled");
 

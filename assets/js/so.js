@@ -16,6 +16,8 @@ import {
   where,
   getDocs,
   doc,
+  getDoc,
+  setDoc,
   updateDoc,
   orderBy,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -90,7 +92,8 @@ async function loadReservations(user) {
     const tB = b.createdAt?.seconds ?? 0;
     return tB - tA;
   });
-
+    await checkAndExpireReservations();
+    await loadAllNotes();
     renderStats();
     renderPendingTable();
     renderCompletedCards();
@@ -125,7 +128,7 @@ function startClock() {
 ═══════════════════════════════════════════════════════ */
 function renderStats() {
   const total     = reservations.length;
-  const confirmed = reservations.filter(r => r.status === "confirmed").length;
+  const confirmed = reservations.filter(r => r.status === "accepted").length;
   const pending   = reservations.filter(r => r.status === "pending").length;
 
   animateCount("statTotal",     total);
@@ -150,10 +153,12 @@ function animateCount(elId, target) {
 ═══════════════════════════════════════════════════════ */
 function makeBadge(status) {
   const map = {
-    pending:   { cls: "badge-pending",   icon: "fa-clock",        label: "Pending"   },
-    confirmed: { cls: "badge-confirmed", icon: "fa-circle-check", label: "Confirmed" },
-    rejected:  { cls: "badge-rejected",  icon: "fa-circle-xmark", label: "Rejected"  },
-    completed: { cls: "badge-completed", icon: "fa-check-double", label: "Completed" },
+    pending:   { cls: "badge-pending",   icon: "fa-clock",            label: "Pending"   },
+    accepted:  { cls: "badge-confirmed", icon: "fa-circle-check",     label: "Accepted"  },
+    rejected:  { cls: "badge-rejected",  icon: "fa-circle-xmark",     label: "Rejected"  },
+    completed: { cls: "badge-completed", icon: "fa-check-double",     label: "Completed" },
+    expired:   { cls: "badge-expired",   icon: "fa-calendar-xmark",   label: "Expired"   },
+    cancel:    { cls: "badge-cancel",    icon: "fa-ban",              label: "Cancelled" },
   };
   const c = map[status] || map.pending;
   return `<span class="badge ${c.cls}"><i class="fas ${c.icon}"></i>${c.label}</span>`;
@@ -179,15 +184,15 @@ function renderPendingTable() {
     const shortId = r.id.slice(-6).toUpperCase();
 
     const actionCell = r.status === "pending"
-      ? `<div class="action-btns">
-           <button class="btn-approve" onclick="updateStatus('${r.id}','confirmed')">
-             <i class="fas fa-check"></i> Approve
-           </button>
-           <button class="btn-reject"  onclick="updateStatus('${r.id}','rejected')">
-             <i class="fas fa-xmark"></i> Reject
-           </button>
-         </div>`
-      : `<span class="resolved-label">${r.status === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
+  ? `<div class="action-btns">
+       <button class="btn-approve" onclick="updateStatus('${r.id}','accepted')">
+         <i class="fas fa-check"></i> Approve
+       </button>
+       <button class="btn-reject"  onclick="updateStatus('${r.id}','rejected')">
+         <i class="fas fa-xmark"></i> Reject
+       </button>
+     </div>`
+  : `<span class="resolved-label">${r.status === "accepted" ? "✓ Approved" : r.status === "cancel" ? "✗ Cancelled" : r.status === "expired" ? "⏰ Expired" : "✗ Rejected"}</span>`;
 
     return `
       <tr id="row-${r.id}">
@@ -229,18 +234,19 @@ window.updateStatus = async function(id, newStatus) {
     const rowEl = document.getElementById(`row-${id}`);
     if (rowEl) {
       rowEl.style.transition = "background .4s";
-      rowEl.style.background  = newStatus === "confirmed" ? "#eaf5ec" : "#fdf2f2";
+      
+      rowEl.style.background = newStatus === "accepted" ? "#eaf5ec" : "#fdf2f2";  // was "confirmed"
       setTimeout(() => { rowEl.style.background = ""; }, 1400);
     }
 
     renderStats();
 
     showToast(
-      newStatus === "confirmed"
-        ? `Reservation approved.`
-        : `Reservation rejected.`,
-      newStatus === "confirmed" ? "success" : "error"
-    );
+    newStatus === "accepted"
+      ? `Reservation approved.`
+      : `Reservation rejected.`,
+    newStatus === "accepted" ? "success" : "error"
+  );
 
   } catch (err) {
     console.error("updateStatus:", err);
@@ -248,6 +254,31 @@ window.updateStatus = async function(id, newStatus) {
   }
 };
 
+
+/* ═══════════════════════════════════════════════════════
+   AUTO-EXPIRE — marks pending reservations as expired
+   if their date+time has already passed
+═══════════════════════════════════════════════════════ */
+async function checkAndExpireReservations() {
+  const now = new Date();
+
+  for (const r of reservations) {
+    if (r.status !== "pending") continue;
+
+    // Combine date + time into a Date object  e.g. "2026-05-25" + "13:52"
+    const reservationDateTime = new Date(`${r.date}T${r.time}:00`);
+
+    if (reservationDateTime < now) {
+      try {
+        await updateDoc(doc(db, "reservation", r.id), { status: "expired" });
+        r.status = "expired"; // update local state too
+        console.log(`Expired: ${r.id}`);
+      } catch (err) {
+        console.error("Failed to expire reservation:", r.id, err);
+      }
+    }
+  }
+}
 /* ═══════════════════════════════════════════════════════
    COMPLETED CARDS
 ═══════════════════════════════════════════════════════ */
@@ -256,7 +287,7 @@ function renderCompletedCards() {
   if (!grid) return;
 
   // In renderCompletedCards()
-const done = reservations.filter(r => r.status === "completed" || r.status === "confirmed");
+const done = reservations.filter(r => r.status === "completed" || r.status === "accepted");
 
   if (!done.length) {
     grid.innerHTML = `<p style="color:var(--text-muted);font-style:italic;padding:10px 0;">No completed reservations yet.</p>`;
@@ -346,7 +377,7 @@ function renderNotesList(id) {
   ).join("");
 }
 
-window.saveNote = function() {
+window.saveNote = async function() {
   const ta   = document.getElementById("noteTextarea");
   const text = ta.value.trim();
   if (!text || !activeNoteId) return;
@@ -361,6 +392,11 @@ window.saveNote = function() {
 
   notes[activeNoteId].unshift({ text, date });
 
+  // Save to Firestore
+  await setDoc(doc(db, "reservationNotes", activeNoteId), {
+    notes: notes[activeNoteId]
+  });
+
   ta.value = "";
   updateCharCount();
   renderNotesList(activeNoteId);
@@ -369,14 +405,34 @@ window.saveNote = function() {
   showToast("Note saved successfully.", "success");
 };
 
-window.deleteNote = function(index) {
+window.deleteNote = async function(index) {
   if (!activeNoteId) return;
   if (!confirm("Delete this note?")) return;
+
   notes[activeNoteId].splice(index, 1);
+
+  // Update Firestore
+  await setDoc(doc(db, "reservationNotes", activeNoteId), {
+    notes: notes[activeNoteId]
+  });
+
   renderNotesList(activeNoteId);
   refreshNoteButton(activeNoteId);
   showToast("Note deleted.", "info");
 };
+
+async function loadAllNotes() {
+  for (const r of reservations) {
+    try {
+      const snap = await getDoc(doc(db, "reservationNotes", r.id));
+      if (snap.exists()) {
+        notes[r.id] = snap.data().notes || [];
+      }
+    } catch (err) {
+      console.error("Failed to load notes for", r.id, err);
+    }
+  }
+}
 
 function refreshNoteButton(id) {
   const btn = document.getElementById(`noteBtn-${id}`);
