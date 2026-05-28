@@ -1,5 +1,5 @@
 import { db, storage } from './firebase-config.js';
-import { showToast } from './toast.js';
+import { showConfirm, showToast } from './toast.js';
 import { setupNavbar } from './navbar.js';
 
 // Initialize navbar
@@ -108,30 +108,33 @@ function loadAdminPosts() {
 }
 
 // ---------- DELETE POST ----------
-async function deletePost(postId) {
+function deletePost(postId) {
 
-  if (!confirm("Delete this post?")) return;
-
-  try {
-    const postSnap = await getDoc(doc(db, "posts", postId)); // get post document
-    const imageURL = postSnap.exists() ? postSnap.data().imageURL : null; // get imageURL
-
-    await deleteDoc(doc(db, "posts", postId)); // delete firestore posts
-
-    if (imageURL && !imageURL.includes("postalice.png")) {
+  showConfirm("Delete this post?",
+    async() => {
       try {
-        await deleteObject(ref(storage, imageURL));
-      } catch (err) {
-        console.warn(err);
-      }
+        const postSnap = await getDoc(doc(db, "posts", postId)); // get post document
+        const imageURL = postSnap.exists() ? postSnap.data().imageURL : null; // get imageURL
+
+        await deleteDoc(doc(db, "posts", postId)); // delete firestore posts
+
+        if (imageURL && !imageURL.includes("postalice.png")) {
+          try {
+            await deleteObject(ref(storage, imageURL));
+          } catch (err) {
+            console.warn(err);
+          }
+        }
+
+        showToast("Post deleted 🗑", "success"); // success message
+
+    } catch (err) {
+        console.error(err);
+        showToast("Delete failed", "error");
     }
-
-    showToast("Post deleted 🗑", "success"); // success message
-
-  } catch (err) {
-    console.error(err);
-    showToast("Delete failed", "error");
-  }
+    }
+  )
+  
 }
 
 // expose

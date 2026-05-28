@@ -1,5 +1,5 @@
 import { db, storage, app } from './firebase-config.js';
-import { showToast } from './toast.js';
+import { showToast , showConfirm} from './toast.js';
 import { setupNavbar } from './navbar.js';
 
 setupNavbar();
@@ -220,23 +220,27 @@ window.createPost = async function () {
 // =====================
 // DELETE POST
 // =====================
-window.deletePost = async function (postId, postUserId, imageURL) {
+window.deletePost = function (postId, postUserId, imageURL) {
 // only owner can delete
   if (!currentUser || postUserId !== currentUser.userId) return;
-  if (!confirm("Delete this post?")) return; // confirm delete
-// delete firestore document
-  await deleteDoc(doc(db, "posts", postId));
 
-  if (imageURL && !imageURL.includes("postalice.png")) {
-    try {
-      const imageRef = ref(storage, imageURL);
-      await deleteObject(imageRef);
-    } catch (err) {
-      console.warn(err);
+  // delete firestore document
+  showConfirm("Delete this post",async() => {
+
+    await deleteDoc(doc(db, "posts", postId));
+
+    if (imageURL && !imageURL.includes("postalice.png")) {
+      try {
+        const imageRef = ref(storage, imageURL);
+        await deleteObject(imageRef);
+      } catch (err) {
+        console.warn(err);
+      }
     }
-  }
 
-  showToast("Deleted 🗑️");
+    showToast("Deleted 🗑️");
+
+  });
 };
 
 // =====================
