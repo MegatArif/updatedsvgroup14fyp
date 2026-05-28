@@ -174,3 +174,33 @@ body {
   transform: translateY(-2px);
   opacity: 0.9;
 }
+
+.rate-btn {
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #f4b400;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.rate-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+.rating-display {
+  margin-top: 12px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #f4b400;
+}

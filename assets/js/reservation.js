@@ -111,11 +111,13 @@ function render(r) {
 
   if (!container) return;
 
-  // 只有 pending / accept 才能 cancel
   const canCancel =
     status === "pending" ||
     status === "accept";
 
+  const canRate =
+  status === "completed" &&
+  !r.rating;
   container.innerHTML += `
 
     <div class="reservation-card">
@@ -154,33 +156,60 @@ function render(r) {
 
       </div>
 
-      <div class="button-group">
+      ${
+  r.rating
+  ?
+  `
+    <div class="rating-display">
+      ⭐ Your Rating: ${r.rating}/5
+    </div>
+  `
+  :
+  ""
+}
+    <div class="button-group">
 
-        <button
-          class="receipt-btn"
-          onclick="downloadPDF('${r.id}')"
-        >
-          <i class="fa-solid fa-download"></i>
-          Download Receipt
-        </button>
+  <button
+    class="receipt-btn"
+    onclick="downloadPDF('${r.id}')"
+  >
+    <i class="fa-solid fa-download"></i>
+    Download Receipt
+  </button>
 
-        ${
-          canCancel
-          ?
-          `
-            <button
-              class="cancel-btn"
-              onclick="cancelReservation('${r.id}')"
-            >
-              <i class="fa-solid fa-ban"></i>
-              Cancel
-            </button>
-          `
-          :
-          ""
-        }
+  ${
+    canRate
+    ?
+    `
+      <button
+        class="rate-btn"
+        onclick="openRating('${r.id}')"
+      >
+        <i class="fa-solid fa-star"></i>
+        Rate
+      </button>
+    `
+    :
+    ""
+  }
 
-      </div>
+  ${
+    canCancel
+    ?
+    `
+      <button
+        class="cancel-btn"
+        onclick="cancelReservation('${r.id}')"
+      >
+        <i class="fa-solid fa-ban"></i>
+        Cancel
+      </button>
+    `
+    :
+    ""
+  }
+
+</div>
 
     </div>
   `;
@@ -335,4 +364,42 @@ window.downloadPDF = function(id) {
   );
 
   doc.save(`CafeHunt_${r.id}.pdf`);
+};
+
+// ================= RATING =================
+window.openRating = async function(id) {
+
+  const rating = prompt(
+    "Rate this cafe from 1 to 5 stars"
+  );
+
+  if (!rating) return;
+
+  const ratingValue = Number(rating);
+
+  if (
+    isNaN(ratingValue) ||
+    ratingValue < 1 ||
+    ratingValue > 5
+  ) {
+    alert("Please enter a number between 1 and 5");
+    return;
+  }
+
+  try {
+
+    await updateDoc(
+      doc(db, "reservation", id),
+      {
+        rating: ratingValue
+      }
+    );
+
+    alert("Thank you for your rating!");
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Failed to submit rating");
+  }
 };
