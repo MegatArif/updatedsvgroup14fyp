@@ -4,6 +4,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.c
 import { getAuth, onAuthStateChanged, updatePassword, updateEmail, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider, signOut } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { setupNavbar } from './navbar.js';
+import { showConfirm } from './toast.js';
 
 const auth = getAuth(app);
 
@@ -271,14 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.type = 'button'; // Prevents form from triggering save profile
         
         // Add click event listener for logout
-        logoutBtn.addEventListener('click', async (e) => {
+        logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            
-            // Confirm logout (optional but user-friendly)
-            const confirmLogout = confirm("Are you sure you want to log out?");
-            if (!confirmLogout) return;
-            
-            showLoading(true);
+
+            showConfirm("Are you sure you want to log out?", 
+                async () => {
+                    showLoading(true);
             
             try {
                 const auth = getAuth();
@@ -295,6 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast("Failed to log out. Please try again.", "error");
                 showLoading(false);
             }
+                }
+            )
         });
     }
 });
