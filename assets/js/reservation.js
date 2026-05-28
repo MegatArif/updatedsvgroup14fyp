@@ -116,7 +116,7 @@ function render(r) {
     !r.rating;
 
   container.innerHTML += `
-    <div class="reservation-card">
+    <div class="reservation-card status-${status}">
 
       <div class="card-top">
         <div>
@@ -125,7 +125,7 @@ function render(r) {
         </div>
 
         <span class="status status-${status}">
-          ${status.toUpperCase()}
+          ${getStatusLabel(status)}
         </span>
       </div>
 
@@ -244,6 +244,7 @@ window.downloadPDF = function(id) {
   doc.save(`CafeHunt_${r.id}.pdf`);
 };
 
+
 // ================= RATING =================
 window.openRating = async function(id) {
 
@@ -258,6 +259,7 @@ window.openRating = async function(id) {
   }
 
   try {
+
     const ref = doc(db, "reservation", id);
     const snap = await getDoc(ref);
 
@@ -265,10 +267,12 @@ window.openRating = async function(id) {
 
     const data = snap.data();
 
-    // 1. update reservation rating
-    await updateDoc(ref, { rating: ratingValue });
+    // ================= 1. UPDATE RESERVATION =================
+    await updateDoc(ref, {
+      rating: ratingValue
+    });
 
-    // 2. update cafe rating
+    // ================= 2. FIND CAFE =================
     const cafeQuery = query(
       collection(db, "cafes"),
       where("name", "==", data.cafe)
@@ -282,22 +286,62 @@ window.openRating = async function(id) {
     }
 
     const cafeDoc = cafeSnap.docs[0];
+
     const cafeRef = doc(db, "cafes", cafeDoc.id);
+
     const cafeData = cafeDoc.data();
 
-    const newSum = (cafeData.ratingSum || 0) + ratingValue;
-    const newCount = (cafeData.ratingCount || 0) + 1;
+    // ================= 3. CURRENT VALUES =================
+    const newSum =
+      (cafeData.ratingSum || 0) + ratingValue;
 
+    const newCount =
+      (cafeData.ratingCount || 0) + 1;
+
+    // ================= 4. RATING BREAKDOWN =================
+    const breakdown =
+      cafeData.ratingBreakdown || {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0
+      };
+
+    breakdown[ratingValue] =
+      (breakdown[ratingValue] || 0) + 1;
+
+    // ================= 5. ROUND AVERAGE =================
+    const averageRating = Number(
+      (newSum / newCount).toFixed(1)
+    );
+
+    // ================= 6. UPDATE FIREBASE =================
     await updateDoc(cafeRef, {
       ratingSum: newSum,
       ratingCount: newCount,
-      rating: newSum / newCount
+      rating: averageRating,
+      ratingBreakdown: breakdown
     });
 
     alert("Thank you for your rating!");
 
   } catch (err) {
+
     console.error(err);
     alert("Failed to submit rating");
   }
 };
+
+
+function getStatusLabel(status) {
+  const map = {
+    pending: "PENDING",
+    accepted: "ACCEPTED",
+    reject: "REJECTED",
+    completed: "COMPLETED",
+    expired: "EXPIRED",
+    cancel: "CANCELLED"
+  };
+  return map[status] || status.toUpperCase();
+}
