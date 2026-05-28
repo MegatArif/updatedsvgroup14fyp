@@ -300,29 +300,27 @@ const done = reservations.filter(r => r.status === "completed" || r.status === "
     const shortId   = r.id.slice(-6).toUpperCase();
 
     return `
-      <div class="comp-card" id="card-${r.id}">
-        <div class="comp-card-top">
-          <div>
-            <div class="comp-card-id" title="${r.id}">${shortId}</div>
-            <div class="comp-card-name">${escapeHtml(r.username)}</div>
-          </div>
-          
-          ${makeBadge(r.status)}
-        </div>
-        <div class="comp-card-meta">
-          <span><i class="fas fa-calendar-alt"></i>${r.date} &nbsp;·&nbsp; ${r.time}</span>
-          <span><i class="fas fa-users"></i>${escapeHtml(r.guests)}</span>
-        </div>
-        <div class="comp-card-actions">
-        <button class="btn" onclick="handleReceipt('${r.id}')">
-          <i class="fas fa-receipt"></i> Receipt
-        </button>
-        <div class="comp-card-actions">
-          <button class="btn" id="noteBtn-${r.id}" onclick="openNotesModal('${r.id}')">
-            <i class="fas fa-pen"></i> Note ${noteBadge}
-          </button>
-        </div>
-      </div>`;
+  <div class="comp-card" id="card-${r.id}">
+    <div class="comp-card-top">
+      <div>
+        <div class="comp-card-id" title="${r.id}">${shortId}</div>
+        <div class="comp-card-name">${escapeHtml(r.username)}</div>
+      </div>
+      ${makeBadge(r.status)}
+    </div>
+    <div class="comp-card-meta">
+      <span><i class="fas fa-calendar-alt"></i>${r.date} &nbsp;·&nbsp; ${r.time}</span>
+      <span><i class="fas fa-users"></i>${escapeHtml(r.guests)}</span>
+    </div>
+    <div class="comp-card-actions">
+      <button class="btn" onclick="handleReceipt('${r.id}')">
+        <i class="fas fa-receipt"></i> Receipt
+      </button>
+      <button class="btn" id="noteBtn-${r.id}" onclick="openNotesModal('${r.id}')">
+        <i class="fas fa-pen"></i> Note ${noteBadge}
+      </button>
+    </div>
+  </div>`;        
   }).join("");
 }
 
