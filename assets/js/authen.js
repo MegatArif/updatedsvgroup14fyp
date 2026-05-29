@@ -6,14 +6,14 @@ import {
   signInWithEmailAndPassword, 
   sendEmailVerification, 
   sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { showToast } from './toast.js'
 
   const ADMIN_EMAILS = [
       'megatarifidlan@graduate.utm.my',
       'leexuanhui@graduate.utm.my',
       'looeeying@graduate.utm.my',
-      'ammar06@graduate.utm.my',
+      'ammar06@graduate,utm.my',
   ];
 
   const auth = getAuth(app);
@@ -79,8 +79,29 @@ import { showToast } from './toast.js'
     overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
   }
 
+  /* ── RESET OWNER FOR RESUBMISSION ── */
+  async function resetOwnerForResubmission(user) {
+    const ownerRef  = doc(db, "ShopOwner", user.uid);
+    const ownerSnap = await getDoc(ownerRef);
+    const oldCafeId = ownerSnap.data()?.cafeDocId;
+
+    // Delete the old rejected cafe document to keep the DB clean
+    if (oldCafeId) {
+      try { await deleteDoc(doc(db, "cafes", oldCafeId)); } catch (_) {}
+    }
+
+    // Reset the owner's registration state so they can resubmit
+    await updateDoc(ownerRef, {
+      cafeRegistered: false,
+      approved:       false,
+      rejected:       false,
+      cafeDocId:      "",
+      rejectionNote:  ""
+    });
+  }
+
   /* ── REJECTED OVERLAY ── */
-  function showRejectedOverlay(reason) {
+  function showRejectedOverlay(reason, user) {
     document.querySelector('.email-overlay')?.remove();
 
     const overlay = document.createElement('div');
@@ -92,15 +113,43 @@ import { showToast } from './toast.js'
         <div class="email-overlay-msg">
           Unfortunately, your cafe registration has been <span>rejected</span> by our team.<br><br>
           ${reason ? `<strong>Reason:</strong> "${reason}"<br><br>` : ''}
-          You may re-register your cafe after addressing the issue.
+          Please address the issue and resubmit your cafe registration.
         </div>
-        <button class="email-overlay-close" style="background:#e53935;">Got it</button>
+        <div style="display:flex;flex-direction:column;gap:.75rem;width:100%;">
+          <button class="email-overlay-close" id="resubmitBtn"
+            style="background:#c47b4a;width:100%;">
+            <i class="ri-store-2-line" style="margin-right:6px;"></i>Re-register Cafe
+          </button>
+          <button class="email-overlay-close" id="gotItBtn"
+            style="background:rgba(255,255,255,0.12);color:#ccc;border:1px solid rgba(255,255,255,0.2);width:100%;">
+            Got it
+          </button>
+        </div>
       </div>
     `;
     document.body.appendChild(overlay);
     requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('show')));
 
-    overlay.querySelector('.email-overlay-close').addEventListener('click', () => closeOverlay(overlay));
+    // "Got it" — just close the overlay
+    overlay.querySelector('#gotItBtn').addEventListener('click', () => closeOverlay(overlay));
+
+    // "Re-register" — reset state then redirect
+    overlay.querySelector('#resubmitBtn').addEventListener('click', async () => {
+      const btn = overlay.querySelector('#resubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ri-loader-4-line" style="margin-right:6px;"></i>Please wait…';
+      try {
+        await resetOwnerForResubmission(user);
+        sessionStorage.setItem('userRole', 'shopowner');
+        window.location.href = 'registercafe.html';
+      } catch (err) {
+        console.error('Reset failed:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-store-2-line" style="margin-right:6px;"></i>Re-register Cafe';
+        showToast('Something went wrong. Please try again.', 'error');
+      }
+    });
+
     overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(overlay); });
   }
 
@@ -486,7 +535,7 @@ function validateUsername(name) {
         ? `Reason: "${ownerData.rejectionNote}"`
         : 'Please contact support for more information.';
       showToast('Your cafe registration was rejected. ' + reason, 'error', 6000);
-      showRejectedOverlay(ownerData.rejectionNote || '');
+      showRejectedOverlay(ownerData.rejectionNote || '', user);
       return;
     }
 
