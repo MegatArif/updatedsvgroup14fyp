@@ -143,8 +143,8 @@ function render(r) {
 
       <div class="button-group">
 
-        <button class="receipt-btn" onclick="downloadPDF('${r.id}')">
-          <i class="fa-solid fa-download"></i> Download Receipt
+        <button class="detail-btn" onclick="downloadPDF('${r.id}')">
+          <i class="fa-solid fa-download"></i> View Detail
         </button>
 
         ${

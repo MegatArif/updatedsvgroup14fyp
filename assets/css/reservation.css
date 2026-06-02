@@ -84,7 +84,7 @@ body {
 .status-expired { background:#f7f1e8;color:#a7927f; }
 
 /* ⭐ BUTTON FIXED */
-.receipt-btn {
+.detail-btn {
   margin-top: 12px;
   padding: 10px 16px;
 
@@ -107,7 +107,7 @@ body {
   transition: 0.2s;
 }
 
-.receipt-btn:hover {
+.detail-btn:hover {
   transform: translateY(-2px);
 }
 
