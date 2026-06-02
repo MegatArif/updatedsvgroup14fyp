@@ -26,6 +26,12 @@ const facilityIcons = {
   "Outdoor seating":   "fa-umbrella-beach",
   "Meeting equipment": "fas fa-chalkboard-user",
 };
+/* ── BANNED WORDS ────────────────────────────────────────────── */
+const bannedWords = [
+  "fuck", "shit", "ass", "bitch", "damn", "crap", "bastard",
+  "bodoh", "sial", "anjing", "celaka", "pundek", "lancau",
+  "kepala bapak", "puki", "hanjing"
+];
 
 /* ── AUTH ────────────────────────────────────────────────────── */
 const auth = getAuth(app);
@@ -65,6 +71,14 @@ function updatePreview() {
           <i class="fas ${facilityIcons[f] || 'fa-check'}"></i> ${f}
         </span>`).join("")
     : "";
+
+  const descLen = descEl.value.length;
+  const countEl = document.getElementById("descCount");
+  if (countEl) {
+    countEl.textContent = descLen;
+    countEl.style.color = descLen > 280 ? "#e53e3e" : descLen > 200 ? "#d97706" : "";
+  }
+
 }
 
 [nameEl, openEl, closeEl, descEl, addressEl, cityEl].forEach(el => {
@@ -120,13 +134,22 @@ async function getNextId() {
   });
   return maxId + 1;
 }
-
+function containsBannedWord(text) {
+  const lower = text.toLowerCase();
+  return bannedWords.some(word => {
+    const regex = new RegExp(`\\b${word}\\b`, "i");
+    return regex.test(lower);
+  });
+}
 /* ── VALIDATE ────────────────────────────────────────────────── */
 function validate() {
   if (!nameEl.value.trim())    { showToast("Cafe name is required.", "error"); return false; }
   if (!openEl.value)           { showToast("Open hour is required.", "error"); return false; }
   if (!closeEl.value)          { showToast("Close hour is required.", "error"); return false; }
   if (!descEl.value.trim())    { showToast("Description is required.", "error"); return false; }
+  if (descEl.value.trim().length < 20)  { showToast("Description must be at least 20 characters.", "error"); return false; }
+  if (descEl.value.trim().length > 300) { showToast("Description cannot exceed 300 characters.", "error"); return false; }
+  if (containsBannedWord(descEl.value)) { showToast("Description contains inappropriate language.", "error"); return false; }
   if (!addressEl.value.trim()) { showToast("Address is required.", "error"); return false; }
   if (!cityEl.value.trim())    { showToast("City is required.", "error"); return false; }
   return true;
