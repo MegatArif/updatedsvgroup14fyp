@@ -5,15 +5,12 @@ import { showToast } from './toast.js';
 
 const auth = getAuth(app);
 
-// State variables to track the logged-in user
 let currentUserName = "Guest User";
 let currentUserUid = null;
 
-// Listen for authentication state changes
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUserUid = user.uid;
-    // Fetch the detailed profile (like the name "Alex") from the 'Customers' collection
     const userDocRef = doc(db, "Customers", user.uid);
     const userSnap = await getDoc(userDocRef);
     if (userSnap.exists()) {
@@ -22,7 +19,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// City display mapping to turn "skudai" -> "Skudai"
 const CITY_DISPLAY_MAP = {
   skudai:     'Skudai',
   kulai:      'Kulai',
@@ -37,74 +33,129 @@ const CITY_DISPLAY_MAP = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  const reservationForm = document.getElementById('reservationForm');
-  const dateInput = document.getElementById('resDate');
-  const formCard = document.getElementById('formCard');
-  const confirmationCard = document.getElementById('confirmationCard');
-  const returnMenuBtn = document.getElementById('returnMenuBtn');
-  const cancelBookingBtn = document.getElementById('cancelBookingBtn');
-  const cafeTitle = document.getElementById('cafeTitle');
-  const cafeSubtitle = document.getElementById('cafeSubtitle');
-  const confirmationSubtitle = document.getElementById('confirmationSubtitle');
+  const reservationForm     = document.getElementById('reservationForm');
+  const dateInput           = document.getElementById('resDate');
+  const formCard            = document.getElementById('formCard');
+  const confirmationCard    = document.getElementById('confirmationCard');
+  const returnMenuBtn       = document.getElementById('returnMenuBtn');
+  const cancelBookingBtn    = document.getElementById('cancelBookingBtn');
+  const cafeTitle           = document.getElementById('cafeTitle');
+  const cafeSubtitle        = document.getElementById('cafeSubtitle');
+  const confirmationSubtitle= document.getElementById('confirmationSubtitle');
 
-  // Get the cafe name from the URL query parameters (e.g., ?cafe=Cafe+Name)
-  const urlParams = new URLSearchParams(window.location.search);
-  const selectedCafe = urlParams.get('name') || "our Cafe"; // Fallback to default
-  const rawCity = urlParams.get('city') || "";
+  const urlParams      = new URLSearchParams(window.location.search);
+  const selectedCafe   = urlParams.get('name')     || "our Cafe";
+  const rawCity        = urlParams.get('city')      || "";
   const selectedLocation = CITY_DISPLAY_MAP[rawCity] || rawCity || "Main Branch";
+  const openHour       = urlParams.get('openHour')  || null;
+  const closeHour      = urlParams.get('closeHour') || null;
 
-  // Update the UI to reflect the selected cafe
-  if (cafeTitle) {
-    cafeTitle.textContent = `Reservation for ${selectedCafe}`;
-  }
-  if (cafeSubtitle) {
-    cafeSubtitle.textContent = `Experience exquisite dining in ${selectedLocation}`;
-  }
-
+  if (cafeTitle)    cafeTitle.textContent    = `Reservation for ${selectedCafe}`;
+  if (cafeSubtitle) cafeSubtitle.textContent = `Experience exquisite dining in ${selectedLocation}`;
   if (selectedCafe !== "our Cafe") {
     document.title = `Book a Table at ${selectedCafe} - CafeHunt`;
   }
 
-  // 1. Validation Logic: Restrict date picker from allowing past dates
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  
-  const minDateString = `${yyyy}-${mm}-${dd}`;
-  dateInput.min = minDateString;
+  // ── Show open hours hint on the page if available ──
+  const timeInput = document.getElementById('resTime');
+  if (openHour && closeHour && timeInput) {
+    timeInput.min = openHour;
+    timeInput.max = closeHour;
 
-  // Helper function to turn ISO dates into a warmer format (e.g., Nov 24, 2026)
-  function formatDateDisplay(dateString) {
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    const dateObj = new Date(dateString + 'T00:00:00'); // Prevent timezone offset errors
-    return dateObj.toLocaleDateString('en-US', options);
+    // Inject a small hint text below the time input
+    const hint = document.createElement('small');
+    hint.id = 'timeHint';
+    hint.style.cssText = 'display:block;margin-top:5px;color:#A98B76;font-size:0.8rem;';
+    hint.textContent = `Open hours: ${formatTimeDisplay(openHour)} – ${formatTimeDisplay(closeHour)}`;
+    timeInput.closest('.form-group')?.appendChild(hint);
   }
 
-  // Helper function to turn 24hr time strings into elegant 12hr strings
+  // Restrict date picker to today onwards
+  const today = new Date();
+  const yyyy  = today.getFullYear();
+  const mm    = String(today.getMonth() + 1).padStart(2, '0');
+  const dd    = String(today.getDate()).padStart(2, '0');
+  dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+  // ── Helpers ──────────────────────────────────────────────
+
+  function formatDateDisplay(dateString) {
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', options);
+  }
+
   function formatTimeDisplay(timeString) {
-    const [hourStr, minStr] = timeString.split(':');
-    let hour = parseInt(hourStr, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12; // convert 0 to 12
+    if (!timeString || !timeString.includes(':')) return timeString || '';
+    const parts  = timeString.split(':');
+    const minStr = parts[1] ?? '00';          
+    let hour     = parseInt(parts[0], 10);
+    if (isNaN(hour)) return timeString;
+    const ampm   = hour >= 12 ? 'PM' : 'AM';
+    hour         = hour % 12 || 12;
     return `${hour}:${minStr} ${ampm}`;
   }
 
-  // 2. Form Submit Interception & Summary Generation
+  function toMinutes(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  /**
+   * Returns an error string if timeValue is outside open hours, null if OK.
+   * Handles two cases:
+   *   Normal  : open=08:00, close=22:00  → selected must be 08:00–22:00
+   *   Overnight: open=22:00, close=02:00 → selected must be 22:00–23:59 OR 00:00–02:00
+   */
+  function validateTimeSlot(timeValue) {
+    if (!openHour || !closeHour) return null;
+
+    const selected = toMinutes(timeValue);
+    const open     = toMinutes(openHour);
+    const close    = toMinutes(closeHour);
+
+    let isValid;
+
+    if (close > open) {
+      // Normal same-day hours: e.g. 08:00 – 22:00
+      isValid = selected >= open && selected <= close;
+    } else {
+      // Overnight hours: e.g. 22:00 – 02:00
+      // Valid if selected is AFTER open OR BEFORE close
+      isValid = selected >= open || selected <= close;
+    }
+
+    if (!isValid) {
+      return `This cafe is only open from ${formatTimeDisplay(openHour)} to ${formatTimeDisplay(closeHour)}. Please choose a time within operating hours.`;
+    }
+    return null;
+  }
+
+  // ── Submit handler ────────────────────────────────────────
+
   reservationForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    // Grab values safely
     const guestsValue = document.getElementById('guests').value;
-    const dateValue = dateInput.value;
-    const timeValue = document.getElementById('resTime').value;
+    const dateValue   = dateInput.value;
+    const timeValue   = document.getElementById('resTime').value;
 
-    // Manual validation check using switch statement
+    // Step-by-step validation — most specific message wins
     let validationMsg = '';
     switch (true) {
-      case !guestsValue: validationMsg = "Please specify the number of guests."; break;
-      case !dateValue:   validationMsg = "Please select a reservation date."; break;
-      case !timeValue:   validationMsg = "Please select a reservation time."; break;
+      case !guestsValue:
+        validationMsg = "Please specify the number of guests.";
+        break;
+      case !dateValue:
+        validationMsg = "Please select a reservation date.";
+        break;
+      case !timeValue:
+        validationMsg = "Please select a reservation time.";
+        break;
+      default: {
+        // All fields filled — check time is within operating hours
+        const slotError = validateTimeSlot(timeValue);
+        if (slotError) validationMsg = slotError;
+      }
     }
 
     if (validationMsg) {
@@ -112,45 +163,39 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // All valid — write to Firestore
     try {
-
-      // Save to Firestore using the specific "reservation" collection and schema
-      // Note: cafe, location, and username are set as defaults since they aren't in the form
       await addDoc(collection(db, "reservation"), {
-        cafe: selectedCafe,      // Use the dynamically fetched cafe name
-        date: dateValue,
-        guests: guestsValue,
-        location: selectedLocation, // Use the dynamically fetched location
-        time: timeValue,
-        username: currentUserName, // Now uses the actual logged-in user's name
-        userId: currentUserUid,    // Recommended: store the UID for database relations
+        cafe:      selectedCafe,
+        date:      dateValue,
+        guests:    guestsValue,
+        location:  selectedLocation,
+        time:      timeValue,
+        username:  currentUserName,
+        userId:    currentUserUid,
         createdAt: serverTimestamp()
       });
 
-      // Assign formatted values to the confirmation UI components
       document.getElementById('summaryGuests').textContent = guestsValue;
-      document.getElementById('summaryDate').textContent = formatDateDisplay(dateValue);
-      document.getElementById('summaryTime').textContent = formatTimeDisplay(timeValue);
+      document.getElementById('summaryDate').textContent   = formatDateDisplay(dateValue);
+      document.getElementById('summaryTime').textContent   = formatTimeDisplay(timeValue);
 
-      // Update the confirmation card text dynamically
       if (confirmationSubtitle) {
         confirmationSubtitle.textContent = `We're delighted to welcome you to ${selectedCafe}.`;
       }
 
-      // Perform seamless visual transition
       formCard.classList.add('hidden');
       confirmationCard.classList.remove('hidden');
       showToast("Your table has been reserved!", "success");
+
     } catch (error) {
       console.error('Booking error:', error);
       let msg = '';
       switch (error.code) {
         case 'permission-denied':
-          msg = 'You do not have permission to make a reservation. Please ensure you are logged in.';
-          break;
+          msg = 'Permission denied. Please ensure you are logged in.'; break;
         case 'unavailable':
-          msg = 'The reservation service is temporarily unavailable. Please try again later.';
-          break;
+          msg = 'Service temporarily unavailable. Please try again.'; break;
         default:
           msg = 'An error occurred: ' + error.message;
       }
@@ -158,12 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Handle redirection back to the main menu or home page
   returnMenuBtn.addEventListener('click', () => {
-    window.location.href = 'gallery.html'; 
+    window.location.href = 'gallery.html';
   });
 
-  // Handle redirection back to the explore page from the form
   if (cancelBookingBtn) {
     cancelBookingBtn.addEventListener('click', () => {
       window.location.href = 'gallery.html';
