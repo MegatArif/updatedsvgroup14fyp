@@ -1,5 +1,5 @@
 import { app, db } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { showToast } from './toast.js';
 
@@ -33,51 +33,25 @@ const CITY_DISPLAY_MAP = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  const reservationForm     = document.getElementById('reservationForm');
-  const dateInput           = document.getElementById('resDate');
-  const formCard            = document.getElementById('formCard');
-  const confirmationCard    = document.getElementById('confirmationCard');
-  const returnMenuBtn       = document.getElementById('returnMenuBtn');
-  const cancelBookingBtn    = document.getElementById('cancelBookingBtn');
-  const cafeTitle           = document.getElementById('cafeTitle');
-  const cafeSubtitle        = document.getElementById('cafeSubtitle');
-  const confirmationSubtitle= document.getElementById('confirmationSubtitle');
+  const reservationForm      = document.getElementById('reservationForm');
+  const dateInput            = document.getElementById('resDate');
+  const timeInput            = document.getElementById('resTime');
+  const formCard             = document.getElementById('formCard');
+  const confirmationCard     = document.getElementById('confirmationCard');
+  const returnMenuBtn        = document.getElementById('returnMenuBtn');
+  const cancelBookingBtn     = document.getElementById('cancelBookingBtn');
+  const cafeTitle            = document.getElementById('cafeTitle');
+  const cafeSubtitle         = document.getElementById('cafeSubtitle');
+  const confirmationSubtitle = document.getElementById('confirmationSubtitle');
 
-  const urlParams      = new URLSearchParams(window.location.search);
-  const selectedCafe   = urlParams.get('name')     || "our Cafe";
-  const rawCity        = urlParams.get('city')      || "";
-  const selectedLocation = CITY_DISPLAY_MAP[rawCity] || rawCity || "Main Branch";
-  const openHour       = urlParams.get('openHour')  || null;
-  const closeHour      = urlParams.get('closeHour') || null;
+  const urlParams = new URLSearchParams(window.location.search);
 
-  if (cafeTitle)    cafeTitle.textContent    = `Reservation for ${selectedCafe}`;
-  if (cafeSubtitle) cafeSubtitle.textContent = `Experience exquisite dining in ${selectedLocation}`;
-  if (selectedCafe !== "our Cafe") {
-    document.title = `Book a Table at ${selectedCafe} - CafeHunt`;
-  }
-
-  // ── Show open hours hint on the page if available ──
-  const timeInput = document.getElementById('resTime');
-  if (openHour && closeHour && timeInput) {
-    timeInput.min = openHour;
-    timeInput.max = closeHour;
-
-    // Inject a small hint text below the time input
-    const hint = document.createElement('small');
-    hint.id = 'timeHint';
-    hint.style.cssText = 'display:block;margin-top:5px;color:#A98B76;font-size:0.8rem;';
-    hint.textContent = `Open hours: ${formatTimeDisplay(openHour)} – ${formatTimeDisplay(closeHour)}`;
-    timeInput.closest('.form-group')?.appendChild(hint);
-  }
-
-  // Restrict date picker to today onwards
-  const today = new Date();
-  const yyyy  = today.getFullYear();
-  const mm    = String(today.getMonth() + 1).padStart(2, '0');
-  const dd    = String(today.getDate()).padStart(2, '0');
-  dateInput.min = `${yyyy}-${mm}-${dd}`;
-
-  // ── Helpers ──────────────────────────────────────────────
+  const cafeDocId = urlParams.get('id') || '';
+  let selectedCafe = urlParams.get('name') || "our Cafe";
+  let rawCity = urlParams.get('city') || "";
+  let selectedLocation = CITY_DISPLAY_MAP[rawCity] || rawCity || "Main Branch";
+  let openHour = urlParams.get('openHour') || null;
+  let closeHour = urlParams.get('closeHour') || null;
 
   function formatDateDisplay(dateString) {
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
@@ -86,18 +60,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatTimeDisplay(timeString) {
     if (!timeString || !timeString.includes(':')) return timeString || '';
-    const parts  = timeString.split(':');
-    const minStr = parts[1] ?? '00';          
-    let hour     = parseInt(parts[0], 10);
+    const parts = timeString.split(':');
+    const minStr = parts[1] ?? '00';
+    let hour = parseInt(parts[0], 10);
     if (isNaN(hour)) return timeString;
-    const ampm   = hour >= 12 ? 'PM' : 'AM';
-    hour         = hour % 12 || 12;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
     return `${hour}:${minStr} ${ampm}`;
   }
 
   function toMinutes(t) {
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
+  }
+
+  function applyCafeHoursToInput() {
+    if (!timeInput || !openHour || !closeHour) return;
+
+    const isSameDaySchedule = toMinutes(closeHour) > toMinutes(openHour);
+
+    if (isSameDaySchedule) {
+      timeInput.min = openHour;
+      timeInput.max = closeHour;
+    } else {
+      timeInput.removeAttribute('min');
+      timeInput.removeAttribute('max');
+    }
+
+    const existingHint = document.getElementById('timeHint');
+    if (existingHint) existingHint.remove();
+
+    const hint = document.createElement('small');
+    hint.id = 'timeHint';
+    hint.style.cssText = 'display:block;margin-top:5px;color:#A98B76;font-size:0.8rem;';
+    hint.textContent = `Open hours: ${formatTimeDisplay(openHour)} – ${formatTimeDisplay(closeHour)}`;
+    timeInput.closest('.form-group')?.appendChild(hint);
   }
 
   /**
@@ -110,17 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!openHour || !closeHour) return null;
 
     const selected = toMinutes(timeValue);
-    const open     = toMinutes(openHour);
-    const close    = toMinutes(closeHour);
+    const open = toMinutes(openHour);
+    const close = toMinutes(closeHour);
 
     let isValid;
 
     if (close > open) {
-      // Normal same-day hours: e.g. 08:00 – 22:00
       isValid = selected >= open && selected <= close;
     } else {
-      // Overnight hours: e.g. 22:00 – 02:00
-      // Valid if selected is AFTER open OR BEFORE close
       isValid = selected >= open || selected <= close;
     }
 
@@ -130,16 +124,84 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  // ── Submit handler ────────────────────────────────────────
+  async function loadCafeOperatingHours() {
+    try {
+      let cafeData = null;
+
+      if (cafeDocId) {
+        const cafeSnap = await getDoc(doc(db, 'cafes', cafeDocId));
+        if (cafeSnap.exists()) {
+          cafeData = cafeSnap.data();
+        }
+      }
+
+      if (!cafeData && selectedCafe && rawCity) {
+        const cafeQuery = query(
+          collection(db, 'cafes'),
+          where('name', '==', selectedCafe),
+          where('city', '==', rawCity)
+        );
+        const cafeSnap = await getDocs(cafeQuery);
+        if (!cafeSnap.empty) {
+          cafeData = cafeSnap.docs[0].data();
+        }
+      }
+
+      if (!cafeData) return;
+
+      selectedCafe = cafeData.name || selectedCafe;
+      rawCity = cafeData.city || rawCity;
+      selectedLocation = CITY_DISPLAY_MAP[rawCity] || rawCity || selectedLocation;
+      openHour = cafeData.openHour || openHour;
+      closeHour = cafeData.closeHour || closeHour;
+
+      if (cafeTitle) {
+        cafeTitle.textContent = `Reservation for ${selectedCafe}`;
+      }
+
+      if (cafeSubtitle) {
+        cafeSubtitle.textContent = `Experience exquisite dining in ${selectedLocation}`;
+      }
+
+      if (selectedCafe !== "our Cafe") {
+        document.title = `Book a Table at ${selectedCafe} - CafeHunt`;
+      }
+
+      applyCafeHoursToInput();
+    } catch (error) {
+      console.error('Failed to load cafe hours:', error);
+      applyCafeHoursToInput();
+    }
+  }
+
+  if (cafeTitle) {
+    cafeTitle.textContent = `Reservation for ${selectedCafe}`;
+  }
+
+  if (cafeSubtitle) {
+    cafeSubtitle.textContent = `Experience exquisite dining in ${selectedLocation}`;
+  }
+
+  if (selectedCafe !== "our Cafe") {
+    document.title = `Book a Table at ${selectedCafe} - CafeHunt`;
+  }
+
+  // Restrict date picker to today onwards
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+  loadCafeOperatingHours();
 
   reservationForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const guestsValue = document.getElementById('guests').value;
-    const dateValue   = dateInput.value;
-    const timeValue   = document.getElementById('resTime').value;
+    const dateValue = dateInput.value;
+    const timeValue = timeInput.value;
 
-    // Step-by-step validation — most specific message wins
     let validationMsg = '';
     switch (true) {
       case !guestsValue:
@@ -152,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         validationMsg = "Please select a reservation time.";
         break;
       default: {
-        // All fields filled — check time is within operating hours
         const slotError = validateTimeSlot(timeValue);
         if (slotError) validationMsg = slotError;
       }
@@ -163,22 +224,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // All valid — write to Firestore
     try {
       await addDoc(collection(db, "reservation"), {
-        cafe:      selectedCafe,
-        date:      dateValue,
-        guests:    guestsValue,
-        location:  selectedLocation,
-        time:      timeValue,
-        username:  currentUserName,
-        userId:    currentUserUid,
+        cafe: selectedCafe,
+        date: dateValue,
+        guests: guestsValue,
+        location: selectedLocation,
+        time: timeValue,
+        username: currentUserName,
+        userId: currentUserUid,
         createdAt: serverTimestamp()
       });
 
       document.getElementById('summaryGuests').textContent = guestsValue;
-      document.getElementById('summaryDate').textContent   = formatDateDisplay(dateValue);
-      document.getElementById('summaryTime').textContent   = formatTimeDisplay(timeValue);
+      document.getElementById('summaryDate').textContent = formatDateDisplay(dateValue);
+      document.getElementById('summaryTime').textContent = formatTimeDisplay(timeValue);
 
       if (confirmationSubtitle) {
         confirmationSubtitle.textContent = `We're delighted to welcome you to ${selectedCafe}.`;
