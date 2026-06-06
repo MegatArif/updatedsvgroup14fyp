@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications – CafeHunt</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/navbar.css"/>
+  <link rel="stylesheet" href="assets/css/customernotification.css"/>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo-area">
+    <i class="fas fa-mug-hot logo-icon"></i>
+    <span class="logo-text">CafeHunt</span>
+  </div>
+  <div class="nav-links"><!-- Populated by navbar.js --></div>
+</div>
+
+<div class="notif-page">
+
+  <div class="notif-header-row">
+    <div>
+      <h1 class="notif-title"><i class="fas fa-bell"></i> Notifications</h1>
+      <p class="notif-sub">Stay updated on your cafe reservations</p>
+    </div>
+    <button class="btn-mark-all" id="markAllBtn">
+      <i class="fas fa-check-double"></i> Mark all as read
+    </button>
+  </div>
+
+  <!-- Tab filter -->
+  <div class="notif-tabs">
+    <button class="ntab active" data-filter="all">All</button>
+    <button class="ntab" data-filter="accepted">Accepted</button>
+    <button class="ntab" data-filter="payment_success">Payment</button>
+    <button class="ntab" data-filter="expired">Expired</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="notif-loading" id="notifLoading">
+    <div class="n-spinner"></div>
+    <p>Loading notifications…</p>
+  </div>
+
+  <!-- Empty -->
+  <div class="notif-empty hidden" id="notifEmpty">
+    <i class="fas fa-bell-slash"></i>
+    <p>No notifications yet</p>
+  </div>
+
+  <!-- List -->
+  <div class="notif-list" id="notifList"></div>
+
+</div>
+
+<script type="module" src="assets/js/customernotification.js"></script>
+</body>
+</html>

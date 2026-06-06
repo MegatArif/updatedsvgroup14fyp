@@ -1,7 +1,21 @@
+// assets/js/navbar.js
+// MODIFIED: notification bell now routes to customernotification.html for customers
+// and shows a live unread-count badge driven by Firestore.
+
 import {
   getAuth,
-  signOut
+  onAuthStateChanged,
+  signOut,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+// ADDED: Firestore imports needed for the live unread badge
+import { db } from "./firebase-config.js";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 export function setupNavbar() {
 
@@ -37,9 +51,13 @@ export function setupNavbar() {
       </a>
     ` : ''}
 
-    ${/* ── NOTIFICATIONS: everyone sees this ── */
-    `<a href="#" id="nav-notif" style="position:relative">
+    ${/* ── NOTIFICATIONS: everyone sees this ──
+          MODIFIED: href now goes to customernotification.html for customers;
+          admin/shopowner keep href="#" (they have no inbox page yet).
+          A <span id="notif-badge"> is injected and filled by the live listener below. ── */
+    `<a href="${isCustomer ? 'customernotification.html' : '#'}" id="nav-notif" style="position:relative">
       <i class="fas fa-bell"></i> Notifications
+      <span id="notif-badge" class="notif-badge" style="display:none;"></span>
     </a>`}
 
     ${/* ── APPROVAL: admin only ── */
@@ -81,13 +99,15 @@ export function setupNavbar() {
   const currentPage = window.location.pathname.split("/").pop();
 
   const activeMap = {
-    "gallery.html":       "nav-explore",
-    "socialpage.html":    "nav-post",
-    "adminpost.html":     "nav-post",
-    "profilepage.html":   "nav-profile",
-    "profilesopage.html": "nav-profileso",
-    "so_dashboard.html":  "nav-dashboard",
-    "reservation.html":  "nav-reservations",
+    "gallery.html":                "nav-explore",
+    "socialpage.html":             "nav-post",
+    "adminpost.html":              "nav-post",
+    "profilepage.html":            "nav-profile",
+    "profilesopage.html":          "nav-profileso",
+    "so_dashboard.html":           "nav-dashboard",
+    "reservation.html":            "nav-reservations",
+    // ADDED: mark notifications link active when on the notification page
+    "customernotification.html":   "nav-notif",
   };
 
   const activeId = activeMap[currentPage];
@@ -108,4 +128,37 @@ export function setupNavbar() {
       alert("Failed to log out. Please try again.");
     }
   });
+
+  /* ── LIVE UNREAD BADGE (customer only) ──────────────────────────────────────
+     ADDED: listens to the notifications collection for this user and shows
+     an unread count on the bell icon. Uses onAuthStateChanged so we have a UID
+     before querying Firestore.
+     Only runs for the customer role to avoid pointless listeners for admin/SO. ── */
+  if (isCustomer) {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const badgeEl = document.getElementById("notif-badge");
+      if (!badgeEl) return;
+
+      const q = query(
+        collection(db, "notifications"),
+        where("userId", "==", user.uid),
+        where("read", "==", false)
+      );
+
+      // onSnapshot gives live updates — badge refreshes instantly when a new
+      // notification is written or when the user marks one as read.
+      onSnapshot(q, (snap) => {
+        const count = snap.size;
+        if (count > 0) {
+          badgeEl.textContent = count > 99 ? "99+" : String(count);
+          badgeEl.style.display = "flex";
+        } else {
+          badgeEl.style.display = "none";
+        }
+      });
+    });
+  }
 }

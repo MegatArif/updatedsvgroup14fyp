@@ -1,108 +1,48 @@
 /* ═══════════════════════════════════════════════════════
    so.js  —  Shop Owner Dashboard
+   MODIFIED: connected to Firestore for real reservation data.
+   ADDED: writes a "accepted" notification to the `notifications`
+          collection when the owner approves a booking.
    Depends on:
      assets/js/toast.js        → showToast()
      assets/js/navbar.js       → setupNavbar()
-     assets/js/firebase-config.js → db, app
+     assets/js/firebase-config → db, app
 ═══════════════════════════════════════════════════════ */
 
 import { showToast }   from "./toast.js";
 import { setupNavbar } from "./navbar.js";
-import { db, app }     from "./firebase-config.js";
 
+// ADDED: Firestore + Auth imports for real data + notification writing
+import { db, app } from "./firebase-config.js";
 import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
   doc,
-  getDoc,
-  setDoc,
   updateDoc,
-  orderBy,
+  addDoc,
+  getDoc,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
 import {
   getAuth,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { guardSession } from "./session.js";
+
+guardSession(["shopowner"]);
 
 const auth = getAuth(app);
 
-/* ═══════════════════════════════════════════════════════
-   STATE
-   reservations[] — populated from Firestore
-   Each item shape (mirrors your Firestore fields):
-   {
-     id,          ← Firestore document ID
-     createdAt,   ← Firestore Timestamp
-     date,        ← "2026-05-25"
-     guests,      ← "3 People"
-     time,        ← "21:00"
-     userId,
-     username,
-     status,      ← "pending" | "confirmed" | "rejected" | "completed"
-   }
-═══════════════════════════════════════════════════════ */
+// MODIFIED: reservations is now populated from Firestore, not hard-coded
 let reservations = [];
 
-// Per-reservation notes stored in memory: { "<docId>": [{text, date}, …] }
+// Per-reservation notes stored in memory: { "docId": [{text, date}, …] }
 const notes = {};
 
-/* ═══════════════════════════════════════════════════════
-   FIRESTORE — LOAD RESERVATIONS FOR THIS OWNER'S CAFE
-═══════════════════════════════════════════════════════ */
-async function loadReservations(user) {
-  try {
-    // 1. Get this owner's cafe name so we can filter reservations
-    const cafesSnap = await getDocs(
-      query(collection(db, "cafes"), where("ownerId", "==", user.uid))
-    );
-
-    if (cafesSnap.empty) {
-      showToast("No cafe registered to this account.", "error");
-      return;
-    }
-
-    const cafeName = cafesSnap.docs[0].data().name || "";
-
-    // 2. Query reservations where cafe == cafeName
-    //    (matches the "cafe" field in your Firestore screenshot)
-    const resQuery = query(
-      collection(db, "reservation"),
-      where("cafe", "==", cafeName),
-      
-    );
-
-    const snap = await getDocs(resQuery);
-
-    reservations = snap.docs.map((d) => ({
-      id:        d.id,
-      createdAt: d.data().createdAt ?? null,
-      date:      d.data().date      ?? "",
-      guests:    d.data().guests    ?? "",
-      time:      d.data().time      ?? "",
-      userId:    d.data().userId    ?? "",
-      username:  d.data().username  ?? "",
-      status:    d.data().status    ?? "pending",   // default pending if field missing
-    }));
-
-    reservations.sort((a, b) => {
-    const tA = a.createdAt?.seconds ?? 0;
-    const tB = b.createdAt?.seconds ?? 0;
-    return tB - tA;
-  });
-    await checkAndExpireReservations();
-    await loadAllNotes();
-    renderStats();
-    renderPendingTable();
-    renderCompletedCards();
-
-  } catch (err) {
-  console.error("loadReservations:", err.code, err.message); // show full error
-  showToast("Failed to load reservations.", "error");
-}
-}
+// The cafe name for this shop owner (loaded from Firestore)
+let ownerCafeName = "";
 
 /* ═══════════════════════════════════════════════════════
    CLOCK
@@ -117,7 +57,7 @@ function startClock() {
     const s    = String(now.getSeconds()).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12 || 12;
-    el.textContent = `${String(h).padStart(2, "0")}:${m}:${s} ${ampm}`;
+    el.textContent = `${String(h).padStart(2,"0")}:${m}:${s} ${ampm}`;
   };
   tick();
   setInterval(tick, 1000);
@@ -128,7 +68,7 @@ function startClock() {
 ═══════════════════════════════════════════════════════ */
 function renderStats() {
   const total     = reservations.length;
-  const confirmed = reservations.filter(r => r.status === "accepted").length;
+  const confirmed = reservations.filter(r => r.status === "confirmed").length;
   const pending   = reservations.filter(r => r.status === "pending").length;
 
   animateCount("statTotal",     total);
@@ -153,132 +93,120 @@ function animateCount(elId, target) {
 ═══════════════════════════════════════════════════════ */
 function makeBadge(status) {
   const map = {
-    pending:   { cls: "badge-pending",   icon: "fa-clock",            label: "Pending"   },
-    accepted:  { cls: "badge-confirmed", icon: "fa-circle-check",     label: "Accepted"  },
-    rejected:  { cls: "badge-rejected",  icon: "fa-circle-xmark",     label: "Rejected"  },
-    completed: { cls: "badge-completed", icon: "fa-check-double",     label: "Completed" },
-    expired:   { cls: "badge-expired",   icon: "fa-calendar-xmark",   label: "Expired"   },
-    cancel:    { cls: "badge-cancel",    icon: "fa-ban",              label: "Cancelled" },
+    pending:   { cls:"badge-pending",   icon:"fa-clock",        label:"Pending"   },
+    confirmed: { cls:"badge-confirmed", icon:"fa-circle-check", label:"Confirmed" },
+    rejected:  { cls:"badge-rejected",  icon:"fa-circle-xmark", label:"Rejected"  },
+    completed: { cls:"badge-completed", icon:"fa-check-double", label:"Completed" },
   };
   const c = map[status] || map.pending;
   return `<span class="badge ${c.cls}"><i class="fas ${c.icon}"></i>${c.label}</span>`;
 }
 
 /* ═══════════════════════════════════════════════════════
-   PENDING TABLE
-   Shows all non-completed reservations.
-   Columns: ID (short), Customer, Date, Time, Guests, Status, Actions
+   PENDING TABLE  (Approve / Reject actions)
 ═══════════════════════════════════════════════════════ */
 function renderPendingTable() {
   const tbody = document.getElementById("reservationsBody");
   if (!tbody) return;
 
+  // Show all non-completed reservations (pending / confirmed / rejected)
   const rows = reservations.filter(r => r.status !== "completed");
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No reservations.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No reservations.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(r => {
-    const shortId = r.id.slice(-6).toUpperCase();
-
+    // Use Firestore doc ID as the row key
     const actionCell = r.status === "pending"
-  ? `<div class="action-btns">
-       <button class="btn-approve" onclick="updateStatus('${r.id}','accepted')">
-         <i class="fas fa-check"></i> Approve
-       </button>
-       <button class="btn-reject"  onclick="updateStatus('${r.id}','rejected')">
-         <i class="fas fa-xmark"></i> Reject
-       </button>
-     </div>`
-  : `<span class="resolved-label">${r.status === "accepted" ? "✓ Approved" : r.status === "cancel" ? "✗ Cancelled" : r.status === "expired" ? "⏰ Expired" : "✗ Rejected"}</span>`;
+      ? `<div class="action-btns">
+           <button class="btn-approve" onclick="updateStatus('${r._docId}','confirmed')">
+             <i class="fas fa-check"></i> Approve
+           </button>
+           <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
+             <i class="fas fa-xmark"></i> Reject
+           </button>
+         </div>`
+      : `<span class="resolved-label">${r.status === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
 
     return `
-      <tr id="row-${r.id}">
-        <td><strong title="${r.id}">${shortId}</strong></td>
-        <td>${escapeHtml(r.username)}</td>
-        <td>${r.date}</td>
-        <td>${r.time}</td>
-        <td>${escapeHtml(r.guests)}</td>
-        <td id="badge-${r.id}">${makeBadge(r.status)}</td>
-        <td id="action-${r.id}">${actionCell}</td>
+      <tr id="row-${r._docId}">
+        <td><strong>${r._docId.substring(0, 6)}…</strong></td>
+        <td>${r.username || r.customer || "—"}</td>
+        <td>${r.date || ""} ${r.time || ""}</td>
+        <td>${r.guests || "—"}</td>
+        <td id="badge-${r._docId}">${makeBadge(r.status)}</td>
+        <td id="action-${r._docId}">${actionCell}</td>
       </tr>`;
   }).join("");
 }
 
 /* ═══════════════════════════════════════════════════════
-   APPROVE / REJECT — writes status back to Firestore
+   APPROVE / REJECT
+   MODIFIED: now writes to Firestore and sends a notification
+             to the customer when the booking is accepted.
 ═══════════════════════════════════════════════════════ */
-window.updateStatus = async function(id, newStatus) {
-  const r = reservations.find(x => x.id === id);
+window.updateStatus = async function(docId, newStatus) {
+  const r = reservations.find(x => x._docId === docId);
   if (!r) return;
 
   try {
-    // Update Firestore first
-    await updateDoc(doc(db, "reservation", id), { status: newStatus });
+    // 1. Update the reservation document in Firestore
+    // ADDED: persists approval/rejection status so reservation.js can read it
+    await updateDoc(doc(db, "reservation", docId), {
+      status: newStatus,
+    });
 
-    // Then update local state
+    // 2. ADDED: Write a notification to the customer if booking was accepted
+    if (newStatus === "confirmed" && r.userId) {
+      await addDoc(collection(db, "notifications"), {
+        userId:        r.userId,                          // customer's UID
+        type:          "accepted",
+        message:       `Your reservation at ${ownerCafeName || r.cafe || "the cafe"} on ${r.date} at ${r.time} has been accepted! We look forward to seeing you.`,
+        cafeName:      ownerCafeName || r.cafe || "",
+        reservationId: docId,
+        read:          false,
+        createdAt:     serverTimestamp(),
+      });
+    }
+
+    // 3. Update local array so re-renders are instant (Firestore onSnapshot will
+    //    also update shortly after, which is fine)
     r.status = newStatus;
 
     // Update badge cell in-place
-    const badgeEl = document.getElementById(`badge-${id}`);
+    const badgeEl = document.getElementById(`badge-${docId}`);
     if (badgeEl) badgeEl.innerHTML = makeBadge(newStatus);
 
     // Swap action buttons → resolved label
-    const actionEl = document.getElementById(`action-${id}`);
+    const actionEl = document.getElementById(`action-${docId}`);
     if (actionEl)
       actionEl.innerHTML = `<span class="resolved-label">${newStatus === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
 
     // Brief row flash
-    const rowEl = document.getElementById(`row-${id}`);
+    const rowEl = document.getElementById(`row-${docId}`);
     if (rowEl) {
       rowEl.style.transition = "background .4s";
-      
-      rowEl.style.background = newStatus === "accepted" ? "#eaf5ec" : "#fdf2f2";  // was "confirmed"
+      rowEl.style.background  = newStatus === "confirmed" ? "#eaf5ec" : "#fdf2f2";
       setTimeout(() => { rowEl.style.background = ""; }, 1400);
     }
 
     renderStats();
 
     showToast(
-    newStatus === "accepted"
-      ? `Reservation approved.`
-      : `Reservation rejected.`,
-    newStatus === "accepted" ? "success" : "error"
-  );
+      newStatus === "confirmed"
+        ? `Reservation approved — customer has been notified. ✅`
+        : `Reservation ${docId.substring(0,6)} has been rejected.`,
+      newStatus === "confirmed" ? "success" : "error"
+    );
 
   } catch (err) {
-    console.error("updateStatus:", err);
-    showToast("Failed to update reservation status.", "error");
+    console.error("updateStatus error:", err);
+    showToast("Failed to update reservation. Please try again.", "error");
   }
 };
 
-
-/* ═══════════════════════════════════════════════════════
-   AUTO-EXPIRE — marks pending reservations as expired
-   if their date+time has already passed
-═══════════════════════════════════════════════════════ */
-async function checkAndExpireReservations() {
-  const now = new Date();
-
-  for (const r of reservations) {
-    if (r.status !== "pending") continue;
-
-    // Combine date + time into a Date object  e.g. "2026-05-25" + "13:52"
-    const reservationDateTime = new Date(`${r.date}T${r.time}:00`);
-
-    if (reservationDateTime < now) {
-      try {
-        await updateDoc(doc(db, "reservation", r.id), { status: "expired" });
-        r.status = "expired"; // update local state too
-        console.log(`Expired: ${r.id}`);
-      } catch (err) {
-        console.error("Failed to expire reservation:", r.id, err);
-      }
-    }
-  }
-}
 /* ═══════════════════════════════════════════════════════
    COMPLETED CARDS
 ═══════════════════════════════════════════════════════ */
@@ -286,8 +214,7 @@ function renderCompletedCards() {
   const grid = document.getElementById("compGrid");
   if (!grid) return;
 
-  // In renderCompletedCards()
-const done = reservations.filter(r => r.status === "completed" || r.status === "accepted");
+  const done = reservations.filter(r => r.status === "completed");
 
   if (!done.length) {
     grid.innerHTML = `<p style="color:var(--text-muted);font-style:italic;padding:10px 0;">No completed reservations yet.</p>`;
@@ -295,34 +222,50 @@ const done = reservations.filter(r => r.status === "completed" || r.status === "
   }
 
   grid.innerHTML = done.map(r => {
-    const count     = (notes[r.id] || []).length;
+    const count     = (notes[r._docId] || []).length;
     const noteBadge = count > 0 ? `<span class="note-count-badge">${count}</span>` : "";
-    const shortId   = r.id.slice(-6).toUpperCase();
-
     return `
-  <div class="comp-card" id="card-${r.id}">
-    <div class="comp-card-top">
-      <div>
-        <div class="comp-card-id" title="${r.id}">${shortId}</div>
-        <div class="comp-card-name">${escapeHtml(r.username)}</div>
-      </div>
-      ${makeBadge(r.status)}
-    </div>
-    <div class="comp-card-meta">
-      <span><i class="fas fa-calendar-alt"></i>${r.date} &nbsp;·&nbsp; ${r.time}</span>
-      <span><i class="fas fa-users"></i>${escapeHtml(r.guests)}</span>
-    </div>
-    <div class="comp-card-actions">
-      <button class="btn" onclick="handleReceipt('${r.id}')">
-        <i class="fas fa-receipt"></i> Receipt
-      </button>
-      <button class="btn" id="noteBtn-${r.id}" onclick="openNotesModal('${r.id}')">
-        <i class="fas fa-pen"></i> Note ${noteBadge}
-      </button>
-    </div>
-  </div>`;        
+      <div class="comp-card" id="card-${r._docId}">
+        <div class="comp-card-top">
+          <div>
+            <div class="comp-card-id">${r._docId.substring(0,6)}…</div>
+            <div class="comp-card-name">${r.username || r.customer || "—"}</div>
+          </div>
+          ${makeBadge(r.status)}
+        </div>
+        <div class="comp-card-meta">
+          <span><i class="fas fa-calendar-alt"></i>${r.date || ""} ${r.time || ""}</span>
+          <span><i class="fas fa-users"></i>${r.guests || "—"} guests</span>
+        </div>
+        <div class="comp-card-actions">
+          <button class="btn" onclick="handleReceipt('${r._docId}')">
+            <i class="fas fa-receipt"></i> Receipt
+          </button>
+          <button class="btn" id="noteBtn-${r._docId}" onclick="openNotesModal('${r._docId}')">
+            <i class="fas fa-pen"></i> Note ${noteBadge}
+          </button>
+        </div>
+      </div>`;
   }).join("");
 }
+
+/* ═══════════════════════════════════════════════════════
+   RECEIPT
+═══════════════════════════════════════════════════════ */
+window.handleReceipt = function(id) {
+  const r = reservations.find(x => x._docId === id);
+  if (!r) return;
+  alert(
+    `━━━━━━━━━━━━━━━━━━━━━━━\n`  +
+    `  RECEIPT  —  ${id.substring(0,8)}\n`    +
+    `━━━━━━━━━━━━━━━━━━━━━━━\n`  +
+    `Customer : ${r.username || r.customer || "—"}\n` +
+    `Date     : ${r.date || ""}\n` +
+    `Time     : ${r.time || ""}\n` +
+    `Guests   : ${r.guests || "—"}\n`   +
+    `━━━━━━━━━━━━━━━━━━━━━━━`
+  );
+};
 
 /* ═══════════════════════════════════════════════════════
    NOTES MODAL
@@ -331,11 +274,10 @@ let activeNoteId = null;
 
 window.openNotesModal = function(id) {
   activeNoteId = id;
-  const r = reservations.find(x => x.id === id);
+  const r = reservations.find(x => x._docId === id);
 
-  document.getElementById("modalSubtitle").textContent =
-    `${r.id.slice(-6).toUpperCase()}  ·  ${r.username}`;
-  document.getElementById("modalTitle").textContent = "Reservation Notes";
+  document.getElementById("modalSubtitle").textContent = `${id.substring(0,8)}  ·  ${r?.username || "—"}`;
+  document.getElementById("modalTitle").textContent    = "Reservation Notes";
 
   const ta = document.getElementById("noteTextarea");
   ta.value = "";
@@ -375,7 +317,7 @@ function renderNotesList(id) {
   ).join("");
 }
 
-window.saveNote = async function() {
+window.saveNote = function() {
   const ta   = document.getElementById("noteTextarea");
   const text = ta.value.trim();
   if (!text || !activeNoteId) return;
@@ -384,16 +326,11 @@ window.saveNote = async function() {
 
   const now  = new Date();
   const date =
-    now.toLocaleDateString("en-MY", { day: "2-digit", month: "short", year: "numeric" }) +
+    now.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" }) +
     "  " +
-    now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" });
+    now.toLocaleTimeString("en-MY", { hour:"2-digit", minute:"2-digit" });
 
   notes[activeNoteId].unshift({ text, date });
-
-  // Save to Firestore
-  await setDoc(doc(db, "reservationNotes", activeNoteId), {
-    notes: notes[activeNoteId]
-  });
 
   ta.value = "";
   updateCharCount();
@@ -403,37 +340,18 @@ window.saveNote = async function() {
   showToast("Note saved successfully.", "success");
 };
 
-window.deleteNote = async function(index) {
+window.deleteNote = function(index) {
   if (!activeNoteId) return;
   if (!confirm("Delete this note?")) return;
-
   notes[activeNoteId].splice(index, 1);
-
-  // Update Firestore
-  await setDoc(doc(db, "reservationNotes", activeNoteId), {
-    notes: notes[activeNoteId]
-  });
-
   renderNotesList(activeNoteId);
   refreshNoteButton(activeNoteId);
+
   showToast("Note deleted.", "info");
 };
 
-async function loadAllNotes() {
-  for (const r of reservations) {
-    try {
-      const snap = await getDoc(doc(db, "reservationNotes", r.id));
-      if (snap.exists()) {
-        notes[r.id] = snap.data().notes || [];
-      }
-    } catch (err) {
-      console.error("Failed to load notes for", r.id, err);
-    }
-  }
-}
-
 function refreshNoteButton(id) {
-  const btn = document.getElementById(`noteBtn-${id}`);
+  const btn   = document.getElementById(`noteBtn-${id}`);
   if (!btn) return;
   const count = (notes[id] || []).length;
   const badge = count > 0 ? `<span class="note-count-badge">${count}</span>` : "";
@@ -450,7 +368,7 @@ window.updateCharCount = function() {
 };
 
 function escapeHtml(str) {
-  return String(str)
+  return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -458,7 +376,7 @@ function escapeHtml(str) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   BUILD & INJECT NOTES MODAL  (once, on load)
+   INJECT NOTES MODAL
 ═══════════════════════════════════════════════════════ */
 function injectNotesModal() {
   if (document.getElementById("notesOverlay")) return;
@@ -485,6 +403,7 @@ function injectNotesModal() {
       </div>
 
       <div class="modal-body">
+
         <div>
           <div class="notes-section-label">Saved Notes</div>
           <div class="notes-list" id="notesList">
@@ -509,6 +428,7 @@ function injectNotesModal() {
             </button>
           </div>
         </div>
+
       </div>
     </div>`;
 
@@ -518,57 +438,33 @@ function injectNotesModal() {
     if (e.key === "Escape") closeNotesModal();
   });
 }
-  window.handleReceipt = function(id) {
-  const r = reservations.find(x => x.id === id);
-  if (!r) return;
 
-  const { jsPDF } = window.jspdf;
-  const pdfdoc = new jsPDF({ unit: "mm", format: [80, 170] });
+/* ═══════════════════════════════════════════════════════
+   FIRESTORE — load reservations for this shop owner
+   ADDED: replaces the hard-coded dummy data array.
+   Queries `reservation` where cafe == ownerCafeName.
+   Uses onSnapshot for real-time updates.
+═══════════════════════════════════════════════════════ */
+function loadReservations(cafeName) {
+  ownerCafeName = cafeName;
 
-  // HEADER
-  pdfdoc.setFillColor(227, 176, 122);
-  pdfdoc.rect(0, 0, 80, 22, "F");
-  pdfdoc.setTextColor(60, 40, 30);
-  pdfdoc.setFont("helvetica", "bold");
-  pdfdoc.setFontSize(14);
-  pdfdoc.text("CAFEHUNT", 40, 10, { align: "center" });
-  pdfdoc.setFontSize(7);
-  pdfdoc.text("OFFICIAL RESERVATION RECEIPT", 40, 16, { align: "center" });
+  const q = query(
+    collection(db, "reservation"),
+    where("cafe", "==", cafeName)
+  );
 
-  let y = 30;
-  pdfdoc.setTextColor(120);
-  pdfdoc.setFontSize(7);
-  pdfdoc.text(r.username, 40, y, { align: "center" });
-  y += 8;
+  onSnapshot(q, (snapshot) => {
+    reservations = snapshot.docs.map((d) => ({
+      _docId: d.id,   // Firestore doc ID used as the unique key
+      ...d.data(),
+    }));
 
-  pdfdoc.setDrawColor(220, 190, 160);
-  pdfdoc.line(5, y, 75, y);
-  y += 10;
+    renderStats();
+    renderPendingTable();
+    renderCompletedCards();
+  });
+}
 
-  const row = (k, v) => {
-    pdfdoc.setTextColor(120);
-    pdfdoc.setFont("helvetica", "bold");
-    pdfdoc.text(k, 5, y);
-    pdfdoc.setTextColor(60, 40, 30);
-    pdfdoc.setFont("helvetica", "normal");
-    pdfdoc.text(String(v), 30, y);
-    y += 8;
-  };
-
-  row("Customer", r.username);
-  row("Date",     r.date);
-  row("Time",     r.time);
-  row("Guests",   r.guests);
-
-  y += 5;
-  pdfdoc.setFillColor(255, 242, 217);
-  pdfdoc.rect(5, y - 4, 70, 10, "F");
-  pdfdoc.setTextColor(150, 90, 40);
-  pdfdoc.setFont("helvetica", "bold");
-  pdfdoc.text(`STATUS : ${r.status.toUpperCase()}`, 40, y + 2, { align: "center" });
-
-  pdfdoc.save(`CafeHunt_${r.id}_${Date.now()}.pdf`);
-};
 /* ═══════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════ */
@@ -577,12 +473,37 @@ document.addEventListener("DOMContentLoaded", () => {
   startClock();
   injectNotesModal();
 
-  // Wait for auth, then load real data
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      loadReservations(user);
-    } else {
-      window.location.href = "index.html";
+  // ADDED: Wait for auth, then fetch the owner's cafe name from ShopOwner doc,
+  // then load reservations scoped to that cafe.
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+
+    try {
+      const ownerSnap = await getDoc(doc(db, "ShopOwner", user.uid));
+      const ownerData = ownerSnap.exists() ? ownerSnap.data() : {};
+      const cafeDocId = ownerData.cafeDocId;
+
+      if (!cafeDocId) {
+        // No cafe registered yet — show empty state
+        renderStats();
+        renderPendingTable();
+        renderCompletedCards();
+        return;
+      }
+
+      const cafeSnap = await getDoc(doc(db, "cafes", cafeDocId));
+      const cafeName = cafeSnap.exists() ? cafeSnap.data().name : "";
+
+      if (!cafeName) {
+        console.warn("so.js: could not resolve cafe name from cafeDocId:", cafeDocId);
+        return;
+      }
+
+      loadReservations(cafeName);
+
+    } catch (err) {
+      console.error("so.js init error:", err);
+      showToast("Could not load reservation data.", "error");
     }
   });
 });

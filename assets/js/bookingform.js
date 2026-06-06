@@ -248,6 +248,17 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmationCard.classList.remove('hidden');
       showToast("Your table has been reserved!", "success");
 
+      if (currentUserUid) {
+        await addDoc(collection(db, "notifications"), {
+          userId:        currentUserUid,
+          type:          "payment_success",
+          message:       `Your booking at ${selectedCafe} on ${dateValue} at ${formatTimeDisplay(timeValue)} for ${guestsValue} has been received. Awaiting cafe confirmation.`,
+          cafeName:      selectedCafe, 
+          read:          false,
+          createdAt:     serverTimestamp(),
+        });
+      }
+
     } catch (error) {
       console.error('Booking error:', error);
       let msg = '';

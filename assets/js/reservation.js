@@ -1,3 +1,10 @@
+// assets/js/reservation.js
+// MODIFIED: added "expired" notification trigger.
+// When a reservation's computed status is "expired" and a notification
+// has not yet been sent (notifSentExpired field is absent), we write
+// one notification document and set notifSentExpired: true on the
+// reservation to prevent duplicates on future renders.
+
 import { db, app } from "./firebase-config.js";
 
 import {
@@ -8,12 +15,14 @@ import {
   getDoc,
   getDocs,
   doc,
-  updateDoc
+  updateDoc,
+  addDoc,          // ADDED: for writing notifications
+  serverTimestamp, // ADDED: for notification timestamps
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 import {
   getAuth,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
 import { setupNavbar } from "./navbar.js";
@@ -24,15 +33,15 @@ const auth = getAuth(app);
 
 // ================= LISTS =================
 const containers = {
-  pending: document.getElementById("pendingList"),
-  accepted: document.getElementById("acceptList"),
-  reject: document.getElementById("rejectList"),
+  pending:   document.getElementById("pendingList"),
+  accepted:  document.getElementById("acceptList"),
+  reject:    document.getElementById("rejectList"),
   completed: document.getElementById("completedList"),
-  expired: document.getElementById("expiredList"),
-  cancel: document.getElementById("cancelList"),
+  expired:   document.getElementById("expiredList"),
+  cancel:    document.getElementById("cancelList"),
 };
 
-let currentUser = null;
+let currentUser     = null;
 let allReservations = [];
 
 // ================= AUTH =================
@@ -40,12 +49,11 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   const snap = await getDoc(doc(db, "Customers", user.uid));
-
   const data = snap.exists() ? snap.data() : {};
 
   currentUser = {
     userId: user.uid,
-    username: data.username || user.email
+    username: data.username || user.email,
   };
 
   loadReservations();
@@ -59,14 +67,13 @@ function loadReservations() {
   );
 
   onSnapshot(q, (snapshot) => {
-
-    Object.values(containers).forEach(c => {
+    Object.values(containers).forEach((c) => {
       if (c) c.innerHTML = "";
     });
 
-    allReservations = snapshot.docs.map(d => ({
+    allReservations = snapshot.docs.map((d) => ({
       id: d.id,
-      ...d.data()
+      ...d.data(),
     }));
 
     allReservations.forEach(render);
@@ -75,15 +82,14 @@ function loadReservations() {
 
 // ================= STATUS LOGIC =================
 function getStatus(r) {
-  const now = new Date();
+  const now         = new Date();
   const bookingTime = new Date(`${r.date}T${r.time}`);
-  const dbStatus = (r.status || "").toLowerCase();
+  const dbStatus    = (r.status || "").toLowerCase();
 
   if (dbStatus === "cancelled" || dbStatus === "cancel") return "cancel";
-  if (dbStatus === "rejected") return "reject";
-  if (dbStatus === "expired") return "expired";
+  if (dbStatus === "rejected")  return "reject";
+  if (dbStatus === "expired")   return "expired";
 
-  // ✅ FIX: unified status = accepted
   if (dbStatus === "accepted") {
     if (bookingTime < now) return "completed";
     return "accepted";
@@ -101,19 +107,18 @@ function getStatus(r) {
 
 // ================= RENDER =================
 function render(r) {
-
-  const status = getStatus(r);
+  const status    = getStatus(r);
   const container = containers[status];
 
   if (!container) return;
 
-  const canCancel =
-    status === "pending" ||
-    status === "accepted";
+  // ADDED: fire-and-forget expired notification (idempotent)
+  if (status === "expired") {
+    sendExpiredNotificationOnce(r);
+  }
 
-  const canRate =
-    status === "completed" &&
-    !r.rating;
+  const canCancel = status === "pending" || status === "accepted";
+  const canRate   = status === "completed" && !r.rating;
 
   container.innerHTML += `
     <div class="reservation-card status-${status}">
@@ -135,11 +140,9 @@ function render(r) {
         <div class="info-box"><span>Guests</span><strong>${r.guests}</strong></div>
       </div>
 
-      ${
-        r.rating
-          ? `<div class="rating-display">⭐ Your Rating: ${r.rating}/5</div>`
-          : ""
-      }
+      ${r.rating
+        ? `<div class="rating-display">⭐ Your Rating: ${r.rating}/5</div>`
+        : ""}
 
       <div class="button-group">
 
@@ -147,25 +150,53 @@ function render(r) {
           <i class="fa-solid fa-download"></i> View Detail
         </button>
 
-        ${
-          canRate
-            ? `<button class="rate-btn" onclick="openRating('${r.id}')">
-                <i class="fa-solid fa-star"></i> Rate
-              </button>`
-            : ""
-        }
+        ${canRate
+          ? `<button class="rate-btn" onclick="openRating('${r.id}')">
+              <i class="fa-solid fa-star"></i> Rate
+            </button>`
+          : ""}
 
-        ${
-          canCancel
-            ? `<button class="cancel-btn" onclick="cancelReservation('${r.id}')">
-                <i class="fa-solid fa-ban"></i> Cancel
-              </button>`
-            : ""
-        }
+        ${canCancel
+          ? `<button class="cancel-btn" onclick="cancelReservation('${r.id}')">
+              <i class="fa-solid fa-ban"></i> Cancel
+            </button>`
+          : ""}
 
       </div>
     </div>
   `;
+}
+
+// ================= EXPIRED NOTIFICATION (ADDED) =================
+// Sends a one-time "expired" notification for a reservation that timed
+// out before the shop owner approved it.
+// Guard: the `notifSentExpired` boolean on the reservation doc prevents
+// duplicate notifications across page loads / snapshot refreshes.
+async function sendExpiredNotificationOnce(r) {
+  // Skip if already sent or if we have no userId to notify
+  if (r.notifSentExpired || !r.userId) return;
+
+  try {
+    // Mark first so a concurrent snapshot can't re-trigger before Firestore
+    // confirms the write.
+    await updateDoc(doc(db, "reservation", r.id), {
+      notifSentExpired: true,
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      userId:        r.userId,
+      type:          "expired",
+      message:       `Your reservation at ${r.cafe || "the cafe"} on ${r.date} at ${r.time} has expired — it was not approved in time. You can make a new booking anytime.`,
+      cafeName:      r.cafe || "",
+      reservationId: r.id,
+      read:          false,
+      createdAt:     serverTimestamp(),
+    });
+
+  } catch (err) {
+    // Non-fatal — user just won't get the notification this cycle
+    console.warn("sendExpiredNotificationOnce failed:", err);
+  }
 }
 
 // ================= CANCEL =================
@@ -175,9 +206,8 @@ window.cancelReservation = async function(id) {
 
   try {
     await updateDoc(doc(db, "reservation", id), {
-      status: "cancel"
+      status: "cancel",
     });
-
     alert("Reservation cancelled");
   } catch (err) {
     console.error(err);
@@ -187,16 +217,12 @@ window.cancelReservation = async function(id) {
 
 // ================= PDF =================
 window.downloadPDF = function(id) {
-
-  const r = allReservations.find(x => x.id === id);
+  const r = allReservations.find((x) => x.id === id);
   if (!r) return;
 
   const { jsPDF } = window.jspdf;
 
-  const doc = new jsPDF({
-    unit: "mm",
-    format: [80, 180]
-  });
+  const doc = new jsPDF({ unit: "mm", format: [80, 180] });
 
   const status = getStatus(r);
 
@@ -217,37 +243,29 @@ window.downloadPDF = function(id) {
     doc.setTextColor(120);
     doc.setFont("helvetica", "bold");
     doc.text(label, 5, y);
-
     doc.setFont("helvetica", "normal");
     doc.text(String(value ?? "-"), 30, y);
-
     y += 7;
   };
 
   row("Customer", r.username);
-  row("Cafe", r.cafe);
+  row("Cafe",     r.cafe);
   row("Location", r.location);
-  row("Date", r.date);
-  row("Time", r.time);
-  row("Guests", r.guests);
+  row("Date",     r.date);
+  row("Time",     r.time);
+  row("Guests",   r.guests);
 
   y += 5;
-
   doc.setFillColor(240, 240, 240);
   doc.rect(5, y, 70, 12, "F");
-
   doc.setFont("helvetica", "bold");
-  doc.text(`STATUS: ${status.toUpperCase()}`, 40, y + 8, {
-    align: "center"
-  });
+  doc.text(`STATUS: ${status.toUpperCase()}`, 40, y + 8, { align: "center" });
 
   doc.save(`CafeHunt_${r.id}.pdf`);
 };
 
-
 // ================= RATING =================
 window.openRating = async function(id) {
-
   const rating = prompt("Rate this cafe from 1 to 5 stars");
   if (!rating) return;
 
@@ -259,89 +277,56 @@ window.openRating = async function(id) {
   }
 
   try {
-
-    const ref = doc(db, "reservation", id);
+    const ref  = doc(db, "reservation", id);
     const snap = await getDoc(ref);
-
     if (!snap.exists()) return;
 
     const data = snap.data();
 
-    // ================= 1. UPDATE RESERVATION =================
-    await updateDoc(ref, {
-      rating: ratingValue
-    });
+    await updateDoc(ref, { rating: ratingValue });
 
-    // ================= 2. FIND CAFE =================
-    const cafeQuery = query(
-      collection(db, "cafes"),
-      where("name", "==", data.cafe)
-    );
-
-    const cafeSnap = await getDocs(cafeQuery);
+    const cafeQuery = query(collection(db, "cafes"), where("name", "==", data.cafe));
+    const cafeSnap  = await getDocs(cafeQuery);
 
     if (cafeSnap.empty) {
       alert("Rating saved but cafe not found");
       return;
     }
 
-    const cafeDoc = cafeSnap.docs[0];
-
-    const cafeRef = doc(db, "cafes", cafeDoc.id);
-
+    const cafeDoc  = cafeSnap.docs[0];
+    const cafeRef  = doc(db, "cafes", cafeDoc.id);
     const cafeData = cafeDoc.data();
 
-    // ================= 3. CURRENT VALUES =================
-    const newSum =
-      (cafeData.ratingSum || 0) + ratingValue;
+    const newSum   = (cafeData.ratingSum   || 0) + ratingValue;
+    const newCount = (cafeData.ratingCount || 0) + 1;
+    const breakdown = cafeData.ratingBreakdown || { 1:0, 2:0, 3:0, 4:0, 5:0 };
+    breakdown[ratingValue] = (breakdown[ratingValue] || 0) + 1;
+    const averageRating = Number((newSum / newCount).toFixed(1));
 
-    const newCount =
-      (cafeData.ratingCount || 0) + 1;
-
-    // ================= 4. RATING BREAKDOWN =================
-    const breakdown =
-      cafeData.ratingBreakdown || {
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0
-      };
-
-    breakdown[ratingValue] =
-      (breakdown[ratingValue] || 0) + 1;
-
-    // ================= 5. ROUND AVERAGE =================
-    const averageRating = Number(
-      (newSum / newCount).toFixed(1)
-    );
-
-    // ================= 6. UPDATE FIREBASE =================
     await updateDoc(cafeRef, {
-      ratingSum: newSum,
-      ratingCount: newCount,
-      rating: averageRating,
-      ratingBreakdown: breakdown
+      ratingSum:       newSum,
+      ratingCount:     newCount,
+      rating:          averageRating,
+      ratingBreakdown: breakdown,
     });
 
     alert("Thank you for your rating!");
 
   } catch (err) {
-
     console.error(err);
     alert("Failed to submit rating");
   }
 };
 
-
+// ================= STATUS LABEL =================
 function getStatusLabel(status) {
   const map = {
-    pending: "PENDING",
-    accepted: "ACCEPTED",
-    reject: "REJECTED",
+    pending:   "PENDING",
+    accepted:  "ACCEPTED",
+    reject:    "REJECTED",
     completed: "COMPLETED",
-    expired: "EXPIRED",
-    cancel: "CANCELLED"
+    expired:   "EXPIRED",
+    cancel:    "CANCELLED",
   };
   return map[status] || status.toUpperCase();
 }
