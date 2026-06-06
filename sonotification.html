@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Notifications</title>
+
+<link rel="stylesheet" href="assets/css/navbar.css">
+<link rel="stylesheet" href="assets/css/sonotification.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="logo-area">
+    <i class="fas fa-mug-hot logo-icon"></i>
+    <span class="logo-text">CafeHunt</span>
+  </div>
+
+  <div class="nav-links">
+    <a href="so_dashboard.html">Dashboard</a>
+    <a href="sonotification.html" class="active">Notification</a>
+  </div>
+</div>
+
+<div class="notification-page">
+
+  <div id="mainView">
+    <h1>Notifications</h1>
+
+    <div id="categoryContainer"></div>
+  </div>
+
+  <div id="detailView" style="display:none;">
+
+    <button id="backBtn">
+      <i class="fas fa-arrow-left"></i>
+      Back
+    </button>
+
+    <h1 id="detailTitle"></h1>
+
+    <div id="detailList"></div>
+
+  </div>
+
+</div>
+
+<script type="module" src="assets/js/sonotification.js"></script>
+
+</body>
+</html>

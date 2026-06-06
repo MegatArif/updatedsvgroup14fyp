@@ -1,0 +1,135 @@
+body{
+  background:#f5f0e8;
+  font-family:'Segoe UI',sans-serif;
+}
+
+.notification-page{
+  max-width:1000px;
+  margin:auto;
+  padding:40px 25px;
+}
+
+h1{
+  margin-bottom:25px;
+  color:#2b2118;
+}
+
+/* CATEGORY CARDS */
+
+.category-grid{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.category-card{
+  background:white;
+  padding:25px;
+  border-radius:18px;
+  cursor:pointer;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  box-shadow:0 3px 10px rgba(0,0,0,.05);
+
+  transition:.2s;
+}
+
+.category-card:hover{
+  transform:translateY(-2px);
+}
+
+.left{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.icon-box{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  color:white;
+  font-size:22px;
+}
+
+.booking{
+  background:#4caf50;
+}
+
+.expired{
+  background:#ff9800;
+}
+
+.admin{
+  background:#e53935;
+}
+
+.card-title{
+  font-size:18px;
+  font-weight:700;
+}
+
+.card-subtitle{
+  color:#777;
+  margin-top:4px;
+}
+
+.count{
+  background:#8b2200;
+  color:white;
+
+  min-width:35px;
+  height:35px;
+
+  border-radius:999px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  font-weight:700;
+}
+
+/* DETAIL */
+
+#backBtn{
+  border:none;
+  background:#8b2200;
+  color:white;
+
+  padding:10px 16px;
+  border-radius:10px;
+
+  cursor:pointer;
+
+  margin-bottom:20px;
+}
+
+.detail-card{
+  background:white;
+  padding:18px;
+  border-radius:15px;
+
+  margin-bottom:15px;
+
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+
+.detail-title{
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.detail-time{
+  margin-top:8px;
+  color:#888;
+  font-size:.85rem;
+}
