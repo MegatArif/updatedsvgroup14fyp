@@ -339,6 +339,153 @@ const CITY_NAMES = {
     johorBahru: 'Johor Bahru',
 };
 
+// =================================================================
+//  CUSTOMER ACTION ZONE
+// =================================================================
+function buildCustomerActions(cafe) {
+    const zone = document.getElementById('modalActionsZone');
+    if (!zone) return;
+
+    zone.innerHTML = `
+      <div class="modal-actions">
+        <button class="btn-reserve" id="btnReservation" style="flex:1;">
+          <i class="fas fa-calendar-check"></i> Make a Reservation
+        </button>
+        <button class="btn-close-left" id="modalCloseBtnCustomer" style="flex:1;">
+          <i class="fas fa-times"></i> Close
+        </button>
+      </div>
+    `;
+
+    document.getElementById('btnReservation').addEventListener('click', () => {
+        const params = new URLSearchParams({
+            id:        cafe.id,
+            name:      cafe.name,
+            address:   cafe.address,
+            city:      cafe.city,
+            openHour:  cafe.openHour,
+            closeHour: cafe.closeHour
+        });
+        window.location.href = `bookingform.html?${params.toString()}`;
+    });
+
+    document.getElementById('modalCloseBtnCustomer')?.addEventListener('click', () => {
+        document.getElementById('detailModal').style.display = 'none';
+    });
+}
+
+// =================================================================
+//  ADMIN ACTION ZONE
+// =================================================================
+const PRESET_FACILITIES = ['WiFi', 'Power outlet', 'Outdoor seating', 'Meeting equipment'];
+
+const FACILITY_ICONS = {
+    'WiFi':              'fa-wifi',
+    'Power outlet':      'fa-plug',
+    'Outdoor seating':   'fa-umbrella-beach',
+    'Meeting equipment': 'fa-chalkboard-user',
+};
+
+function buildAdminActions(cafe) {
+    const zone = document.getElementById('modalActionsZone');
+    if (!zone) return;
+
+    // Build checkbox list — tick whichever the cafe currently has
+    const checkboxesHtml = PRESET_FACILITIES.map(f => {
+        const checked = (cafe.facilities || []).includes(f) ? 'checked' : '';
+        return `
+          <label class="admin-fac-label">
+            <input type="checkbox" value="${f}" ${checked} class="admin-fac-cb">
+            <i class="fas ${FACILITY_ICONS[f]}"></i> ${f}
+          </label>`;
+    }).join('');
+
+    zone.innerHTML = `
+      <!-- ── Edit Facilities Panel ── -->
+      <div class="admin-fac-panel">
+        <div class="admin-fac-header">
+          <i class="fas fa-microchip"></i> Edit Facilities
+        </div>
+        <div class="admin-fac-grid">${checkboxesHtml}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-save-facilities" id="btnSaveFacilities">
+            <i class="fas fa-floppy-disk"></i> Save Facilities
+          </button>
+        </div>
+        <div id="facilityStatus" style="font-size:.75rem;margin-top:6px;min-height:1rem;"></div>
+      </div>
+
+      <!-- ── Danger zone ── -->
+      <div class="modal-actions" style="margin-top:10px;">
+        <button class="btn-delete-restaurant" id="btnDeleteRestaurant" style="flex:1;">
+          <i class="fas fa-trash-alt"></i> Delete Restaurant
+        </button>
+        <button class="btn-close-left" id="modalCloseBtnAdmin" style="flex:1;">
+          <i class="fas fa-times"></i> Close
+        </button>
+      </div>
+    `;
+
+    // Save facilities
+    document.getElementById('btnSaveFacilities').addEventListener('click', async () => {
+        const selected = [...document.querySelectorAll('.admin-fac-cb:checked')].map(cb => cb.value);
+        const statusEl = document.getElementById('facilityStatus');
+        const saveBtn  = document.getElementById('btnSaveFacilities');
+
+        saveBtn.disabled = true;
+        statusEl.textContent = 'Saving…';
+        statusEl.style.color = '#c47b4a';
+
+        try {
+            // cafe.id is the Firestore doc ID for Firestore-sourced cafes
+            // (local fallback cafes have numeric ids — guard against that)
+            if (typeof cafe.id === 'number') {
+                showToast('Cannot edit local fallback cafes.', 'error');
+                statusEl.textContent = '';
+                saveBtn.disabled = false;
+                return;
+            }
+
+            await updateDoc(doc(db, 'cafes', cafe.id), { facilities: selected });
+
+            // Update local cache so modal reflects the new state immediately
+            cafe.facilities = selected;
+
+            // Refresh the facility pills in the modal-left panel
+            const pillContainer = document.querySelector('.modal-facilities');
+            if (pillContainer) {
+                pillContainer.innerHTML = selected.length
+                    ? selected.map(f =>
+                        `<span class="facility-pill"><i class="fas ${FACILITY_ICONS[f] || 'fa-check'}"></i> ${f}</span>`
+                      ).join('')
+                    : '<span style="color:#9e8070;font-size:.8rem;">None listed</span>';
+            }
+
+            // Also refresh the cafe card in the grid
+            updateCafeList();
+
+            statusEl.textContent = '✓ Saved successfully';
+            statusEl.style.color = '#2d7a3a';
+            showToast('Facilities updated!', 'success');
+        } catch (err) {
+            console.error('Save facilities error:', err);
+            statusEl.textContent = '✗ Save failed';
+            statusEl.style.color = '#e53935';
+            showToast('Failed to save facilities.', 'error');
+        } finally {
+            saveBtn.disabled = false;
+        }
+    });
+
+    // Delete restaurant
+    document.getElementById('btnDeleteRestaurant').addEventListener('click', () => deleteRestaurant(cafe));
+
+    // Close button (admin modal)
+    document.getElementById('modalCloseBtnAdmin')?.addEventListener('click', () => {
+        document.getElementById('detailModal').style.display = 'none';
+    });
+}
+
 async function showDetailModal(cafe) {
     const modal      = document.getElementById('detailModal');
     const contentDiv = document.getElementById('modalDynamicContent');
@@ -406,19 +553,7 @@ async function showDetailModal(cafe) {
 
           <div class="modal-divider"></div>
 
-          <div class="modal-actions">
-            ${sessionStorage.getItem('userRole') === 'admin'
-              ? `<button class="btn-delete-restaurant" id="btnDeleteRestaurant">
-                   <i class="fas fa-trash-alt"></i> Delete Restaurant
-                 </button>`
-              : `<button class="btn-reserve" id= "btnReservation">
-                   <i class="fas fa-calendar-check"></i> Make a Reservation
-                 </button>`
-            }
-            <button class="btn-close-left" id="modalCloseBtn">
-              <i class="fas fa-times"></i> Close
-            </button>
-          </div>
+          <div id="modalActionsZone"></div>
 
         </div>
       </div><!-- /modal-left -->
@@ -515,30 +650,14 @@ async function showDetailModal(cafe) {
     // ── Close handlers ──
     const closeModal = () => { modal.style.display = 'none'; };
     modal.querySelector('.close-modal').onclick = closeModal;
-    document.getElementById('modalCloseBtn').onclick = closeModal;
     window.onclick = e => { if (e.target === modal) closeModal(); };
 
-    // ── Reservation redirect (for customers) ──
-    const reserveBtn = document.getElementById('btnReservation');
-    if (reserveBtn) {
-        reserveBtn.addEventListener('click', () => {
-            // Pass cafe data via URL parameters
-            const params = new URLSearchParams({
-                id: cafe.id,
-                name: cafe.name,
-                address: cafe.address,
-                city: cafe.city,
-                openHour: cafe.openHour,
-                closeHour: cafe.closeHour
-            });
-            window.location.href = `bookingform.html?${params.toString()}`;
-        });
-    }
-
-    // ── Admin: wire up Delete Restaurant button ──
-    const deleteBtn = document.getElementById('btnDeleteRestaurant');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => deleteRestaurant(cafe));
+    // ── Render role-specific action zone ──
+    const role = sessionStorage.getItem('userRole');
+    if (role === 'admin') {
+        buildAdminActions(cafe);
+    } else {
+        buildCustomerActions(cafe);
     }
 
     // ── Hide embed placeholder when iframe loads ──

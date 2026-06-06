@@ -1007,6 +1007,68 @@ body{
     transform: translateX(-50%) translateY(0);
 }
 
+/* ── Admin: Edit Facilities panel inside modal ── */
+.admin-fac-panel {
+    background: #fdf7f0;
+    border: 1.5px solid #f0d5be;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 0.5rem;
+}
+
+.admin-fac-header {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #2b1a0e;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.admin-fac-header i { color: #c47b4a; }
+
+.admin-fac-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 12px;
+}
+
+.admin-fac-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .8rem;
+    font-weight: 500;
+    color: #4a3728;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #f0d5be;
+    background: #fff;
+    transition: background .15s, border-color .15s;
+    user-select: none;
+}
+.admin-fac-label:hover { background: #fdf0e6; border-color: #c47b4a; }
+.admin-fac-label input { cursor: pointer; accent-color: #c47b4a; }
+.admin-fac-label i { color: #c47b4a; font-size: .78rem; width: 14px; text-align: center; }
+
+.btn-save-facilities {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    background: #c47b4a;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+}
+.btn-save-facilities:hover { background: #a55f36; transform: scale(1.02); }
+.btn-save-facilities:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
 @media (max-width: 780px) {
     .search-card { width: 92%; padding: 1rem; }
     .filter-panel { flex-direction: column; align-items: stretch; }
