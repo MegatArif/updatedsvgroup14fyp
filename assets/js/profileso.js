@@ -7,6 +7,7 @@ import { getAuth, onAuthStateChanged, updatePassword, verifyBeforeUpdateEmail,
          reauthenticateWithCredential, EmailAuthProvider, signOut }
     from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { setupNavbar } from './navbar.js';
+import { showConfirm } from './toast.js';
 
 const auth = getAuth(app);
 
@@ -69,9 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const logoutBtn = document.getElementById('log-up-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            if (!confirm("Are you sure you want to log out?")) return;
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        showConfirm("Are you sure you want to log out?", async () => {
             showLoading(true);
             try {
                 await signOut(auth);
@@ -83,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showLoading(false);
             }
         });
-    }
+    });
+}
 });
 
 // ─── LOAD PROFILE ──────────────────────────────────────────────────────────────

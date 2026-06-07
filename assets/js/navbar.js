@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-
+import { showConfirm } from './toast.js';
 // ADDED: Firestore imports needed for the live unread badge
 import { db } from "./firebase-config.js";
 import {
@@ -114,20 +114,19 @@ export function setupNavbar() {
   if (activeId) document.getElementById(activeId)?.classList.add("active");
 
   /* ── LOGOUT ── */
-  document.getElementById('nav-logout')?.addEventListener('click', async () => {
-
-    if (!confirm("Are you sure you want to log out?")) return;
-
-    try {
-      const auth = getAuth();
-      await signOut(auth);
-      sessionStorage.removeItem('userRole');
-      window.location.href = 'index.html';
-    } catch (err) {
-      console.error("Logout error:", err);
-      alert("Failed to log out. Please try again.");
-    }
-  });
+  document.getElementById('nav-logout')?.addEventListener('click', () => {
+    showConfirm("Are you sure you want to log out?", async () => {
+        try {
+            const auth = getAuth();
+            await signOut(auth);
+            sessionStorage.removeItem('userRole');
+            window.location.href = 'index.html';
+        } catch (err) {
+            console.error("Logout error:", err);
+            alert("Failed to log out. Please try again.");
+        }
+    });
+});
 
   /* ── LIVE UNREAD BADGE (customer only) ──────────────────────────────────────
      ADDED: listens to the notifications collection for this user and shows

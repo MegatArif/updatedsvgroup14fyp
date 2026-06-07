@@ -33,6 +33,12 @@ const bannedWords = [
   "kepala bapak", "puki", "hanjing"
 ];
 
+const CITY_NAMES = {
+  skudai: 'Skudai', kulai: 'Kulai', masai: 'Masai',
+  tangkak: 'Tangkak', pontian: 'Pontian', segamat: 'Segamat',
+  muar: 'Muar', kluang: 'Kluang', batuPahat: 'Batu Pahat',
+  johorBahru: 'Johor Bahru',
+};
 /* ── AUTH ────────────────────────────────────────────────────── */
 const auth = getAuth(app);
 
@@ -56,7 +62,8 @@ function fmt(t) { if (!t) return "––:––"; return t; }
 
 function updatePreview() {
   document.getElementById("previewName").textContent    = nameEl.value.trim()    || "Your Cafe Name";
-  document.getElementById("previewAddress").textContent = addressEl.value.trim() || "Your address";
+  document.getElementById("previewAddress").textContent =
+    `${addressEl.value.trim() || "Your address"}, ${CITY_NAMES[cityEl.value] || ""}`;
   document.getElementById("previewDesc").textContent    = descEl.value.trim()    || "Your description will appear here.";
 
   const open  = fmt(openEl.value);
@@ -151,7 +158,7 @@ function validate() {
   if (descEl.value.trim().length > 300) { showToast("Description cannot exceed 300 characters.", "error"); return false; }
   if (containsBannedWord(descEl.value)) { showToast("Description contains inappropriate language.", "error"); return false; }
   if (!addressEl.value.trim()) { showToast("Address is required.", "error"); return false; }
-  if (!cityEl.value.trim())    { showToast("City is required.", "error"); return false; }
+  if (!cityEl.value) { showToast("Please select a city.", "error"); return false; }
   return true;
 }
 
