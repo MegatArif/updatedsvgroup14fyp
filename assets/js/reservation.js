@@ -265,57 +265,170 @@ window.downloadPDF = function(id) {
 };
 
 // ================= RATING =================
-window.openRating = async function(id) {
-  const rating = prompt("Rate this cafe from 1 to 5 stars");
-  if (!rating) return;
+function injectRatingModal() {
+  if (document.getElementById("ratingOverlay")) return;
 
-  const ratingValue = Number(rating);
+  const overlay = document.createElement("div");
+  overlay.id = "ratingOverlay";
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(58,47,40,0.45);
+    backdrop-filter:blur(4px);z-index:9999;
+    display:none;align-items:center;justify-content:center;
+  `;
 
-  if (isNaN(ratingValue) || ratingValue < 1 || ratingValue > 5) {
-    alert("Please enter 1-5");
-    return;
-  }
+  overlay.innerHTML = `
+    <div style="
+      background:#fffaf3;border-radius:20px;padding:36px 32px;
+      width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.18);
+      text-align:center;position:relative;
+    ">
+      <button id="ratingCloseBtn" style="
+        position:absolute;top:14px;right:16px;
+        background:none;border:none;font-size:18px;
+        color:#8c7a6b;cursor:pointer;
+      "><i class="fas fa-xmark"></i></button>
 
-  try {
-    const ref  = doc(db, "reservation", id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
+      <div style="font-size:32px;margin-bottom:8px;">⭐</div>
+      <h2 style="font-size:1.3rem;font-weight:800;color:#3a2f28;margin-bottom:4px;">Rate Your Visit</h2>
+      <p id="ratingCafeName" style="font-size:13px;color:#8c7a6b;margin-bottom:24px;"></p>
 
-    const data = snap.data();
+      <div id="starRow" style="display:flex;justify-content:center;gap:10px;margin-bottom:20px;">
+        ${[1,2,3,4,5].map(n => `
+          <span data-star="${n}" style="
+            font-size:36px;cursor:pointer;color:#e0d0c0;
+            transition:transform 0.15s,color 0.15s;
+            user-select:none;
+          ">★</span>
+        `).join("")}
+      </div>
 
-    await updateDoc(ref, { rating: ratingValue });
+      <p id="ratingHint" style="font-size:12px;color:#b8906d;min-height:18px;margin-bottom:20px;"></p>
 
-    const cafeQuery = query(collection(db, "cafes"), where("name", "==", data.cafe));
-    const cafeSnap  = await getDocs(cafeQuery);
+      <button id="ratingSubmitBtn" disabled style="
+        width:100%;padding:13px;border:none;border-radius:12px;
+        background:linear-gradient(135deg,#f6d7a7,#e3b07a);
+        color:#3a2f28;font-size:14px;font-weight:700;
+        cursor:pointer;opacity:0.5;transition:0.2s;
+        box-shadow:0 4px 14px rgba(227,176,122,0.4);
+      ">Submit Rating</button>
+    </div>
+  `;
 
-    if (cafeSnap.empty) {
-      alert("Rating saved but cafe not found");
-      return;
-    }
+  document.body.appendChild(overlay);
 
-    const cafeDoc  = cafeSnap.docs[0];
-    const cafeRef  = doc(db, "cafes", cafeDoc.id);
-    const cafeData = cafeDoc.data();
+  // Star hover + click
+  let selectedRating = 0;
+  const stars = overlay.querySelectorAll("[data-star]");
+  const hints = ["","Poor 😕","Fair 😐","Good 😊","Great 😄","Excellent! 🤩"];
 
-    const newSum   = (cafeData.ratingSum   || 0) + ratingValue;
-    const newCount = (cafeData.ratingCount || 0) + 1;
-    const breakdown = cafeData.ratingBreakdown || { 1:0, 2:0, 3:0, 4:0, 5:0 };
-    breakdown[ratingValue] = (breakdown[ratingValue] || 0) + 1;
-    const averageRating = Number((newSum / newCount).toFixed(1));
-
-    await updateDoc(cafeRef, {
-      ratingSum:       newSum,
-      ratingCount:     newCount,
-      rating:          averageRating,
-      ratingBreakdown: breakdown,
+  stars.forEach(star => {
+    star.addEventListener("mouseenter", () => {
+      const val = +star.dataset.star;
+      stars.forEach(s => {
+        s.style.color = +s.dataset.star <= val ? "#e3b07a" : "#e0d0c0";
+        s.style.transform = +s.dataset.star <= val ? "scale(1.15)" : "scale(1)";
+      });
+      document.getElementById("ratingHint").textContent = hints[val];
     });
 
-    alert("Thank you for your rating!");
+    star.addEventListener("mouseleave", () => {
+      stars.forEach(s => {
+        s.style.color = +s.dataset.star <= selectedRating ? "#e3b07a" : "#e0d0c0";
+        s.style.transform = "scale(1)";
+      });
+      document.getElementById("ratingHint").textContent = hints[selectedRating];
+    });
 
-  } catch (err) {
-    console.error(err);
-    alert("Failed to submit rating");
+    star.addEventListener("click", () => {
+      selectedRating = +star.dataset.star;
+      const btn = document.getElementById("ratingSubmitBtn");
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      document.getElementById("ratingHint").textContent = hints[selectedRating];
+    });
+  });
+
+  // Close
+  overlay.querySelector("#ratingCloseBtn").addEventListener("click", closeRatingModal);
+  overlay.addEventListener("click", e => { if (e.target === overlay) closeRatingModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeRatingModal(); });
+
+  // Store getter for submit
+  overlay._getSelectedRating = () => selectedRating;
+  overlay._resetStars = () => {
+    selectedRating = 0;
+    stars.forEach(s => { s.style.color = "#e0d0c0"; s.style.transform = "scale(1)"; });
+    document.getElementById("ratingHint").textContent = "";
+    const btn = document.getElementById("ratingSubmitBtn");
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+  };
+}
+
+function closeRatingModal() {
+  const overlay = document.getElementById("ratingOverlay");
+  if (overlay) {
+    overlay.style.display = "none";
+    overlay._resetStars?.();
   }
+}
+
+window.openRating = async function(id) {
+  const r = allReservations.find(x => x.id === id);
+  if (!r) return;
+
+  injectRatingModal();
+  const overlay = document.getElementById("ratingOverlay");
+  document.getElementById("ratingCafeName").textContent = r.cafe || "";
+  overlay._resetStars();
+  overlay.style.display = "flex";
+
+  // Wire submit
+  const submitBtn = document.getElementById("ratingSubmitBtn");
+  const newBtn = submitBtn.cloneNode(true); // remove old listeners
+  submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+
+  newBtn.addEventListener("click", async () => {
+    const ratingValue = overlay._getSelectedRating();
+    if (!ratingValue) return;
+
+    newBtn.disabled = true;
+    newBtn.textContent = "Submitting…";
+
+    try {
+      const resRef  = doc(db, "reservation", id);
+      const resSnap = await getDoc(resRef);
+      if (!resSnap.exists()) return;
+
+      const data = resSnap.data();
+      await updateDoc(resRef, { rating: ratingValue });
+
+      const cafeQuery = query(collection(db, "cafes"), where("name", "==", data.cafe));
+      const cafeSnap  = await getDocs(cafeQuery);
+
+      if (!cafeSnap.empty) {
+        const cafeDoc  = cafeSnap.docs[0];
+        const cafeData = cafeDoc.data();
+        const newSum   = (cafeData.ratingSum   || 0) + ratingValue;
+        const newCount = (cafeData.ratingCount || 0) + 1;
+        const breakdown = cafeData.ratingBreakdown || {1:0,2:0,3:0,4:0,5:0};
+        breakdown[ratingValue] = (breakdown[ratingValue] || 0) + 1;
+
+        await updateDoc(doc(db, "cafes", cafeDoc.id), {
+          ratingSum: newSum, ratingCount: newCount,
+          rating: Number((newSum / newCount).toFixed(1)),
+          ratingBreakdown: breakdown,
+        });
+      }
+
+      closeRatingModal();
+
+    } catch (err) {
+      console.error(err);
+      newBtn.disabled = false;
+      newBtn.textContent = "Submit Rating";
+    }
+  });
 };
 
 // ================= STATUS LABEL =================
