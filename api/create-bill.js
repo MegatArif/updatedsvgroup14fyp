@@ -33,6 +33,8 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    const data = await response.json();
+console.log('ToyyibPay response:', JSON.stringify(data));
 
     if (data[0]?.BillCode) {
       res.status(200).json({ billCode: data[0].BillCode });
