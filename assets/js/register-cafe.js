@@ -7,6 +7,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
   ref,
@@ -166,6 +167,13 @@ function validate() {
 submitBtn.addEventListener("click", async () => {
   if (!validate()) return;
 
+  const currentUser = auth.currentUser;  // ← only declare ONCE, up here
+  if (!currentUser) {
+    showToast("Session expired. Please log in again.", "error");
+    window.location.href = "index.html";
+    return;
+  }
+
   const facilities = [...document.querySelectorAll(".facility-pill input:checked")]
     .map(cb => cb.value);
 
@@ -186,9 +194,6 @@ submitBtn.addEventListener("click", async () => {
       imagePath = storePath;
     }
 
-    // Build Firestore cafe document — default rating seeded at 4
-    const currentUser = auth.currentUser;
-
     const cafeDoc = {
       id:            nextId,
       name:          nameEl.value.trim(),
@@ -203,25 +208,30 @@ submitBtn.addEventListener("click", async () => {
       ratingCount:   1,
       ratingSum:     4,
       ratingBreakdown: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 0 },
-      // ── approval fields ──────────────────────────────
-      approveStatus: "pending",          // gallery filters on this
-      ownerId:       currentUser?.uid || "",  // links cafe → ShopOwner
-      ownerEmail:    currentUser?.email || "",
+      approveStatus: "pending",
+      ownerId:       currentUser.uid,    // ← no need for ?. anymore
+      ownerEmail:    currentUser.email,
     };
 
     const cafeRef = await addDoc(collection(db, "cafes"), cafeDoc);
 
-    // Flag the shop owner's Firestore doc as having submitted a cafe
-    // Also store the cafe's Firestore doc ID so adminapproval.js can find it
-    if (currentUser) {
+    // ← ONE updateDoc, wrapped in its own try-catch
+    try {
       await updateDoc(doc(db, "ShopOwner", currentUser.uid), {
         cafeRegistered: true,
-        cafeDocId:      cafeRef.id,   // ← adminapproval.js uses this
-        // approved remains false — admin must flip it
+        cafeDocId:      cafeRef.id,
       });
+    } catch (updateErr) {
+      console.error("Owner update failed:", updateErr);
+      await deleteDoc(cafeRef).catch(() => {});
+      showToast(`Failed to link cafe to your account: ${updateErr.code || updateErr.message}`, "error");
+      submitBtn.disabled = false;
+      submitLabel.classList.remove("hidden");
+      submitSpin.classList.add("hidden");
+      return;
     }
 
-    // Lock button and show toast before signing out
+    // ✅ Success
     submitLabel.classList.remove("hidden");
     submitSpin.classList.add("hidden");
     submitLabel.textContent = "✅ Submitted — Signing you out…";
@@ -232,16 +242,15 @@ submitBtn.addEventListener("click", async () => {
       3500
     );
 
-    // Sign out after the toast has had time to read
     setTimeout(async () => {
       await signOut(auth);
       sessionStorage.clear();
-      window.location.href = "index.html";  // ← your login page
+      window.location.href = "index.html";
     }, 3500);
 
   } catch (err) {
     console.error("Registration error:", err);
-    showToast("Something went wrong. Please try again.", "error");
+    showToast(`Something went wrong: ${err.code || err.message}`, "error");  // ← shows real error
     submitBtn.disabled = false;
     submitLabel.classList.remove("hidden");
     submitSpin.classList.add("hidden");
