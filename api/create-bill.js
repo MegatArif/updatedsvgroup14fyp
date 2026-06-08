@@ -27,21 +27,23 @@ export default async function handler(req, res) {
   });
 
   try {
-    const response = await fetch("https://dev.toyyibpay.com/index.php/api/createBill", {
-      method: "POST",
-      body: params,
-    });
+  const response = await fetch("https://dev.toyyibpay.com/index.php/api/createBill", {
+    method: "POST",
+    body: params,
+  });
 
-    const data = await response.json();
-    const data = await response.json();
-console.log('ToyyibPay response:', JSON.stringify(data));
+  const text = await response.text(); // ← read as text first
+  console.log('ToyyibPay raw response:', text);
 
-    if (data[0]?.BillCode) {
-      res.status(200).json({ billCode: data[0].BillCode });
-    } else {
-      res.status(400).json({ error: "Failed to create bill", detail: data });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const data = JSON.parse(text); // ← then parse
+
+  if (data[0]?.BillCode) {
+    res.status(200).json({ billCode: data[0].BillCode });
+  } else {
+    res.status(400).json({ error: "Failed to create bill", detail: data });
   }
+} catch (err) {
+  console.error('create-bill crash:', err.message); // ← this will show in Vercel logs
+  res.status(500).json({ error: err.message });
+}
 }
