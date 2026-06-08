@@ -39,7 +39,7 @@ import { db, app }   from './firebase-config.js';
         reservationData = snap.data();
  
         const guests = parseInt(reservationData.guests) || 1;
-        const total  = guests * PRICE_PER_GUEST;
+        const total  = 10;
  
         document.getElementById('payCardCafe').textContent     = reservationData.cafe     || '—';
         document.getElementById('payCardLocation').textContent = reservationData.location || '—';
