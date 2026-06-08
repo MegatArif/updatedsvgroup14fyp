@@ -95,7 +95,7 @@ import { db, app }   from './firebase-config.js';
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             customerName:  reservationData.username || currentUser?.username || 'Customer',
-            customerEmail: currentUser?.email || '',
+            customerEmail: currentUser?.email || 'noreply@cafehunt.com',
             customerPhone: phone,
             amount:        amount,
             reservationId: reservationId,
@@ -108,7 +108,7 @@ import { db, app }   from './firebase-config.js';
         if (data.billCode) {
           window.location.href = `https://dev.toyyibpay.com/${data.billCode}`;
         } else {
-            const detail = data.detail?.[0]?.msg || data.raw || data.error || 'Failed to create payment.';
+        const detail = data.detail?.[0]?.msg || data.raw || data.error || 'Failed to create payment.';
           showError(data.error || 'Failed to create payment. Please try again.');
           btn.disabled = false;
           btn.classList.remove('loading');

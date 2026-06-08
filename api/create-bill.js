@@ -38,10 +38,23 @@ export default async function handler(req, res) {
   const data = JSON.parse(text); // ← then parse
 
   if (data[0]?.BillCode) {
-    res.status(200).json({ billCode: data[0].BillCode });
-  } else {
-    res.status(400).json({ error: "Failed to create bill", detail: data, raw: text });
-  }
+  res.status(200).json({ billCode: data[0].BillCode });
+} else {
+  res.status(400).json({ 
+    error: "Failed to create bill", 
+    detail: data,
+    raw: text,
+    // also echo back what we sent so we can verify
+    sentData: {
+      userSecretKey: process.env.TOYYIBPAY_SECRET_KEY_SANDBOX ? 'present' : 'MISSING',
+      categoryCode:  process.env.TOYYIBPAY_CATEGORY_CODE_SANDBOX ? 'present' : 'MISSING',
+      billName:      `Reservation - ${cafeName}`,
+      billAmount:    String(amount * 100),
+      billPhone:     customerPhone,
+      billEmail:     customerEmail,
+    }
+  });
+}
 } catch (err) {
   console.error('create-bill crash:', err.message); // ← this will show in Vercel logs
   res.status(500).json({ error: err.message });
