@@ -6,8 +6,14 @@ import { db, app }   from './firebase-config.js';
     setupNavbar();
  
     const PRICE_PER_GUEST = 5;
-    const urlParams       = new URLSearchParams(window.location.search);
-    const reservationId   = urlParams.get('reservationId') || urlParams.get('billExternalReferenceNo') || '';
+    const urlParams     = new URLSearchParams(window.location.search);
+const reservationId = urlParams.get('reservationId') 
+                   || urlParams.get('order_id')           // ToyyibPay sometimes sends this
+                   || urlParams.get('billExternalReferenceNo') 
+                   || '';
+
+console.log('All URL params:', window.location.search); // ← add this to see what ToyyibPay sends back
+console.log('reservationId:', reservationId);
  
     function formatDate(d) {
       if (!d) return '—';
@@ -22,20 +28,19 @@ import { db, app }   from './firebase-config.js';
       return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
     }
     
+    loadDetails();
+
+    // Auth runs separately just to get user info
     const auth = getAuth(app);
-        onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            await loadDetails();
-            return;
-        }
+    onAuthStateChanged(auth, async (user) => {
+    if (user) {
         const snap = await getDoc(doc(db, 'Customers', user.uid));
         currentUser = {
-            uid:      user.uid,
-            username: snap.exists() ? (snap.data().username || user.email) : user.email,
-            email:    user.email,
+        uid:   user.uid,
+        email: user.email,
         };
-        await loadDetails();
-        })
+    }
+    });
 
     async function loadDetails() {
       if (!reservationId) return;
