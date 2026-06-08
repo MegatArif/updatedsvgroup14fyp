@@ -30,7 +30,7 @@ const facilityIcons = {
 const bannedWords = [
   "fuck", "shit", "ass", "bitch", "damn", "crap", "bastard",
   "bodoh", "sial", "anjing", "celaka", "pundek", "lancau",
-  "kepala bapak", "puki", "hanjing"
+  "kepala bapak", "puki", "hanjing", "nigga",
 ];
 
 const CITY_NAMES = {
@@ -156,6 +156,7 @@ function validate() {
   if (!descEl.value.trim())    { showToast("Description is required.", "error"); return false; }
   if (descEl.value.trim().length < 20)  { showToast("Description must be at least 20 characters.", "error"); return false; }
   if (descEl.value.trim().length > 300) { showToast("Description cannot exceed 300 characters.", "error"); return false; }
+  if (containsBannedWord(nameEl.value)) { showToast("Name contains inappropriate language.", "error"); return false; }
   if (containsBannedWord(descEl.value)) { showToast("Description contains inappropriate language.", "error"); return false; }
   if (!addressEl.value.trim()) { showToast("Address is required.", "error"); return false; }
   if (!cityEl.value) { showToast("Please select a city.", "error"); return false; }
