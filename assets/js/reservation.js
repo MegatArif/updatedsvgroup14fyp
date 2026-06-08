@@ -91,11 +91,11 @@ function getStatus(r) {
   if (dbStatus === "expired")   return "expired";
 
   
-  if (dbStatus === "accepted") {
-    if (r.paymentStatus === "paid") return "completed"; // ← paid = completed
-    if (bookingTime < now) return "expired";            // ← time passed, unpaid = expired
-    return "accepted";
-  }
+ if (dbStatus === "accepted") {
+  if (r.paymentStatus === "paid" && bookingTime < now) return "completed"; // paid + visited
+  if (r.paymentStatus !== "paid" && bookingTime < now) return "expired";   // unpaid + missed
+  return "accepted"; // still upcoming (paid or unpaid)
+}
 
   if (dbStatus === "completed") return "completed";
 
@@ -112,6 +112,7 @@ function render(r) {
   const status    = getStatus(r);
   const container = containers[status];
   const canPay = status === "accepted" && !r.paymentStatus;
+  const isPaid    = status === "accepted" && r.paymentStatus === "paid";
   if (!container) return;
 
   // ADDED: fire-and-forget expired notification (idempotent)
@@ -155,6 +156,10 @@ function render(r) {
         ? `<button class="rate-btn" onclick="openRating('${r.id}')">
             <i class="fa-solid fa-star"></i> Rate Visit
           </button>`
+        : ""}
+      
+      ${isPaid
+        ? `<span class="paid-badge"><i class="fas fa-check-circle"></i> Paid — Awaiting Visit</span>`
         : ""}
 
       ${canPay

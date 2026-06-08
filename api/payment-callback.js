@@ -5,8 +5,10 @@ const app = initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SER
 const db  = getFirestore(app);
 
 export default async function handler(req, res) {
+  console.log('Callback received:', req.body);
+  console.log('SERVICE_ACCOUNT:', process.env.FIREBASE_SERVICE_ACCOUNT ? 'present' : 'MISSING');
   const { billExternalReferenceNo, status_id } = req.body;
-  // status_id 1 = successful payment
+  console.log('status_id:', status_id, 'reservationId:', billExternalReferenceNo);
 
   if ((status_id === "1" || status_id === 1) && billExternalReferenceNo) {
     try {
