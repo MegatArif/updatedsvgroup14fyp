@@ -231,45 +231,42 @@ document.getElementById('shop-settings').addEventListener('submit', async (e) =>
 });
 
 // ─── DELETE SHOP & UNREGISTER ─────────────────────────────────────────────────
+// AFTER
 document.getElementById('delete-shop-btn').addEventListener('click', async () => {
     const user = auth.currentUser;
     if (!user || !currentCafeId) return;
 
-    if (!confirm(
-        "⚠️ Are you sure you want to DELETE your shop and unregister?\n\n" +
-        "• Your cafe listing will be permanently removed\n" +
-        "• Your ShopOwner registration will be revoked\n\n" +
-        "This CANNOT be undone."
-    )) return;
+    showConfirm(
+        "⚠️ Delete your shop and unregister?\n\nYour cafe listing will be permanently removed and your ShopOwner registration will be revoked. This cannot be undone.",
+        async () => {
+            showLoading(true);
+            try {
+                const batch = writeBatch(db);
+                batch.delete(doc(db, "cafes", currentCafeId));
+                batch.set(doc(db, "ShopOwner", user.uid), {
+                    cafeRegistered: false,
+                    approved: false,
+                    rejected: false,
+                    resolvedAt: null
+                }, { merge: true });
+                await batch.commit();
 
-    if (!confirm("Final confirmation: Delete shop and unregister?")) return;
+                try {
+                    const pic = document.getElementById('main-profile-pic');
+                    const imgPath = pic.dataset.currentPath || `cafes/${currentCafeId}.jpg`;
+                    await deleteObject(ref(storage, imgPath));
+                } catch (_) {}
 
-    showLoading(true);
-    try {
-        const batch = writeBatch(db);
-        batch.delete(doc(db, "cafes", currentCafeId));
-        batch.set(doc(db, "ShopOwner", user.uid), {
-            cafeRegistered: false,
-            approved: false,
-            rejected: false,
-            resolvedAt: null
-        }, { merge: true });
-        await batch.commit();
+                showToast("Shop deleted and account unregistered. Redirecting...");
+                setTimeout(() => { window.location.href = 'index.html'; }, 2000);
 
-        try {
-            const pic = document.getElementById('main-profile-pic');
-            const imgPath = pic.dataset.currentPath || `cafes/${currentCafeId}.jpg`;
-            await deleteObject(ref(storage, imgPath));
-        } catch (_) {}
-
-        showToast("Shop deleted and account unregistered. Redirecting...");
-        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
-
-    } catch (err) {
-        console.error(err);
-        showToast("Failed to delete shop. Please try again.", "error");
-        showLoading(false);
-    }
+            } catch (err) {
+                console.error(err);
+                showToast("Failed to delete shop. Please try again.", "error");
+                showLoading(false);
+            }
+        }
+    );
 });
 
 // ─── CHANGE PASSWORD ───────────────────────────────────────────────────────────
