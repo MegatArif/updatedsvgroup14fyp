@@ -233,9 +233,22 @@ document.addEventListener('DOMContentLoaded', () => {
         time: timeValue,
         username: currentUserName,
         userId: currentUserUid,
-        status: "pending",
         createdAt: serverTimestamp()
       });
+
+      await addDoc(collection(db, "sonotifications"), {
+  cafeName: selectedCafe,
+  type: "booking",
+
+  customerName: currentUserName,
+
+  message:
+    `${currentUserName} made a reservation for ${guestsValue} guest(s) on ${dateValue} at ${formatTimeDisplay(timeValue)}.`,
+
+  read: false,
+
+  createdAt: serverTimestamp()
+});
 
       document.getElementById('summaryGuests').textContent = guestsValue;
       document.getElementById('summaryDate').textContent = formatDateDisplay(dateValue);

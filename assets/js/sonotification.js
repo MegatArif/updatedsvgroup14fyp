@@ -1,94 +1,181 @@
-const notifications = [
+import { app, db } from "./firebase-config.js";
 
-  {
-    type:"booking",
-    title:"New Reservation",
-    message:"John Tan booked a table for 4 guests",
-    time:"2 minutes ago"
-  },
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-  {
-    type:"booking",
-    title:"New Reservation",
-    message:"Sarah booked a table for 2 guests",
-    time:"5 minutes ago"
-  },
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-  {
-    type:"booking",
-    title:"New Reservation",
-    message:"Alex booked a table for 6 guests",
-    time:"10 minutes ago"
-  },
+const auth = getAuth(app);
 
-  {
-    type:"expired",
-    title:"Reservation Expired",
-    message:"Reservation A12345 expired",
-    time:"1 hour ago"
-  },
-
-  {
-    type:"expired",
-    title:"Reservation Expired",
-    message:"Reservation B55321 expired",
-    time:"2 hours ago"
-  },
-
-  {
-    type:"admin",
-    title:"Admin Notice",
-    message:"Customer John123 has been suspended",
-    time:"Yesterday"
-  }
-
-];
+let notifications = [];
 
 const params = new URLSearchParams(window.location.search);
 const selectedType = params.get("type");
 
 const categoryContainer =
-document.getElementById("categoryContainer");
+  document.getElementById("categoryContainer");
 
 const mainView =
-document.getElementById("mainView");
+  document.getElementById("mainView");
 
 const detailView =
-document.getElementById("detailView");
+  document.getElementById("detailView");
 
 const detailTitle =
-document.getElementById("detailTitle");
+  document.getElementById("detailTitle");
 
 const detailList =
-document.getElementById("detailList");
+  document.getElementById("detailList");
 
 const backBtn =
-document.getElementById("backBtn");
+  document.getElementById("backBtn");
 
-if(selectedType){
 
-  showDetails(selectedType);
+// =========================
+// LOAD OWNER CAFE
+// =========================
 
-}else{
+onAuthStateChanged(auth, async (user) => {
 
-  showCategories();
-}
+  if (!user) {
+    console.log("No shop owner logged in");
+    return;
+  }
 
-backBtn.addEventListener("click",()=>{
+  try {
 
-  window.location.href="sonotification.html";
+    const ownerSnap =
+      await getDoc(
+        doc(db, "ShopOwner", user.uid)
+      );
+
+    if (!ownerSnap.exists()) {
+      console.log("Shop owner not found");
+      return;
+    }
+
+    const cafeDocId =
+      ownerSnap.data().cafeDocId;
+
+    if (!cafeDocId) {
+      console.log("No cafeDocId found");
+      return;
+    }
+
+    const cafeSnap =
+      await getDoc(
+        doc(db, "cafes", cafeDocId)
+      );
+
+    if (!cafeSnap.exists()) {
+      console.log("Cafe not found");
+      return;
+    }
+
+    const cafeName =
+      cafeSnap.data().name;
+
+    console.log(
+      "Loading notifications for:",
+      cafeName
+    );
+
+    loadNotifications(cafeName);
+
+  } catch (error) {
+
+    console.error(
+      "Notification load error:",
+      error
+    );
+  }
 });
 
-function showCategories(){
+
+// =========================
+// LOAD NOTIFICATIONS
+// =========================
+
+function loadNotifications(cafeName) {
+
+  const q = query(
+    collection(db, "sonotifications"),
+    where("cafeName", "==", cafeName)
+  );
+
+  onSnapshot(q, (snapshot) => {
+
+    notifications =
+      snapshot.docs.map(doc => ({
+
+        id: doc.id,
+        ...doc.data()
+
+      }));
+
+    console.log(
+      "Cafe Notifications:",
+      notifications
+    );
+
+    if (selectedType) {
+
+      showDetails(selectedType);
+
+    } else {
+
+      showCategories();
+    }
+
+  });
+
+}
+
+
+// =========================
+// BACK BUTTON
+// =========================
+
+backBtn?.addEventListener("click", () => {
+
+  window.location.href =
+    "sonotification.html";
+
+});
+
+
+// =========================
+// CATEGORY PAGE
+// =========================
+
+function showCategories() {
 
   const bookingCount =
-    notifications.filter(n=>n.type==="booking").length;
+    notifications.filter(n =>
+      n.type === "booking" ||
+      n.type === "reservation"
+    ).length;
 
   const expiredCount =
-    notifications.filter(n=>n.type==="expired").length;
+    notifications.filter(n =>
+      n.type === "expired"
+    ).length;
 
   const adminCount =
-    notifications.filter(n=>n.type==="admin").length;
+    notifications.filter(n =>
+      n.type === "admin"
+    ).length;
 
   categoryContainer.innerHTML = `
 
@@ -179,47 +266,107 @@ function showCategories(){
   `;
 }
 
-window.goType = function(type){
+
+// =========================
+// OPEN CATEGORY
+// =========================
+
+window.goType = function(type) {
 
   window.location.href =
-  `sonotification.html?type=${type}`;
-}
+    `sonotification.html?type=${type}`;
 
-function showDetails(type){
+};
 
-  mainView.style.display="none";
-  detailView.style.display="block";
 
-  const filtered =
-  notifications.filter(n=>n.type===type);
+// =========================
+// DETAIL PAGE
+// =========================
+
+function showDetails(type) {
+
+  mainView.style.display = "none";
+  detailView.style.display = "block";
+
+  let filtered = [];
+
+  if (type === "booking") {
+
+    filtered =
+      notifications.filter(n =>
+        n.type === "booking" ||
+        n.type === "reservation"
+      );
+
+  } else {
+
+    filtered =
+      notifications.filter(n =>
+        n.type === type
+      );
+  }
 
   const titleMap = {
-    booking:"New Reservations",
-    expired:"Expired Reservations",
-    admin:"Admin Notices"
+
+    booking:
+      "New Reservations",
+
+    expired:
+      "Expired Reservations",
+
+    admin:
+      "Admin Notices"
   };
 
   detailTitle.textContent =
-  titleMap[type];
+    titleMap[type] ||
+    "Notifications";
 
   detailList.innerHTML =
-  filtered.map(n=>`
+    filtered.map(n => {
 
-    <div class="detail-card">
+      let dateText = "";
 
-      <div class="detail-title">
-        ${n.title}
+      if (n.createdAt?.toDate) {
+
+        dateText =
+          n.createdAt
+          .toDate()
+          .toLocaleString();
+      }
+
+      return `
+
+        <div class="detail-card">
+
+          <div class="detail-title">
+            ${n.type}
+          </div>
+
+          <div>
+            ${n.message || ""}
+          </div>
+
+          <div class="detail-time">
+            ${dateText}
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+  if (filtered.length === 0) {
+
+    detailList.innerHTML = `
+
+      <div class="detail-card">
+
+        No notifications found.
+
       </div>
 
-      <div>
-        ${n.message}
-      </div>
-
-      <div class="detail-time">
-        ${n.time}
-      </div>
-
-    </div>
-
-  `).join("");
+    `;
+  }
 }
