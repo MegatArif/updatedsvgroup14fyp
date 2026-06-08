@@ -90,8 +90,10 @@ function getStatus(r) {
   if (dbStatus === "rejected")  return "reject";
   if (dbStatus === "expired")   return "expired";
 
+  
   if (dbStatus === "accepted") {
-    if (bookingTime < now) return "completed";
+    if (r.paymentStatus === "paid") return "completed"; // ← paid = completed
+    if (bookingTime < now) return "expired";            // ← time passed, unpaid = expired
     return "accepted";
   }
 
@@ -145,34 +147,28 @@ function render(r) {
         : ""}
 
       <div class="button-group">
+      <button class="detail-btn" onclick="downloadPDF('${r.id}')">
+        <i class="fa-solid fa-file-lines"></i> View Detail
+      </button>
 
-        <button class="detail-btn" onclick="downloadPDF('${r.id}')">
-          <i class="fa-solid fa-download"></i> View Detail
-        </button>
+      ${canRate
+        ? `<button class="rate-btn" onclick="openRating('${r.id}')">
+            <i class="fa-solid fa-star"></i> Rate Visit
+          </button>`
+        : ""}
 
-        ${canRate
-          ? `<button class="rate-btn" onclick="openRating('${r.id}')">
-              <i class="fa-solid fa-star"></i> Rate
-            </button>`
-          : ""}
+      ${canPay
+        ? `<button class="pay-btn" onclick="handlePayment('${r.id}')">
+            <i class="fa-solid fa-credit-card"></i> Pay Now
+          </button>`
+        : ""}
 
-        ${canCancel
-          ? `<button class="cancel-btn" onclick="cancelReservation('${r.id}')">
-              <i class="fa-solid fa-ban"></i> Cancel
-            </button>`
-          : ""}
-        
-        ${canPay
-          ? `<button class="pay-btn" onclick="handlePayment('${r.id}')">
-              <i class="fa-solid fa-credit-card"></i> Pay Now
-            </button>`
-          : ""}
-
-        ${status === "accepted" && r.paymentStatus === "paid"
-          ? `<span class="paid-badge"><i class="fas fa-check-circle"></i> Paid</span>`
-          : ""}
-
-      </div>
+      ${canCancel
+        ? `<button class="cancel-btn" onclick="cancelReservation('${r.id}')">
+            <i class="fa-solid fa-ban"></i> Cancel
+          </button>`
+        : ""}
+    </div>
     </div>
   `;
 }

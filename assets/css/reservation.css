@@ -83,33 +83,7 @@ body {
 .status-completed { background:#e6f0ff;color:#1565c0; }
 .status-expired { background:#f7f1e8;color:#a7927f; }
 
-/* ⭐ BUTTON FIXED */
-.detail-btn {
-  margin-top: 12px;
-  padding: 10px 16px;
 
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: linear-gradient(135deg, #f6d7a7, #e3b07a);
-  color: #3a2f28;
-
-  font-weight: 600;
-  font-size: 13px;
-
-  cursor: pointer;
-
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: 0.2s;
-}
-
-.detail-btn:hover {
-  transform: translateY(-2px);
-}
 
 /* ===== SECTION TITLE COLORS ===== */
 
@@ -149,53 +123,47 @@ body {
 
 .button-group {
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0,0,0,0.06);
 }
+
+.detail-btn, .cancel-btn, .rate-btn, .pay-btn {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+}
+
+.detail-btn {
+  background: #f5ede2;
+  color: #7a5540;
+  border: 1px solid #e8d5c0;
+}
+.detail-btn:hover { background: #ecdbc8; transform: translateY(-1px); }
 
 .cancel-btn {
-  padding: 10px 16px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: #c62828;
-  color: white;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: 0.2s;
+  background: #fff0f0;
+  color: #c62828;
+  border: 1px solid #f5c6c6;
+  margin-left: auto; /* pushes to right */
 }
-
-.cancel-btn:hover {
-  transform: translateY(-2px);
-  opacity: 0.9;
-}
+.cancel-btn:hover { background: #ffe0e0; transform: translateY(-1px); }
 
 .rate-btn {
-  padding: 10px 16px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: #f4b400;
-  color: white;
-
-  font-size: 13px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: 0.2s;
+  background: #fff8e1;
+  color: #c98b3b;
+  border: 1px solid #f5e0a8;
 }
-
-.rate-btn:hover {
-  transform: translateY(-2px);
-  opacity: 0.9;
-}
+.rate-btn:hover { background: #fef0c0; transform: translateY(-1px); }
 .rating-display {
   margin-top: 12px;
 
@@ -344,29 +312,23 @@ body {
 }
 
 .pay-btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 12px;
   background: linear-gradient(135deg, #2e7d32, #43a047);
   color: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
+  box-shadow: 0 3px 10px rgba(46,125,50,0.25);
 }
-
-.pay-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+.pay-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(46,125,50,0.35); }
 
 .paid-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
-  border-radius: 12px;
+  padding: 9px 14px;
+  border-radius: 10px;
   background: #e8f5e9;
   color: #2e7d32;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  border: 1px solid #c8e6c9;
 }
 /* ================= MODERN BACKGROUND UPGRADE ================= */
 

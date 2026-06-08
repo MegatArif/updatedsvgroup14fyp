@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const { billExternalReferenceNo, status_id } = req.body;
   // status_id 1 = successful payment
 
-  if (status_id === "1" && billExternalReferenceNo) {
+  if ((status_id === "1" || status_id === 1) && billExternalReferenceNo) {
     try {
       // Find reservation by ID and mark completed
       await db.collection("reservation").doc(billExternalReferenceNo).update({
