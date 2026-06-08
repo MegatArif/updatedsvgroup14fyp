@@ -109,10 +109,7 @@ function renderPendingTable() {
   const tbody = document.getElementById("reservationsBody");
   if (!tbody) return;
 
-const rows = reservations.filter(r => 
-  r.status !== "completed" && 
-  !(r.status === "accepted" && r.paymentStatus === "paid")
-);
+const rows = reservations.filter(r => r.status !== "completed");
 
 const done = reservations.filter(r => 
   r.status === "completed" || 
