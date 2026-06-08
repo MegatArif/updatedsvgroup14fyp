@@ -40,7 +40,7 @@ export default async function handler(req, res) {
   if (data[0]?.BillCode) {
     res.status(200).json({ billCode: data[0].BillCode });
   } else {
-    res.status(400).json({ error: "Failed to create bill", detail: data });
+    res.status(400).json({ error: "Failed to create bill", detail: data, raw: text });
   }
 } catch (err) {
   console.error('create-bill crash:', err.message); // ← this will show in Vercel logs

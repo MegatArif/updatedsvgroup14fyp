@@ -108,6 +108,7 @@ import { db, app }   from './firebase-config.js';
         if (data.billCode) {
           window.location.href = `https://dev.toyyibpay.com/${data.billCode}`;
         } else {
+            const detail = data.detail?.[0]?.msg || data.raw || data.error || 'Failed to create payment.';
           showError(data.error || 'Failed to create payment. Please try again.');
           btn.disabled = false;
           btn.classList.remove('loading');
