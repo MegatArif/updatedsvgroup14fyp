@@ -343,6 +343,31 @@ body {
   z-index: 1;
 }
 
+.pay-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2e7d32, #43a047);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pay-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+.paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 700;
+}
 /* ================= MODERN BACKGROUND UPGRADE ================= */
 
 body {

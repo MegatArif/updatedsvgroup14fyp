@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         time: timeValue,
         username: currentUserName,
         userId: currentUserUid,
+        status: "pending",
         createdAt: serverTimestamp()
       });
 

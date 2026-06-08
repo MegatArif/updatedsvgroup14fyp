@@ -119,16 +119,29 @@ function renderPendingTable() {
 
   tbody.innerHTML = rows.map(r => {
     // Use Firestore doc ID as the row key
-    const actionCell = r.status === "pending"
-      ? `<div class="action-btns">
+    const status = (r.status || "pending").toLowerCase();
+
+const actionCell = status === "pending"
+  ? `<div class="action-btns">
+       <button class="btn-approve" onclick="updateStatus('${r._docId}','confirmed')">
+         <i class="fas fa-check"></i> Approve
+       </button>
+       <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
+         <i class="fas fa-xmark"></i> Reject
+       </button>
+     </div>`
+  : status === "confirmed"
+    ? `<span class="resolved-label">✓ Approved</span>`
+    : status === "rejected"
+      ? `<span class="resolved-label">✗ Rejected</span>`
+      : `<div class="action-btns">
            <button class="btn-approve" onclick="updateStatus('${r._docId}','confirmed')">
              <i class="fas fa-check"></i> Approve
            </button>
            <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
              <i class="fas fa-xmark"></i> Reject
            </button>
-         </div>`
-      : `<span class="resolved-label">${r.status === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
+         </div>`;
 
     return `
       <tr id="row-${r._docId}">

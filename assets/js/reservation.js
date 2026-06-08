@@ -109,7 +109,7 @@ function getStatus(r) {
 function render(r) {
   const status    = getStatus(r);
   const container = containers[status];
-
+  const canPay = status === "accepted" && !r.paymentStatus;
   if (!container) return;
 
   // ADDED: fire-and-forget expired notification (idempotent)
@@ -160,6 +160,16 @@ function render(r) {
           ? `<button class="cancel-btn" onclick="cancelReservation('${r.id}')">
               <i class="fa-solid fa-ban"></i> Cancel
             </button>`
+          : ""}
+        
+        ${canPay
+          ? `<button class="pay-btn" onclick="handlePayment('${r.id}')">
+              <i class="fa-solid fa-credit-card"></i> Pay Now
+            </button>`
+          : ""}
+
+        ${status === "accepted" && r.paymentStatus === "paid"
+          ? `<span class="paid-badge"><i class="fas fa-check-circle"></i> Paid</span>`
           : ""}
 
       </div>
@@ -430,7 +440,41 @@ window.openRating = async function(id) {
     }
   });
 };
+window.handlePayment = async function(id) {
+  const r = allReservations.find(x => x.id === id);
+  if (!r) return;
 
+  // You need customer phone — fetch from Firestore or ask
+  const phone = prompt("Enter your phone number (e.g. 0123456789):");
+  if (!phone) return;
+
+  try {
+    const response = await fetch("/api/create-bill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName:  currentUser.username,
+        customerEmail: currentUser.email || "",
+        customerPhone: phone,
+        amount:        10,          // set your reservation fee here
+        reservationId: r.id,
+        cafeName:      r.cafe,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.billCode) {
+      // Redirect to ToyyibPay payment page
+      window.location.href = `https://dev.toyyibpay.com/${data.billCode}`;
+    } else {
+      alert("Failed to create payment. Please try again.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Payment error. Please try again.");
+  }
+};
 // ================= STATUS LABEL =================
 function getStatusLabel(status) {
   const map = {
