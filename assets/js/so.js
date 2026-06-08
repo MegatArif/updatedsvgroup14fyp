@@ -68,7 +68,7 @@ function startClock() {
 ═══════════════════════════════════════════════════════ */
 function renderStats() {
   const total     = reservations.length;
-  const confirmed = reservations.filter(r => r.status === "confirmed").length;
+  const confirmed = reservations.filter(r => r.status === "accepted").length;
   const pending   = reservations.filter(r => r.status === "pending").length;
 
   animateCount("statTotal",     total);
@@ -123,14 +123,14 @@ function renderPendingTable() {
 
     const actionCell = status === "pending"
       ? `<div class="action-btns">
-          <button class="btn-approve" onclick="updateStatus('${r._docId}','confirmed')">
+          <button class="btn-approve" onclick="updateStatus('${r._docId}','accepted')">
             <i class="fas fa-check"></i> Approve
           </button>
           <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
             <i class="fas fa-xmark"></i> Reject
           </button>
         </div>`
-      : status === "confirmed"
+      : status === "accepted"
         ? `<span class="resolved-label">✓ Approved</span>`
         : status === "rejected"
           ? `<span class="resolved-label">✗ Rejected</span>`
@@ -172,7 +172,7 @@ window.updateStatus = async function(docId, newStatus) {
     });
 
     // 2. ADDED: Write a notification to the customer if booking was accepted
-    if (newStatus === "confirmed" && r.userId) {
+    if (newStatus === "accepted" && r.userId) {
       await addDoc(collection(db, "notifications"), {
         userId:        r.userId,                          // customer's UID
         type:          "accepted",
@@ -201,17 +201,17 @@ window.updateStatus = async function(docId, newStatus) {
     const rowEl = document.getElementById(`row-${docId}`);
     if (rowEl) {
       rowEl.style.transition = "background .4s";
-      rowEl.style.background  = newStatus === "confirmed" ? "#eaf5ec" : "#fdf2f2";
+      rowEl.style.background  = newStatus === "accepted" ? "#eaf5ec" : "#fdf2f2";
       setTimeout(() => { rowEl.style.background = ""; }, 1400);
     }
 
     renderStats();
 
     showToast(
-      newStatus === "confirmed"
+      newStatus === "accepted"
         ? `Reservation approved — customer has been notified. ✅`
         : `Reservation ${docId.substring(0,6)} has been rejected.`,
-      newStatus === "confirmed" ? "success" : "error"
+      newStatus === "accepted" ? "success" : "error"
     );
 
   } catch (err) {
