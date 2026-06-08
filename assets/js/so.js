@@ -109,8 +109,15 @@ function renderPendingTable() {
   const tbody = document.getElementById("reservationsBody");
   if (!tbody) return;
 
-  // Show all non-completed reservations (pending / confirmed / rejected)
-  const rows = reservations.filter(r => r.status !== "completed");
+const rows = reservations.filter(r => 
+  r.status !== "completed" && 
+  !(r.status === "accepted" && r.paymentStatus === "paid")
+);
+
+const done = reservations.filter(r => 
+  r.status === "completed" || 
+  (r.status === "accepted" && r.paymentStatus === "paid")
+);
 
   if (!rows.length) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No reservations.</td></tr>`;
@@ -118,44 +125,53 @@ function renderPendingTable() {
   }
 
     tbody.innerHTML = rows.map(r => {
-    // Use Firestore doc ID as the row key
-    const status = (r.status || "pending").toLowerCase();
+  const status = (r.status || "pending").toLowerCase();
 
-    const actionCell = status === "pending"
-      ? `<div class="action-btns">
-          <button class="btn-approve" onclick="updateStatus('${r._docId}','accepted')">
-            <i class="fas fa-check"></i> Approve
-          </button>
-          <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
-            <i class="fas fa-xmark"></i> Reject
-          </button>
-        </div>`
-      : status === "accepted"
-        ? `<span class="resolved-label">✓ Approved</span>`
-        : status === "rejected"
-          ? `<span class="resolved-label">✗ Rejected</span>`
-          : `<div class="action-btns">
-              <button class="btn-approve" onclick="updateStatus('${r._docId}','confirmed')">
-                <i class="fas fa-check"></i> Approve
-              </button>
-              <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
-                <i class="fas fa-xmark"></i> Reject
-              </button>
-            </div>`;
+  const actionCell = status === "pending"
+    ? `<div class="action-btns">
+        <button class="btn-approve" onclick="updateStatus('${r._docId}','accepted')">
+          <i class="fas fa-check"></i> Approve
+        </button>
+        <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
+          <i class="fas fa-xmark"></i> Reject
+        </button>
+      </div>`
+    : status === "accepted"
+      ? `<span class="resolved-label">✓ Approved</span>`
+      : status === "rejected"
+        ? `<span class="resolved-label">✗ Rejected</span>`
+        : `<div class="action-btns">
+            <button class="btn-approve" onclick="updateStatus('${r._docId}','accepted')">
+              <i class="fas fa-check"></i> Approve
+            </button>
+            <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
+              <i class="fas fa-xmark"></i> Reject
+            </button>
+          </div>`;
 
-    return `
-      <tr id="row-${r._docId}">
-        <td><strong>${r._docId.substring(0, 6)}…</strong></td>
-        <td>${r.username || r.customer || "—"}</td>
-        <td>${r.date || "—"} </td>
-        <td>${r.time || "—"}</td>
-        <td>${r.guests || "—"}</td>
-        <td id="badge-${r._docId}">${makeBadge(r.status)}</td>
-        <td id="action-${r._docId}">${actionCell}</td>
-      </tr>`;
-  }).join("");
+  return `
+    <tr id="row-${r._docId}">
+      <td><strong>${r._docId.substring(0, 6)}…</strong></td>
+      <td>${r.username || r.customer || "—"}</td>
+      <td>${r.date || "—"}</td>
+      <td>${r.time || "—"}</td>
+      <td>${r.guests || "—"}</td>
+      <td id="payment-${r._docId}">${makePaymentBadge(r)}</td>
+      <td id="badge-${r._docId}">${makeBadge(r.status)}</td>
+      <td id="action-${r._docId}">${actionCell}</td>
+    </tr>`;
+}).join("");
 }
-
+  function makePaymentBadge(r) {
+  if (r.paymentStatus === "paid") {
+    return `<span class="badge" style="background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;">
+      <i class="fas fa-circle-check"></i> Paid
+    </span>`;
+  }
+  return `<span class="badge" style="background:#fff8ec;color:#a86000;border:1px solid #f0d090;">
+    <i class="fas fa-clock"></i> Unpaid
+  </span>`;
+}
 /* ═══════════════════════════════════════════════════════
    APPROVE / REJECT
    MODIFIED: now writes to Firestore and sends a notification
