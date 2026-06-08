@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   const params = new URLSearchParams({
     userSecretKey:         process.env.TOYYIBPAY_SECRET_KEY_SANDBOX,
     categoryCode:          process.env.TOYYIBPAY_CATEGORY_CODE_SANDBOX,
-    billName:              `Reservation - ${cafeName}`,
+    billName:              `Res - ${cafeName}`.substring(0, 30),
     billDescription:       `Reservation ID: ${reservationId}`,
     billPriceSetting:      1,                        // fixed price
     billPayorInfo:         1,                        // collect payer info
