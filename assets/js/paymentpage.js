@@ -6,7 +6,6 @@ import { db, app }   from './firebase-config.js';
     setupNavbar();
  
     const auth = getAuth(app);
-    const PRICE_PER_GUEST = 5;
  
     const urlParams     = new URLSearchParams(window.location.search);
     const reservationId = urlParams.get('reservationId');
@@ -47,7 +46,6 @@ import { db, app }   from './firebase-config.js';
         document.getElementById('payCardDate').textContent     = formatDate(reservationData.date);
         document.getElementById('payCardTime').textContent     = formatTime(reservationData.time);
         document.getElementById('payCardGuests').textContent   = guests + ' guest' + (guests > 1 ? 's' : '');
-        document.getElementById('priceGuests').textContent     = guests;
         document.getElementById('priceTotal').textContent      = `RM ${total.toFixed(2)}`;
         document.getElementById('btnTotal').textContent        = `RM ${total.toFixed(2)}`;
  
@@ -81,7 +79,7 @@ import { db, app }   from './firebase-config.js';
       if (!reservationData) { showError('Reservation data not loaded yet.'); return; }
  
       const guests = parseInt(reservationData.guests) || 1;
-      const amount = guests * PRICE_PER_GUEST;
+      const amount = 10;
       const phone  = '0' + rawPhone; // prepend 0 for ToyyibPay
  
       const btn = document.getElementById('payBtn');
