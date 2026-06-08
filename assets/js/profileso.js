@@ -11,6 +11,13 @@ import { showConfirm } from './toast.js';
 
 const auth = getAuth(app);
 
+// Maps display names back to select keys (for existing data stored as display names)
+const CITY_KEY_MAP = {
+    'Skudai': 'skudai', 'Kulai': 'kulai', 'Masai': 'masai',
+    'Tangkak': 'tangkak', 'Pontian': 'pontian', 'Segamat': 'segamat',
+    'Muar': 'muar', 'Kluang': 'kluang', 'Batu Pahat': 'batuPahat',
+    'Johor Bahru': 'johorBahru',
+};
 // ─── UI helpers ────────────────────────────────────────────────────────────────
 const showLoading = (show) =>
     document.getElementById('loading-overlay').classList.toggle('hidden', !show);
@@ -125,7 +132,8 @@ async function loadShopOwnerProfile(user) {
         document.getElementById('display-name').textContent = cafe.name || user.email.split('@')[0];
         document.getElementById('shop-name').value          = cafe.name        || '';
         document.getElementById('shop-address').value       = cafe.address     || '';
-        document.getElementById('shop-city').value          = cafe.city        || '';
+        const cityVal = cafe.city || '';
+        document.getElementById('shop-city').value = CITY_KEY_MAP[cityVal] ?? cityVal;
         document.getElementById('shop-description').value   = cafe.description || '';
         document.getElementById('shop-open-hour').value     = cafe.openHour    || '';
         document.getElementById('shop-close-hour').value    = cafe.closeHour   || '';
