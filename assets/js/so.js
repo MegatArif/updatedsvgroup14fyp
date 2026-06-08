@@ -94,7 +94,7 @@ function animateCount(elId, target) {
 function makeBadge(status) {
   const map = {
     pending:   { cls:"badge-pending",   icon:"fa-clock",        label:"Pending"   },
-    confirmed: { cls:"badge-confirmed", icon:"fa-circle-check", label:"Confirmed" },
+    accepted:  { cls:"badge-confirmed", icon:"fa-circle-check", label:"Accepted" },
     rejected:  { cls:"badge-rejected",  icon:"fa-circle-xmark", label:"Rejected"  },
     completed: { cls:"badge-completed", icon:"fa-check-double", label:"Completed" },
   };
@@ -147,7 +147,8 @@ function renderPendingTable() {
       <tr id="row-${r._docId}">
         <td><strong>${r._docId.substring(0, 6)}…</strong></td>
         <td>${r.username || r.customer || "—"}</td>
-        <td>${r.date || ""} ${r.time || ""}</td>
+        <td>${r.date || "—"} </td>
+        <td>${r.time || "—"}</td>
         <td>${r.guests || "—"}</td>
         <td id="badge-${r._docId}">${makeBadge(r.status)}</td>
         <td id="action-${r._docId}">${actionCell}</td>
@@ -195,7 +196,7 @@ window.updateStatus = async function(docId, newStatus) {
     // Swap action buttons → resolved label
     const actionEl = document.getElementById(`action-${docId}`);
     if (actionEl)
-      actionEl.innerHTML = `<span class="resolved-label">${newStatus === "confirmed" ? "✓ Approved" : "✗ Rejected"}</span>`;
+      actionEl.innerHTML = `<span class="resolved-label">${newStatus === "accepted" ? "✓ Approved" : "✗ Rejected"}</span>`;
 
     // Brief row flash
     const rowEl = document.getElementById(`row-${docId}`);

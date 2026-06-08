@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Successful – CafeHunt</title>
+ 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/css/successfulpaymentpage.css"/>
+  <link rel="stylesheet" href="assets/css/navbar.css"/>
+  </head>
+<body>
+ 
+    <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo-area">
+      <i class="fas fa-mug-hot logo-icon"></i>
+      <span class="logo-text">CafeHunt</span>
+    </div>
+    <div class="nav-links"></div>
+  </div>
+  <!-- Confetti -->
+  <div class="confetti-wrap" id="confetti"></div>
+ 
+  
+ 
+  <div class="success-page">
+ 
+    <div class="pay-brand">
+      <div class="pay-brand-logo">
+        <i class="fas fa-mug-hot"></i> CafeHunt
+      </div>
+      <div class="pay-brand-sub">Payment Confirmation</div>
+    </div>
+ 
+    <div class="success-card">
+ 
+      <!-- Green hero -->
+      <div class="success-hero">
+        <div class="check-ring">
+          <i class="fas fa-check"></i>
+        </div>
+        <div class="success-title">Payment Successful!</div>
+        <div class="success-subtitle">Your table is confirmed. See you soon ☕</div>
+      </div>
+      <div class="tear-line"></div>
+ 
+      <div class="success-body">
+ 
+        <div class="receipt-section-label">Reservation Summary</div>
+ 
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-store"></i> Cafe</span>
+          <span class="receipt-row-value" id="sucCafe">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-user"></i> Customer</span>
+          <span class="receipt-row-value" id="sucCustomer">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-calendar"></i> Date</span>
+          <span class="receipt-row-value" id="sucDate">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-clock"></i> Time</span>
+          <span class="receipt-row-value" id="sucTime">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-users"></i> Guests</span>
+          <span class="receipt-row-value" id="sucGuests">—</span>
+        </div>
+ 
+        <!-- Paid amount -->
+        <div class="paid-box">
+          <div class="paid-box-label">
+            <i class="fas fa-circle-check"></i> Amount Paid
+          </div>
+          <div class="paid-box-amount" id="sucAmount">RM 0.00</div>
+        </div>
+ 
+        <!-- Reference -->
+        <div class="ref-box">
+          <span class="ref-label"><i class="fas fa-receipt" style="margin-right:5px;color:var(--Terracotta)"></i>Reference ID</span>
+          <span class="ref-value" id="sucRef">—</span>
+        </div>
+ 
+        <!-- Actions -->
+        <div class="success-actions">
+          <a href="reservation.html" class="btn-primary">
+            <i class="fas fa-calendar-check"></i> View My Reservations
+          </a>
+          <a href="gallery.html" class="btn-secondary">
+            <i class="fas fa-mug-hot"></i> Explore More Cafes
+          </a>
+        </div>
+ 
+      </div>
+    </div>
+ 
+  </div><!-- /success-page -->
+ 
+  <script src="assets/js/successfulpaymentpage.js" type="module"></script>
+</body>
+</html>

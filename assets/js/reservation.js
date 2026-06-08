@@ -440,41 +440,10 @@ window.openRating = async function(id) {
     }
   });
 };
-window.handlePayment = async function(id) {
-  const r = allReservations.find(x => x.id === id);
-  if (!r) return;
-
-  // You need customer phone — fetch from Firestore or ask
-  const phone = prompt("Enter your phone number (e.g. 0123456789):");
-  if (!phone) return;
-
-  try {
-    const response = await fetch("/api/create-bill", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerName:  currentUser.username,
-        customerEmail: currentUser.email || "",
-        customerPhone: phone,
-        amount:        10,          // set your reservation fee here
-        reservationId: r.id,
-        cafeName:      r.cafe,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.billCode) {
-      // Redirect to ToyyibPay payment page
-      window.location.href = `https://dev.toyyibpay.com/${data.billCode}`;
-    } else {
-      alert("Failed to create payment. Please try again.");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Payment error. Please try again.");
-  }
-};
+window.handlePayment = function(id) {
+    console.log('handlePayment called with id:', id);
+  window.location.href = `paymentpage.html?reservationId=${id}`;
+}
 // ================= STATUS LABEL =================
 function getStatusLabel(status) {
   const map = {

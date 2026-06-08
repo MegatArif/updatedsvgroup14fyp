@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment – CafeHunt</title>
+ 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/css/navbar.css"/>
+  <link rel="stylesheet" href="assets/css/paymentpage.css"/>
+</head>
+<body>
+ 
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo-area">
+      <i class="fas fa-mug-hot logo-icon"></i>
+      <span class="logo-text">CafeHunt</span>
+    </div>
+    <div class="nav-links"></div>
+  </div>
+ 
+  <div class="pay-page">
+ 
+    <!-- Brand -->
+    <div class="pay-brand">
+      <div class="pay-brand-logo">
+        <i class="fas fa-mug-hot"></i> CafeHunt
+      </div>
+      <div class="pay-brand-sub">Secure Reservation Payment</div>
+    </div>
+ 
+    <!-- Receipt Card -->
+    <div class="receipt-card">
+ 
+      <!-- Dark header -->
+      <div class="receipt-top">
+        <div class="receipt-cafe" id="payCardCafe">Loading…</div>
+        <div class="receipt-location">
+          <i class="fas fa-location-dot"></i>
+          <span id="payCardLocation">—</span>
+        </div>
+      </div>
+      <div class="tear-line"></div>
+ 
+      <div class="receipt-body">
+ 
+        <!-- Booking details -->
+        <div class="receipt-section-label">Booking Details</div>
+ 
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-user"></i> Customer</span>
+          <span class="receipt-row-value" id="payCardCustomer">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-calendar"></i> Date</span>
+          <span class="receipt-row-value" id="payCardDate">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-clock"></i> Time</span>
+          <span class="receipt-row-value" id="payCardTime">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-users"></i> Guests</span>
+          <span class="receipt-row-value" id="payCardGuests">—</span>
+        </div>
+ 
+        <!-- Price breakdown -->
+        <div class="receipt-section-label">Payment Summary</div>
+        <div class="price-box">
+          <div class="price-line">
+            <span>Reservation fee</span>
+            <span>RM 5.00 × <span id="priceGuests">0</span> guests</span>
+          </div>
+          <div class="price-line">
+            <span>Service charge</span>
+            <span>RM 0.00</span>
+          </div>
+          <div class="price-line total">
+            <span>Total</span>
+            <span class="price-amount" id="priceTotal">RM 0.00</span>
+          </div>
+        </div>
+ 
+        <!-- Phone number -->
+        <div class="phone-group">
+          <label class="phone-label" for="phoneInput">
+            <i class="fas fa-phone" style="margin-right:5px;color:var(--Terracotta)"></i>
+            Mobile Number (for payment receipt)
+          </label>
+          <div class="phone-input-wrap">
+            <span class="phone-prefix">🇲🇾 +60</span>
+            <input
+              id="phoneInput"
+              class="phone-input"
+              type="tel"
+              placeholder="12-345 6789"
+              maxlength="11"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+ 
+        <!-- Error message -->
+        <div class="error-msg" id="errorMsg">
+          <i class="fas fa-circle-exclamation"></i>
+          <span id="errorText">Something went wrong. Please try again.</span>
+        </div>
+ 
+        <!-- Pay button -->
+        <button class="btn-pay" id="payBtn" onclick="handlePayNow()">
+          <span class="btn-pay-text">
+            <i class="fas fa-lock"></i> Pay Now — <span id="btnTotal">RM 0.00</span>
+          </span>
+          <div class="spinner-sm"></div>
+        </button>
+ 
+        <p class="pay-note">
+          <i class="fas fa-shield-halved"></i>
+          Secured by ToyyibPay · SSL encrypted
+        </p>
+ 
+      </div>
+    </div><!-- /receipt-card -->
+  </div><!-- /pay-page -->
+ 
+  <script src="assets/js/paymentpage.js" type="module"></script>
+    </body>
+</html>
