@@ -325,19 +325,6 @@ import { showToast } from './toast.js'
         return;
       }
 
-      const customerDoc = await getDoc(doc(db, "Customers", user.uid));
-    if (!customerDoc.exists()) {
-      // Not in Customers collection — could be a shop owner
-      const ownerDoc = await getDoc(doc(db, "ShopOwner", user.uid));
-      if (ownerDoc.exists()) {
-        showToast('This account is registered as a Shop Owner. Please use the Shop Owner login.', 'error', 5000);
-      } else {
-        showToast('Account not found. Please register.', 'error');
-      }
-      await auth.signOut(); // ← important: sign them back out
-      return;
-    }
-
       // ✅ Check if admin — silent, no one knows this check exists
       if (ADMIN_EMAILS.includes(email)) {
         sessionStorage.setItem('userRole', 'admin');
@@ -530,18 +517,6 @@ function validateUsername(name) {
       return;
     }
 
-    const ownerDoc = await getDoc(doc(db, "ShopOwner", user.uid));
-    if (!ownerDoc.exists()) {
-      const customerDoc = await getDoc(doc(db, "Customers", user.uid));
-      if (customerDoc.exists()) {
-        showToast('This account is registered as a Customer. Please use the Customer login.', 'error', 5000);
-      } else {
-        showToast('Shop owner account not found.', 'error');
-      }
-      await auth.signOut();
-      return;
-    }
-    
     // ── Fetch ShopOwner document to check cafe registration & approval status ──
     const ownerDoc = await getDoc(doc(db, "ShopOwner", user.uid));
     const ownerData = ownerDoc.exists() ? ownerDoc.data() : {};
