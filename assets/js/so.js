@@ -537,6 +537,52 @@ async function checkExpiredReservations(list) {
     }
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   AUTO COMPLETE ACCEPTED + PAID RESERVATIONS
+═══════════════════════════════════════════════════════ */
+async function checkCompletedReservations(list) {
+  const now = new Date();
+
+  for (const r of list) {
+    const status = (r.status || "").toLowerCase();
+    const isPaid = r.paymentStatus === "paid";
+
+    // Only process accepted + paid
+    if (status !== "accepted" || !isPaid) continue;
+
+    const bookingTime = new Date(`${r.date}T${r.time}`);
+
+    // Past booking time → mark as completed
+    if (now >= bookingTime) {
+      try {
+        await updateDoc(doc(db, "reservation", r._docId), {
+          status: "completed",
+        });
+
+        // Optional: notify customer their visit is completed
+        if (r.userId && !r.notifSentCompleted) {
+          await addDoc(collection(db, "notifications"), {
+            userId: r.userId,
+            type: "completed",
+            message: `Your visit to ${r.cafe || "the cafe"} on ${r.date} at ${r.time} is now marked as completed. Thank you for visiting!`,
+            cafeName: r.cafe || "",
+            reservationId: r._docId,
+            read: false,
+            createdAt: serverTimestamp(),
+          });
+
+          await updateDoc(doc(db, "reservation", r._docId), {
+            notifSentCompleted: true,
+          });
+        }
+
+      } catch (err) {
+        console.error("Auto complete failed:", err);
+      }
+    }
+  }
+}
 /* ═══════════════════════════════════════════════════════
    FIRESTORE — load reservations for this shop owner
    ADDED: replaces the hard-coded dummy data array.
@@ -558,7 +604,8 @@ onSnapshot(q, async (snapshot) => {
   }));
 
   await checkExpiredReservations(reservations);
-
+  await checkCompletedReservations(reservations);
+  
   renderStats();
   renderPendingTable();
   renderCompletedCards();
