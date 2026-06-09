@@ -1,6 +1,6 @@
 import { db, storage } from './firebase-config.js';
 import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { collection, getDocs, deleteDoc, doc, query, where, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { setupNavbar } from './navbar.js';
 import { showToast } from './toast.js';
 
@@ -447,6 +447,16 @@ function buildAdminActions(cafe) {
             }
 
             await updateDoc(doc(db, 'cafes', cafe.id), { facilities: selected });
+            await addDoc(
+  collection(db, "sonotifications"),
+  {
+    cafeName: cafe.name,
+    type: "admin",
+    message: "Admin has updated your facilities.",
+    createdAt: serverTimestamp(),
+    read: false
+  }
+);
 
             // Update local cache so modal reflects the new state immediately
             cafe.facilities = selected;

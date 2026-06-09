@@ -118,12 +118,15 @@ function loadNotifications(cafeName) {
   onSnapshot(q, (snapshot) => {
 
     notifications =
-      snapshot.docs.map(doc => ({
-
-        id: doc.id,
-        ...doc.data()
-
-      }));
+  snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }))
+  .sort((a, b) => {
+    const aTime = a.createdAt?.seconds || 0;
+    const bTime = b.createdAt?.seconds || 0;
+    return bTime - aTime; 
+  });
 
     console.log(
       "Cafe Notifications:",
