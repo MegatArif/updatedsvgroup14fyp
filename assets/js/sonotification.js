@@ -1,4 +1,7 @@
 import { app, db } from "./firebase-config.js";
+import { setupNavbar } from "./navbar.js";
+
+setupNavbar();
 
 import {
   collection,
