@@ -69,7 +69,7 @@ export function setupNavbar() {
 
     ${/* ── APPROVAL: admin only ── */
     isAdmin ? `
-      <a href="adminnotification.html" id="nav-notif"l">
+      <a href="adminnotification.html" id="nav-notif">
         <i class="fas fa-clipboard-check"></i> Notification
       </a>
     ` : ''}
