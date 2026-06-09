@@ -60,7 +60,7 @@ async function markPaid() {
       console.log('paymentStatus updated to paid');
 
        // Trigger Admin Notification for the successful payment
-      /*const rSnap = await getDoc(doc(db, 'reservation', reservationId));
+      const rSnap = await getDoc(doc(db, 'reservation', reservationId));
       if (rSnap.exists()) {
           const rData = rSnap.data();
           await addDoc(collection(db, "adminnotifications"), {
@@ -72,7 +72,7 @@ async function markPaid() {
               read: false,
               createdAt: serverTimestamp(),
           });
-      }*/
+      }
 
     } catch(err) {
       console.error('markPaid failed:', err);
