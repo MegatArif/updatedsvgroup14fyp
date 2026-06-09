@@ -147,7 +147,7 @@ async function expireReservationOnce(reservationId) {
     transaction.set(notificationRef, {
       userId:        reservation.userId,
       type:          "expired",
-      message:       `Your reservation at ${reservation.cafe || "the cafe"} on ${reservation.date} at ${reservation.time} has expired because no decision was made before the reservation time.`,
+      message:       `Your reservation at ${reservation.cafe || "the cafe"} on ${reservation.date} at ${formatTimeDisplay(reservation.time)} has expired because no decision was made before the reservation time.`,
       cafeName:      reservation.cafe || "",
       reservationId,
       read:          false,
@@ -228,4 +228,17 @@ function escHtml(str) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function formatTimeDisplay(timeString) {
+  if (!timeString || !timeString.includes(":")) return timeString || "";
+
+  const [hourString, minuteString = "00"] = timeString.split(":");
+  let hour = Number.parseInt(hourString, 10);
+  if (Number.isNaN(hour)) return timeString;
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour}:${minuteString} ${ampm}`;
 }

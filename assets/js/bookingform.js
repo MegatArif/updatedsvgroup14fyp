@@ -266,7 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
         await addDoc(collection(db, "notifications"), {
           userId:        currentUserUid,
           type:          "payment_success",
-          message:       `Your booking at ${selectedCafe} on ${dateValue} at ${formatTimeDisplay(timeValue)} for ${guestsValue} has been received. Awaiting cafe confirmation.`,
+          message:       `Your booking at ${selectedCafe} on ${dateValue} at ${formatTimeDisplay(timeValue)} 
+          for ${guestsValue} has been received. Awaiting cafe confirmation.`,
           cafeName:      selectedCafe, 
           read:          false,
           createdAt:     serverTimestamp(),
