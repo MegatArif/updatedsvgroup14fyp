@@ -6,7 +6,8 @@ import {
   where,
   onSnapshot,
   doc,
-  getDoc
+  getDoc,
+  updateDoc
 }
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
@@ -158,53 +159,63 @@ backBtn?.addEventListener("click", () => {
 // =========================
 // CATEGORY PAGE
 // =========================
+window.markAsRead = async function(id) {
+  try {
+
+    await updateDoc(doc(db, "sonotifications", id), {
+      read: true
+    });
+
+    const n = notifications.find(x => x.id === id);
+    if (n) n.read = true;
+
+    // 🔥 IMPORTANT: refresh UI
+    showCategories();
+    showDetails(selectedType);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 function showCategories() {
 
   const bookingCount =
     notifications.filter(n =>
-      n.type === "booking" ||
-      n.type === "reservation"
+      (n.type === "booking" || n.type === "reservation") &&
+      n.read !== true
     ).length;
 
   const expiredCount =
     notifications.filter(n =>
-      n.type === "expired"
+      n.type === "expired" &&
+      n.read !== true
     ).length;
 
   const adminCount =
     notifications.filter(n =>
-      n.type === "admin"
+      n.type === "admin" &&
+      n.read !== true
     ).length;
 
   categoryContainer.innerHTML = `
-
     <div class="category-grid">
 
       <div class="category-card"
       onclick="goType('booking')">
 
         <div class="left">
-
           <div class="icon-box booking">
             <i class="fas fa-calendar-check"></i>
           </div>
 
           <div>
-            <div class="card-title">
-              New Reservations
-            </div>
-
-            <div class="card-subtitle">
-              New customer bookings
-            </div>
+            <div class="card-title">New Reservations</div>
+            <div class="card-subtitle">New customer bookings</div>
           </div>
-
         </div>
 
-        <div class="count">
-          ${bookingCount}
-        </div>
+        <div class="count">${bookingCount}</div>
 
       </div>
 
@@ -212,26 +223,17 @@ function showCategories() {
       onclick="goType('expired')">
 
         <div class="left">
-
           <div class="icon-box expired">
             <i class="fas fa-clock"></i>
           </div>
 
           <div>
-            <div class="card-title">
-              Expired Reservations
-            </div>
-
-            <div class="card-subtitle">
-              Auto expired bookings
-            </div>
+            <div class="card-title">Expired Reservations</div>
+            <div class="card-subtitle">Auto expired bookings</div>
           </div>
-
         </div>
 
-        <div class="count">
-          ${expiredCount}
-        </div>
+        <div class="count">${expiredCount}</div>
 
       </div>
 
@@ -239,33 +241,23 @@ function showCategories() {
       onclick="goType('admin')">
 
         <div class="left">
-
           <div class="icon-box admin">
             <i class="fas fa-triangle-exclamation"></i>
           </div>
 
           <div>
-            <div class="card-title">
-              Admin Notices
-            </div>
-
-            <div class="card-subtitle">
-              Messages from admin
-            </div>
+            <div class="card-title">Admin Notices</div>
+            <div class="card-subtitle">Messages from admin</div>
           </div>
-
         </div>
 
-        <div class="count">
-          ${adminCount}
-        </div>
+        <div class="count">${adminCount}</div>
 
       </div>
 
     </div>
   `;
 }
-
 
 // =========================
 // OPEN CATEGORY
@@ -323,50 +315,33 @@ function showDetails(type) {
     "Notifications";
 
   detailList.innerHTML =
-    filtered.map(n => {
+  filtered.map(n => {
 
-      let dateText = "";
+    let dateText = "";
 
-      if (n.createdAt?.toDate) {
+    if (n.createdAt?.toDate) {
+      dateText = n.createdAt.toDate().toLocaleString();
+    }
 
-        dateText =
-          n.createdAt
-          .toDate()
-          .toLocaleString();
-      }
+    return `
+      <div class="detail-card ${n.read ? "read" : "unread"}">
 
-      return `
+        <div class="detail-title">${n.type}</div>
 
-        <div class="detail-card">
+        <div>${n.message || ""}</div>
 
-          <div class="detail-title">
-            ${n.type}
-          </div>
+        <div class="detail-time">${dateText}</div>
 
-          <div>
-            ${n.message || ""}
-          </div>
-
-          <div class="detail-time">
-            ${dateText}
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("");
-
-  if (filtered.length === 0) {
-
-    detailList.innerHTML = `
-
-      <div class="detail-card">
-
-        No notifications found.
+        ${!n.read ? `
+          <button class="mark-btn"
+            onclick="markAsRead('${n.id}')">
+            Mark as read
+          </button>
+        ` : `
+          <span class="done-text">✓ Done</span>
+        `}
 
       </div>
-
     `;
-  }
-}
+
+  }).join("");}

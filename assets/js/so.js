@@ -96,6 +96,7 @@ function makeBadge(status) {
     pending:   { cls:"badge-pending",   icon:"fa-clock",        label:"Pending"   },
     accepted:  { cls:"badge-confirmed", icon:"fa-circle-check", label:"Accepted" },
     rejected:  { cls:"badge-rejected",  icon:"fa-circle-xmark", label:"Rejected"  },
+    expired:   { cls:"badge-rejected",  icon:"fa-hourglass-end",label:"Expired"   },
     completed: { cls:"badge-completed", icon:"fa-check-double", label:"Completed" },
   };
   const c = map[status] || map.pending;
@@ -467,6 +468,76 @@ function injectNotesModal() {
 }
 
 /* ═══════════════════════════════════════════════════════
+   AUTO EXPIRE PENDING RESERVATIONS
+═══════════════════════════════════════════════════════ */
+async function checkExpiredReservations(list) {
+  const now = new Date();
+
+  for (const r of list) {
+
+    const status = (r.status || "pending").toLowerCase();
+
+    // 只处理 pending
+    if (status !== "pending") continue;
+
+    const bookingTime = new Date(`${r.date}T${r.time}`);
+
+    // 到预约时间还没 approve/reject
+    if (now >= bookingTime) {
+
+      try {
+
+        await updateDoc(
+          doc(db, "reservation", r._docId),
+          {
+            status: "expired"
+          }
+        );
+
+        
+   if (!r.notifSentExpired) {
+
+  // Customer notification
+  if (r.userId) {
+    await addDoc(collection(db, "notifications"), {
+      userId: r.userId,
+      type: "expired",
+      message:
+        `Your reservation at ${r.cafe || "the cafe"} on ${r.date} at ${r.time} has expired because no decision was made before the reservation time.`,
+      cafeName: r.cafe || "",
+      reservationId: r._docId,
+      read: false,
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  // Shop Owner notification
+  await addDoc(collection(db, "sonotifications"), {
+    type: "expired",
+    cafeName: r.cafe || "",
+    customerName: r.username || r.customer || "Customer",
+    reservationId: r._docId,
+    read: false,
+    createdAt: serverTimestamp(),
+    message:
+      `${r.username || r.customer || "A customer"}'s reservation on ${r.date} at ${r.time} expired because no action was taken before the reservation time.`
+  });
+
+  await updateDoc(
+    doc(db, "reservation", r._docId),
+    {
+      notifSentExpired: true
+    }
+  );
+}
+
+      } catch (err) {
+        console.error("Auto expire failed:", err);
+      }
+    }
+  }
+}
+/* ═══════════════════════════════════════════════════════
    FIRESTORE — load reservations for this shop owner
    ADDED: replaces the hard-coded dummy data array.
    Queries `reservation` where cafe == ownerCafeName.
@@ -480,16 +551,18 @@ function loadReservations(cafeName) {
     where("cafe", "==", cafeName)
   );
 
-  onSnapshot(q, (snapshot) => {
-    reservations = snapshot.docs.map((d) => ({
-      _docId: d.id,   // Firestore doc ID used as the unique key
-      ...d.data(),
-    }));
+onSnapshot(q, async (snapshot) => {
+  reservations = snapshot.docs.map((d) => ({
+    _docId: d.id,
+    ...d.data(),
+  }));
 
-    renderStats();
-    renderPendingTable();
-    renderCompletedCards();
-  });
+  await checkExpiredReservations(reservations);
+
+  renderStats();
+  renderPendingTable();
+  renderCompletedCards();
+});
 }
 
 /* ═══════════════════════════════════════════════════════
