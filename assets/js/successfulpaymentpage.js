@@ -5,7 +5,7 @@ import { setupNavbar } from './navbar.js';
 
 setupNavbar();
 
-const PRICE_PER_GUEST = 5;
+
 const urlParams     = new URLSearchParams(window.location.search);
 const reservationId = urlParams.get('reservationId')
                    || urlParams.get('order_id')
@@ -35,7 +35,7 @@ async function loadDetails() {
     if (!snap.exists()) return;
     const r = snap.data();
     const guests = parseInt(r.guests) || 1;
-    const total  = guests * PRICE_PER_GUEST;
+    const total  = 10;
 
     document.getElementById('sucCafe').textContent     = r.cafe      || '—';
     document.getElementById('sucCustomer').textContent = r.username   || '—';
