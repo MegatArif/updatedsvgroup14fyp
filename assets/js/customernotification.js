@@ -11,11 +11,13 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
   doc,
   updateDoc,
   writeBatch,
+  getDocs,
+  runTransaction,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 import {
@@ -47,9 +49,10 @@ const ICON_MAP = {
 };
 
 // ── Auth → load notifications ─────────────────────────────────
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) return;
   listenNotifications(user.uid);
+  checkExpiredReservations(user.uid);
 
   // Mark all as read
   markAllBtn.addEventListener("click", async () => {
@@ -90,6 +93,67 @@ function listenNotifications(uid) {
       loadingEl.style.display = "none";
     }
   );
+}
+
+// ── Expired reservation check ─────────────────────────────────
+// Customer notification reads should not keep a stale pending booking alive.
+// This checks the reservation itself, independent of notification read status.
+async function checkExpiredReservations(uid) {
+  try {
+    const q = query(
+      collection(db, "reservation"),
+      where("userId", "==", uid)
+    );
+    const snapshot = await getDocs(q);
+
+    await Promise.all(
+      snapshot.docs
+        .filter((reservationDoc) => shouldExpire(reservationDoc.data()))
+        .map((reservationDoc) => expireReservationOnce(reservationDoc.id))
+    );
+  } catch (err) {
+    console.warn("checkExpiredReservations failed:", err);
+  }
+}
+
+function shouldExpire(r) {
+  const status = (r.status || "pending").toLowerCase();
+  if (status !== "pending") return false;
+
+  const bookingTime = new Date(`${r.date}T${r.time}`);
+  if (Number.isNaN(bookingTime.getTime())) return false;
+
+  return new Date() >= bookingTime;
+}
+
+async function expireReservationOnce(reservationId) {
+  const reservationRef = doc(db, "reservation", reservationId);
+  const notificationRef = doc(db, "notifications", `expired_${reservationId}`);
+
+  await runTransaction(db, async (transaction) => {
+    const reservationSnap = await transaction.get(reservationRef);
+    if (!reservationSnap.exists()) return;
+
+    const reservation = reservationSnap.data();
+    if (!shouldExpire(reservation)) return;
+
+    transaction.update(reservationRef, {
+      status: "expired",
+      notifSentExpired: true,
+    });
+
+    if (reservation.notifSentExpired || !reservation.userId) return;
+
+    transaction.set(notificationRef, {
+      userId:        reservation.userId,
+      type:          "expired",
+      message:       `Your reservation at ${reservation.cafe || "the cafe"} on ${reservation.date} at ${reservation.time} has expired because no decision was made before the reservation time.`,
+      cafeName:      reservation.cafe || "",
+      reservationId,
+      read:          false,
+      createdAt:     serverTimestamp(),
+    });
+  });
 }
 
 // ── Render ────────────────────────────────────────────────────
