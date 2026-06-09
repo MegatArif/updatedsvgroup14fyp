@@ -58,6 +58,22 @@ async function markPaid() {
         paidAt: new Date().toISOString(),
       });
       console.log('paymentStatus updated to paid');
+
+       // Trigger Admin Notification for the successful payment
+      const rSnap = await getDoc(doc(db, 'reservation', reservationId));
+      if (rSnap.exists()) {
+          const rData = rSnap.data();
+          await addDoc(collection(db, "adminnotifications"), {
+              type: "payment_success",
+              message: `Payment Received: ${rData.username || 'A customer'} successfully paid for their reservation at ${rData.cafe}.`,
+              cafeName: rData.cafe || "",
+              reservationId: reservationId,
+              userId: rData.userId || "",
+              read: false,
+              createdAt: serverTimestamp(),
+          });
+      }
+
     } catch(err) {
       console.error('markPaid failed:', err);
     }
