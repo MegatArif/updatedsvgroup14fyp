@@ -44,15 +44,6 @@ export function setupNavbar() {
       </a>
     ` : ''}
 
-    ${/* ── ADMIN NOTIFICATIONS: admin only ── */
-    isAdmin ? `
-      <a href="adminnotification.html" id="nav-admin-notif" style="position:relative">
-        <i class="fas fa-bell"></i> Admin Notifications
-        <span id="admin-notif-badge" class="notif-badge" style="display:none;"></span>
-      </a>
-    ` : ''}
-
-
     ${/* ── RESERVATIONS: customer only ── */
     isCustomer ? `
       <a href="reservation.html" id="nav-reservations">
