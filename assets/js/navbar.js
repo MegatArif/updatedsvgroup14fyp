@@ -55,7 +55,7 @@ export function setupNavbar() {
           MODIFIED: href now goes to customernotification.html for customers;
           admin/shopowner keep href="#" (they have no inbox page yet).
           A <span id="notif-badge"> is injected and filled by the live listener below. ── */
-    `<a href="${isCustomer ? 'customernotification.html' : isShopOwner ? 'sonotification.html': '#'}" id="nav-notif" style="position:relative">
+    `<a href="${isAdmin ? 'adminnotification.html'? isCustomer : 'customernotification.html' : isShopOwner ? 'sonotification.html': '#'}" id="nav-notif" style="position:relative">
       <i class="fas fa-bell"></i> Notifications
       <span id="notif-badge" class="notif-badge" style="display:none;"></span>
     </a>`}
@@ -64,13 +64,6 @@ export function setupNavbar() {
     isAdmin ? `
       <a href="adminapprove.html" id="nav-approval">
         <i class="fas fa-clipboard-check"></i> Approval
-      </a>
-    ` : ''}
-
-    ${/* ── APPROVAL: admin only ── */
-    isAdmin ? `
-      <a href="adminnotification.html" id="nav-notif">
-        <i class="fas fa-clipboard-check"></i> Notification
       </a>
     ` : ''}
 
