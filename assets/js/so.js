@@ -278,21 +278,205 @@ function renderCompletedCards() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   RECEIPT
+   RECEIPT  —  generates the same PDF as the customer side
 ═══════════════════════════════════════════════════════ */
-window.handleReceipt = function(id) {
+function formatReceiptDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-MY', {
+    weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+function formatReceiptTime(t) {
+  if (!t || !t.includes(':')) return t || '—';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+function iconToBase64SO(unicode, color = '#8b5a2b', size = 64) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    setTimeout(() => {
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = color;
+      ctx.font = `900 ${size * 0.75}px "Font Awesome 6 Free"`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(unicode, size / 2, size / 2);
+      resolve(canvas.toDataURL('image/png'));
+    }, 100);
+  });
+}
+
+window.handleReceipt = async function(id) {
   const r = reservations.find(x => x._docId === id);
   if (!r) return;
-  alert(
-    `━━━━━━━━━━━━━━━━━━━━━━━\n`  +
-    `  RECEIPT  —  ${id.substring(0,8)}\n`    +
-    `━━━━━━━━━━━━━━━━━━━━━━━\n`  +
-    `Customer : ${r.username || r.customer || "—"}\n` +
-    `Date     : ${r.date || ""}\n` +
-    `Time     : ${r.time || ""}\n` +
-    `Guests   : ${r.guests || "—"}\n`   +
-    `━━━━━━━━━━━━━━━━━━━━━━━`
-  );
+
+  // jsPDF must be available — add to your HTML if not already:
+  // <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  if (!window.jspdf) {
+    showToast("PDF library not loaded.", "error");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'mm', format: 'a5' });
+
+  const cafe     = r.cafe     || '—';
+  const customer = r.username || r.customer || '—';
+  const date     = formatReceiptDate(r.date);
+  const time     = formatReceiptTime(r.time);
+  const guests   = (parseInt(r.guests) || 1);
+  const guestStr = guests + ' guest' + (guests > 1 ? 's' : '');
+  const total    = 10;
+  const amount   = `RM ${total.toFixed(2)}`;
+  const ref      = id.substring(0, 12).toUpperCase();
+  const now      = new Date().toLocaleString('en-MY');
+
+  const W = pdf.internal.pageSize.getWidth();
+
+  // ── Background ──
+  pdf.setFillColor(253, 248, 241);
+  pdf.rect(0, 0, W, pdf.internal.pageSize.getHeight(), 'F');
+
+  // ── Green header bar ──
+  pdf.setFillColor(74, 122, 74);
+  pdf.roundedRect(10, 8, W - 20, 30, 4, 4, 'F');
+
+  // ── White check circle ──
+  pdf.setFillColor(255, 255, 255);
+  pdf.circle(W / 2, 19, 7, 'F');
+
+  // ── Checkmark ──
+  pdf.setDrawColor(74, 122, 74);
+  pdf.setLineWidth(1.5);
+  pdf.line(W/2 - 3, 19.5, W/2 - 0.5, 22.5);
+  pdf.line(W/2 - 0.5, 22.5, W/2 + 4, 16.5);
+  pdf.setLineWidth(0.2);
+
+  // ── Header text ──
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(13);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Payment Successful', W / 2, 33, { align: 'center' });
+
+  // ── Mug icon ──
+  const mugBase64 = await iconToBase64SO('\uf7b6', '#8b5a2b', 64);
+  const brandTextWidth = pdf.getStringUnitWidth('CafeHunt') * 11 / pdf.internal.scaleFactor;
+  const brandIconW = 6;
+  const gap = 2;
+  const totalBrandW = brandIconW + gap + brandTextWidth;
+  const brandStartX = (W - totalBrandW) / 2;
+
+  pdf.addImage(mugBase64, 'PNG', brandStartX, 39, brandIconW, brandIconW);
+  pdf.setTextColor(139, 90, 43);
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('CafeHunt', brandStartX + brandIconW + gap, 45);
+
+  pdf.setTextColor(180, 140, 100);
+  pdf.setFontSize(7.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('PAYMENT CONFIRMATION', W / 2, 51, { align: 'center' });
+
+  // ── Dashed tear line ──
+  pdf.setDrawColor(220, 200, 175);
+  pdf.setLineDashPattern([2, 2], 0);
+  pdf.line(10, 56, W - 10, 56);
+  pdf.setLineDashPattern([], 0);
+
+  // ── Section label ──
+  pdf.setTextColor(180, 120, 70);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('RESERVATION DETAILS', 14, 63);
+
+  // ── Detail rows ──
+  const rows = [
+    ['Cafe',     cafe],
+    ['Customer', customer],
+    ['Date',     date],
+    ['Time',     time],
+    ['Guests',   guestStr],
+  ];
+
+  let y = 69;
+  rows.forEach(([label, value]) => {
+    pdf.setFillColor(255, 252, 247);
+    pdf.roundedRect(12, y - 4.5, W - 24, 9, 2, 2, 'F');
+    pdf.setTextColor(140, 110, 80);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(label, 16, y);
+    pdf.setTextColor(40, 28, 18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(value, W - 14, y, { align: 'right' });
+    y += 12;
+  });
+
+  // ── Amount paid box ──
+  y += 2;
+  pdf.setFillColor(232, 245, 233);
+  pdf.roundedRect(12, y, W - 24, 18, 3, 3, 'F');
+  pdf.setDrawColor(150, 200, 150);
+  pdf.roundedRect(12, y, W - 24, 18, 3, 3, 'S');
+
+  pdf.setFillColor(34, 139, 34);
+  pdf.circle(19, y + 7, 3, 'F');
+  pdf.setDrawColor(255, 255, 255);
+  pdf.setLineWidth(0.8);
+  pdf.line(17.2, y + 7, 18.5, y + 8.3);
+  pdf.line(18.5, y + 8.3, 21, y + 5.5);
+  pdf.setLineWidth(0.2);
+
+  pdf.setTextColor(34, 100, 34);
+  pdf.setFontSize(8.5);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Amount Paid', 24, y + 7.5);
+  pdf.setFontSize(13);
+  pdf.text(amount, W - 14, y + 9, { align: 'right' });
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(80, 140, 80);
+  pdf.text('Status: PAID', 17, y + 14);
+
+  // ── Reference box ──
+  y += 24;
+  pdf.setFillColor(250, 246, 240);
+  pdf.roundedRect(12, y, W - 24, 13, 2, 2, 'F');
+  pdf.setDrawColor(220, 200, 175);
+  pdf.roundedRect(12, y, W - 24, 13, 2, 2, 'S');
+
+  pdf.setTextColor(140, 110, 80);
+  pdf.setFontSize(7.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Reference ID', 16, y + 5.5);
+  pdf.setTextColor(40, 28, 18);
+  pdf.setFont('courier', 'bold');
+  pdf.setFontSize(8);
+  pdf.text(ref, W - 14, y + 5.5, { align: 'right' });
+  pdf.setTextColor(160, 130, 90);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(6.5);
+  pdf.text(`Printed: ${now}`, 16, y + 10.5);
+
+  // ── Footer ──
+  y += 20;
+  pdf.setDrawColor(220, 200, 175);
+  pdf.setLineDashPattern([2, 2], 0);
+  pdf.line(10, y, W - 10, y);
+  pdf.setLineDashPattern([], 0);
+
+  pdf.setTextColor(180, 140, 100);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Thank you for using CafeHunt!', W / 2, y + 7, { align: 'center' });
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7);
+  pdf.text('See you soon', W / 2, y + 13, { align: 'center' });
+
+  pdf.save(`CafeHunt_Receipt_${ref}.pdf`);
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -605,7 +789,7 @@ onSnapshot(q, async (snapshot) => {
 
   await checkExpiredReservations(reservations);
   await checkCompletedReservations(reservations);
-  
+
   renderStats();
   renderPendingTable();
   renderCompletedCards();
