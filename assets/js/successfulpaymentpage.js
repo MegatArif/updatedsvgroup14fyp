@@ -51,28 +51,43 @@ async function loadDetails() {
 // ── Mark payment as paid (backup if server callback fails) ──
 async function markPaid() {
   const payStatus = urlParams.get('status_id');
+  // Check if status_id is 1 (Success) and we have a reservationId
   if ((payStatus === '1' || payStatus === 1) && reservationId) {
     try {
-      await updateDoc(doc(db, 'reservation', reservationId), {
+      const resRef = doc(db, 'reservation', reservationId);
+      const rSnap = await getDoc(resRef);
+
+      if (!rSnap.exists()) {
+        console.warn("Reservation document not found for ID:", reservationId);
+        return;
+      }
+
+      const rData = rSnap.data();
+
+      // Guard: If already marked as paid, skip to avoid duplicate notifications
+      if (rData.paymentStatus === 'paid') {
+        console.log('Payment already processed and recorded.');
+        return;
+      }
+
+      await updateDoc(resRef, {
         paymentStatus: 'paid',
-        paidAt: new Date().toISOString(),
+        paidAt: serverTimestamp(),
       });
       console.log('paymentStatus updated to paid');
 
       // Trigger Admin Notification for the successful payment
-      const rSnap = await getDoc(doc(db, 'reservation', reservationId));
-      if (rSnap.exists()) {
-          const rData = rSnap.data();
-          await addDoc(collection(db, "adminnotifications"), {
-              type: "payment_success",
-              message: `Payment Received: ${rData.username || 'A customer'} successfully paid for their reservation at ${rData.cafe}.`,
-              cafeName: rData.cafe || "",
-              reservationId: reservationId,
-              userId: rData.userId || "",
-              read: false,
-              createdAt: serverTimestamp(),
-          });
-      }
+      await addDoc(collection(db, "adminnotifications"), {
+          type: "payment_success",
+          message: `Payment Received: ${rData.username || 'A customer'} successfully paid for their reservation at ${rData.cafe}.`,
+          cafeName: rData.cafe || "",
+          reservationId: reservationId,
+          userId: rData.userId || "",
+          read: false,
+          createdAt: serverTimestamp(),
+      });
+      console.log('Admin notification created successfully.');
+
 
     } catch(err) {
       console.error('markPaid failed:', err);
