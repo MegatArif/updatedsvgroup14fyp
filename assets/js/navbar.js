@@ -106,7 +106,7 @@ export function setupNavbar() {
     "profilesopage.html":          "nav-profileso",
     "so_dashboard.html":           "nav-dashboard",
     "reservation.html":            "nav-reservations",
-    "adminnotification.html":      "nav-admin-notif",
+    "adminnotification.html":      "nav-notif",
     // ADDED: mark notifications link active when on the notification page
     "customernotification.html":   "nav-notif",
   };
