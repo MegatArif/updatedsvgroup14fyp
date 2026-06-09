@@ -5,7 +5,6 @@ import { setupNavbar } from './navbar.js';
 
 setupNavbar();
 
-
 const urlParams     = new URLSearchParams(window.location.search);
 const reservationId = urlParams.get('reservationId')
                    || urlParams.get('order_id')
@@ -38,7 +37,7 @@ async function loadDetails() {
     const total  = 10;
 
     document.getElementById('sucCafe').textContent     = r.cafe      || '—';
-    document.getElementById('sucCustomer').textContent = r.username   || '—';
+    document.getElementById('sucCustomer').textContent = r.username  || '—';
     document.getElementById('sucDate').textContent     = formatDate(r.date);
     document.getElementById('sucTime').textContent     = formatTime(r.time);
     document.getElementById('sucGuests').textContent   = guests + ' guest' + (guests > 1 ? 's' : '');
@@ -71,7 +70,6 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     await getDoc(doc(db, 'Customers', user.uid));
   }
-  // Run both after auth resolves
   await markPaid();
   await loadDetails();
 });
@@ -83,19 +81,44 @@ function spawnConfetti() {
   for (let i = 0; i < 55; i++) {
     const dot = document.createElement('div');
     dot.className = 'dot';
-    dot.style.left            = Math.random() * 100 + 'vw';
-    dot.style.background      = colors[Math.floor(Math.random() * colors.length)];
-    dot.style.width           = (Math.random() * 7 + 5) + 'px';
-    dot.style.height          = dot.style.width;
+    dot.style.left              = Math.random() * 100 + 'vw';
+    dot.style.background        = colors[Math.floor(Math.random() * colors.length)];
+    dot.style.width             = (Math.random() * 7 + 5) + 'px';
+    dot.style.height            = dot.style.width;
     dot.style.animationDuration = (Math.random() * 2.5 + 1.5) + 's';
-    dot.style.animationDelay  = (Math.random() * 1.2) + 's';
-    dot.style.opacity         = Math.random() * .7 + .3;
+    dot.style.animationDelay    = (Math.random() * 1.2) + 's';
+    dot.style.opacity           = Math.random() * .7 + .3;
     wrap.appendChild(dot);
   }
 }
 spawnConfetti();
 
-window.downloadReceipt = function() {
+// ── Draw Font Awesome icon onto a canvas and return base64 PNG ──
+// Font Awesome must already be loaded on the page for this to work.
+function iconToBase64(unicode, color = '#8b5a2b', size = 64) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Wait a tick to ensure FA font is available, then draw
+    const draw = () => {
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = color;
+      ctx.font = `900 ${size * 0.75}px "Font Awesome 6 Free"`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(unicode, size / 2, size / 2);
+      resolve(canvas.toDataURL('image/png'));
+    };
+
+    // Small delay to be safe with font loading
+    setTimeout(draw, 100);
+  });
+}
+
+// ── Download Receipt as PDF ──
+window.downloadReceipt = async function() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: 'mm', format: 'a5' });
 
@@ -114,45 +137,62 @@ window.downloadReceipt = function() {
   pdf.setFillColor(253, 248, 241);
   pdf.rect(0, 0, W, pdf.internal.pageSize.getHeight(), 'F');
 
-  // ── Header bar ──
+  // ── Green header bar ──
   pdf.setFillColor(74, 122, 74);
-  pdf.roundedRect(10, 8, W - 20, 28, 4, 4, 'F');
+  pdf.roundedRect(10, 8, W - 20, 30, 4, 4, 'F');
 
-  // ── Check circle ──
-  pdf.setFillColor(255, 255, 255, 0.2);
-  pdf.circle(W / 2, 18, 8, 'F');
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('✓', W / 2, 20, { align: 'center' });
+  // ── White check circle ──
+  pdf.setFillColor(255, 255, 255);
+  pdf.circle(W / 2, 19, 7, 'F');
+
+  // ── Checkmark drawn as two lines ──
+  pdf.setDrawColor(74, 122, 74);
+  pdf.setLineWidth(1.5);
+  pdf.line(W/2 - 3, 19.5, W/2 - 0.5, 22.5);
+  pdf.line(W/2 - 0.5, 22.5, W/2 + 4, 16.5);
+  pdf.setLineWidth(0.2);
 
   // ── Header text ──
-  pdf.setFontSize(14);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(13);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Payment Successful', W / 2, 30, { align: 'center' });
+  pdf.text('Payment Successful', W / 2, 33, { align: 'center' });
 
-  // ── Brand ──
+  // ── Mug icon from Font Awesome rendered via canvas ──
+  const mugBase64 = await iconToBase64('\uf7b6', '#8b5a2b', 64);
+
+  // Center the brand: icon + "CafeHunt" text together
+  const brandTextWidth = pdf.getStringUnitWidth('CafeHunt') * 11 / pdf.internal.scaleFactor;
+  const brandIconW = 6;
+  const gap = 2;
+  const totalBrandW = brandIconW + gap + brandTextWidth;
+  const brandStartX = (W - totalBrandW) / 2;
+
+  pdf.addImage(mugBase64, 'PNG', brandStartX, 39, brandIconW, brandIconW);
+
   pdf.setTextColor(139, 90, 43);
   pdf.setFontSize(11);
-  pdf.text('☕  CafeHunt', W / 2, 44, { align: 'center' });
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('CafeHunt', brandStartX + brandIconW + gap, 45);
 
   pdf.setTextColor(180, 140, 100);
   pdf.setFontSize(7.5);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('PAYMENT CONFIRMATION', W / 2, 49, { align: 'center' });
+  pdf.text('PAYMENT CONFIRMATION', W / 2, 51, { align: 'center' });
 
-  // ── Tear line ──
+  // ── Dashed tear line ──
   pdf.setDrawColor(220, 200, 175);
   pdf.setLineDashPattern([2, 2], 0);
-  pdf.line(10, 54, W - 10, 54);
+  pdf.line(10, 56, W - 10, 56);
   pdf.setLineDashPattern([], 0);
 
-  // ── Section: Reservation Details ──
+  // ── Section label ──
   pdf.setTextColor(180, 120, 70);
   pdf.setFontSize(7);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('RESERVATION DETAILS', 14, 61);
+  pdf.text('RESERVATION DETAILS', 14, 63);
 
+  // ── Detail rows ──
   const rows = [
     ['Cafe',     cafe],
     ['Customer', customer],
@@ -161,7 +201,7 @@ window.downloadReceipt = function() {
     ['Guests',   guests],
   ];
 
-  let y = 67;
+  let y = 69;
   rows.forEach(([label, value]) => {
     pdf.setFillColor(255, 252, 247);
     pdf.roundedRect(12, y - 4.5, W - 24, 9, 2, 2, 'F');
@@ -178,46 +218,56 @@ window.downloadReceipt = function() {
     y += 12;
   });
 
-  // ── Amount box ──
+  // ── Amount paid box ──
   y += 2;
   pdf.setFillColor(232, 245, 233);
   pdf.roundedRect(12, y, W - 24, 18, 3, 3, 'F');
   pdf.setDrawColor(150, 200, 150);
   pdf.roundedRect(12, y, W - 24, 18, 3, 3, 'S');
 
+  // Draw small green checkmark circle for "Amount Paid" label
+  pdf.setFillColor(34, 139, 34);
+  pdf.circle(19, y + 7, 3, 'F');
+  pdf.setDrawColor(255, 255, 255);
+  pdf.setLineWidth(0.8);
+  pdf.line(17.2, y + 7, 18.5, y + 8.3);
+  pdf.line(18.5, y + 8.3, 21, y + 5.5);
+  pdf.setLineWidth(0.2);
+
   pdf.setTextColor(34, 100, 34);
   pdf.setFontSize(8.5);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('✓  Amount Paid', 17, y + 7);
+  pdf.text('Amount Paid', 24, y + 7.5);
 
   pdf.setFontSize(13);
-  pdf.text(amount, W - 14, y + 8, { align: 'right' });
+  pdf.text(amount, W - 14, y + 9, { align: 'right' });
 
   pdf.setFontSize(7);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('Status: PAID', 17, y + 13);
+  pdf.setTextColor(80, 140, 80);
+  pdf.text('Status: PAID', 17, y + 14);
 
   // ── Reference box ──
   y += 24;
   pdf.setFillColor(250, 246, 240);
-  pdf.roundedRect(12, y, W - 24, 12, 2, 2, 'F');
+  pdf.roundedRect(12, y, W - 24, 13, 2, 2, 'F');
   pdf.setDrawColor(220, 200, 175);
-  pdf.roundedRect(12, y, W - 24, 12, 2, 2, 'S');
+  pdf.roundedRect(12, y, W - 24, 13, 2, 2, 'S');
 
   pdf.setTextColor(140, 110, 80);
   pdf.setFontSize(7.5);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('Reference ID', 16, y + 5);
+  pdf.text('Reference ID', 16, y + 5.5);
 
   pdf.setTextColor(40, 28, 18);
   pdf.setFont('courier', 'bold');
   pdf.setFontSize(8);
-  pdf.text(ref, W - 14, y + 5, { align: 'right' });
+  pdf.text(ref, W - 14, y + 5.5, { align: 'right' });
 
   pdf.setTextColor(160, 130, 90);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(6.5);
-  pdf.text(`Printed: ${now}`, 16, y + 10);
+  pdf.text(`Printed: ${now}`, 16, y + 10.5);
 
   // ── Footer ──
   y += 20;
@@ -232,7 +282,7 @@ window.downloadReceipt = function() {
   pdf.text('Thank you for using CafeHunt!', W / 2, y + 7, { align: 'center' });
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(7);
-  pdf.text('See you soon ☕', W / 2, y + 13, { align: 'center' });
+  pdf.text('See you soon', W / 2, y + 13, { align: 'center' });
 
   pdf.save(`CafeHunt_Receipt_${ref}.pdf`);
 };
