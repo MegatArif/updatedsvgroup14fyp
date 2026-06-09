@@ -122,7 +122,11 @@
       position: relative;
       z-index: 1;
     }
- 
+    
+    .success-actions button.btn-primary {
+    border: none;
+    font-size: .95rem;
+  }
     /* Tear line */
     .tear-line {
       height: 18px;

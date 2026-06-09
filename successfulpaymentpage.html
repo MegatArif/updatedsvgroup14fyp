@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment Successful – CafeHunt</title>
- 
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="assets/css/successfulpaymentpage.css"/>
@@ -87,13 +87,16 @@
  
         <!-- Actions -->
         <div class="success-actions">
-          <a href="reservation.html" class="btn-primary">
-            <i class="fas fa-calendar-check"></i> View My Reservations
-          </a>
-          <a href="gallery.html" class="btn-secondary">
-            <i class="fas fa-mug-hot"></i> Explore More Cafes
-          </a>
-        </div>
+        <button class="btn-primary" id="downloadReceiptBtn" onclick="downloadReceipt()">
+          <i class="fas fa-download"></i> Download Receipt
+        </button>
+        <a href="reservation.html" class="btn-secondary">
+          <i class="fas fa-calendar-check"></i> View My Reservations
+        </a>
+        <a href="gallery.html" class="btn-secondary">
+          <i class="fas fa-mug-hot"></i> Explore More Cafes
+        </a>
+      </div>
  
       </div>
     </div>

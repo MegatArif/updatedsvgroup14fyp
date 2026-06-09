@@ -94,3 +94,145 @@ function spawnConfetti() {
   }
 }
 spawnConfetti();
+
+window.downloadReceipt = function() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'mm', format: 'a5' });
+
+  const cafe     = document.getElementById('sucCafe').textContent;
+  const customer = document.getElementById('sucCustomer').textContent;
+  const date     = document.getElementById('sucDate').textContent;
+  const time     = document.getElementById('sucTime').textContent;
+  const guests   = document.getElementById('sucGuests').textContent;
+  const amount   = document.getElementById('sucAmount').textContent;
+  const ref      = document.getElementById('sucRef').textContent;
+  const now      = new Date().toLocaleString('en-MY');
+
+  const W = pdf.internal.pageSize.getWidth();
+
+  // ── Background ──
+  pdf.setFillColor(253, 248, 241);
+  pdf.rect(0, 0, W, pdf.internal.pageSize.getHeight(), 'F');
+
+  // ── Header bar ──
+  pdf.setFillColor(74, 122, 74);
+  pdf.roundedRect(10, 8, W - 20, 28, 4, 4, 'F');
+
+  // ── Check circle ──
+  pdf.setFillColor(255, 255, 255, 0.2);
+  pdf.circle(W / 2, 18, 8, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('✓', W / 2, 20, { align: 'center' });
+
+  // ── Header text ──
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Payment Successful', W / 2, 30, { align: 'center' });
+
+  // ── Brand ──
+  pdf.setTextColor(139, 90, 43);
+  pdf.setFontSize(11);
+  pdf.text('☕  CafeHunt', W / 2, 44, { align: 'center' });
+
+  pdf.setTextColor(180, 140, 100);
+  pdf.setFontSize(7.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('PAYMENT CONFIRMATION', W / 2, 49, { align: 'center' });
+
+  // ── Tear line ──
+  pdf.setDrawColor(220, 200, 175);
+  pdf.setLineDashPattern([2, 2], 0);
+  pdf.line(10, 54, W - 10, 54);
+  pdf.setLineDashPattern([], 0);
+
+  // ── Section: Reservation Details ──
+  pdf.setTextColor(180, 120, 70);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('RESERVATION DETAILS', 14, 61);
+
+  const rows = [
+    ['Cafe',     cafe],
+    ['Customer', customer],
+    ['Date',     date],
+    ['Time',     time],
+    ['Guests',   guests],
+  ];
+
+  let y = 67;
+  rows.forEach(([label, value]) => {
+    pdf.setFillColor(255, 252, 247);
+    pdf.roundedRect(12, y - 4.5, W - 24, 9, 2, 2, 'F');
+
+    pdf.setTextColor(140, 110, 80);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(label, 16, y);
+
+    pdf.setTextColor(40, 28, 18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(value, W - 14, y, { align: 'right' });
+
+    y += 12;
+  });
+
+  // ── Amount box ──
+  y += 2;
+  pdf.setFillColor(232, 245, 233);
+  pdf.roundedRect(12, y, W - 24, 18, 3, 3, 'F');
+  pdf.setDrawColor(150, 200, 150);
+  pdf.roundedRect(12, y, W - 24, 18, 3, 3, 'S');
+
+  pdf.setTextColor(34, 100, 34);
+  pdf.setFontSize(8.5);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('✓  Amount Paid', 17, y + 7);
+
+  pdf.setFontSize(13);
+  pdf.text(amount, W - 14, y + 8, { align: 'right' });
+
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Status: PAID', 17, y + 13);
+
+  // ── Reference box ──
+  y += 24;
+  pdf.setFillColor(250, 246, 240);
+  pdf.roundedRect(12, y, W - 24, 12, 2, 2, 'F');
+  pdf.setDrawColor(220, 200, 175);
+  pdf.roundedRect(12, y, W - 24, 12, 2, 2, 'S');
+
+  pdf.setTextColor(140, 110, 80);
+  pdf.setFontSize(7.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Reference ID', 16, y + 5);
+
+  pdf.setTextColor(40, 28, 18);
+  pdf.setFont('courier', 'bold');
+  pdf.setFontSize(8);
+  pdf.text(ref, W - 14, y + 5, { align: 'right' });
+
+  pdf.setTextColor(160, 130, 90);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(6.5);
+  pdf.text(`Printed: ${now}`, 16, y + 10);
+
+  // ── Footer ──
+  y += 20;
+  pdf.setDrawColor(220, 200, 175);
+  pdf.setLineDashPattern([2, 2], 0);
+  pdf.line(10, y, W - 10, y);
+  pdf.setLineDashPattern([], 0);
+
+  pdf.setTextColor(180, 140, 100);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Thank you for using CafeHunt!', W / 2, y + 7, { align: 'center' });
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7);
+  pdf.text('See you soon ☕', W / 2, y + 13, { align: 'center' });
+
+  pdf.save(`CafeHunt_Receipt_${ref}.pdf`);
+};
