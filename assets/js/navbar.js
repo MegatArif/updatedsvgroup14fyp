@@ -105,7 +105,6 @@ export function setupNavbar() {
     "profilepage.html":            "nav-profile",
     "profilesopage.html":          "nav-profileso",
     "so_dashboard.html":           "nav-dashboard",
-    "adminnotification.html":      "nav-admin-notif",
     "reservation.html":            "nav-reservations",
     // ADDED: mark notifications link active when on the notification page
     "customernotification.html":   "nav-notif",
@@ -162,29 +161,3 @@ export function setupNavbar() {
     });
   }
 }
-
- /* ── LIVE UNREAD BADGE (admin only) ────────────────────────────────────── */
-  if (isAdmin) {
-    const auth = getAuth();
-    onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-
-      const badgeEl = document.getElementById("admin-notif-badge");
-      if (!badgeEl) return;
-
-      const q = query(
-        collection(db, "adminnotifications"), // Query the new adminnotifications collection
-        where("read", "==", false)
-      );
-
-      onSnapshot(q, (snap) => {
-        const count = snap.size;
-        if (count > 0) {
-          badgeEl.textContent = count > 99 ? "99+" : String(count);
-          badgeEl.style.display = "flex";
-        } else {
-          badgeEl.style.display = "none";
-        }
-      });
-    });
-  }
