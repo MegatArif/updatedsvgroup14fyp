@@ -1,0 +1,260 @@
+/* ── adminnotification.css ─────────────────────────────── */
+/* Based on customernotification.css, adapted for admin theme */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #f5f0e8; /* From so.css / adminApprove.css */
+  --surface:      #ffffff;
+  --surface-alt:  #faf7f2; /* From so.css */
+  --border:       #e8e0d0; /* From so.css */
+  --accent:       hsl(24, 51%, 53%); /* From adminApprove.css */
+  --accent-dark:  hsl(24, 51%, 40%); /* From adminApprove.css */
+  --green:        #2d7a3a;
+  --green-bg:     #eaf5ec;
+  --green-border: #a8d8b0;
+  --amber:        #a86000;
+  --amber-bg:     #fff8ec;
+  --amber-border: #f0d090;
+  --red:          #9b1c1c;
+  --red-bg:       #fdf2f2;
+  --red-border:   #f0a8a8;
+  --text-primary:   #1a1208; /* From so.css */
+  --text-secondary: #6b5e48; /* From so.css */
+  --text-muted:     #a09080; /* From so.css */
+  --shadow-sm:    0 1px 4px rgba(0,0,0,.07);
+  --shadow-md:    0 4px 20px rgba(0,0,0,.10);
+  --radius:       14px;
+  --radius-sm:    8px;
+  --font:         'Inter', 'Arial', sans-serif; /* From adminApprove.css */
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ── PAGE WRAPPER ────────────────────────────────────────── */
+.notif-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 36px 24px 72px;
+}
+
+/* ── HEADER ROW ──────────────────────────────────────────── */
+.notif-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.notif-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.notif-title i { color: var(--accent); }
+
+.notif-sub {
+  font-size: .85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.btn-mark-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: var(--font);
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-mark-all:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: hsl(24, 51%, 97%);
+}
+
+/* ── TABS ────────────────────────────────────────────────── */
+.notif-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  background: var(--surface);
+  padding: 7px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.ntab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.ntab:hover  { background: var(--surface-alt); color: var(--text-primary); }
+.ntab.active { background: var(--accent); color: #fff; }
+
+/* ── LOADING / EMPTY ─────────────────────────────────────── */
+.notif-loading,
+.notif-empty {
+  text-align: center;
+  padding: 72px 24px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.notif-empty i { font-size: 3rem; opacity: .35; }
+.notif-empty p { font-size: 1rem; font-style: italic; }
+
+.n-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hidden { display: none !important; }
+
+/* ── NOTIFICATION LIST ───────────────────────────────────── */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── SINGLE NOTIFICATION CARD ────────────────────────────── */
+.notif-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s, transform .15s;
+  cursor: default;
+  position: relative;
+}
+.notif-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* unread = slightly warmer background + left accent strip */
+.notif-card.unread {
+  background: hsl(24, 51%, 98%); /* Lighter accent background */
+  border-left: 4px solid var(--accent);
+}
+
+/* ── ICON BADGE ──────────────────────────────────────────── */
+.notif-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.notif-icon.payment_success { /* New type for payment success */
+  background: var(--green-bg); /* Green for success */
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+.notif-icon.admin_message { /* General admin message */
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+}
+
+/* ── CONTENT ─────────────────────────────────────────────── */
+.notif-content { flex: 1; min-width: 0; }
+
+.notif-msg {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+.notif-card.unread .notif-msg { font-weight: 700; }
+
+.notif-meta { /* Consolidated meta info */
+  font-size: .78rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+.notif-meta span {
+  margin-right: 8px;
+}
+.notif-meta i {
+  margin-right: 3px;
+  color: var(--text-secondary);
+}
+
+/* ── UNREAD DOT ──────────────────────────────────────────── */
+.unread-dot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* ── MARK READ BUTTON (on hover) ─────────────────────────── */
+.btn-mark-read {
+  flex-shrink: 0;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: var(--font);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  white-space: nowrap;
+  align-self: center;
+}
+.btn-mark-read:hover { border-color: var(--accent); color: var(--accent); }
+.notif-card:not(.unread) .btn-mark-read { visibility: hidden; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .notif-header-row { flex-direction: column; }
+  .notif-card { flex-wrap: wrap; }
+  .btn-mark-read { align-self: flex-start; }
+}
