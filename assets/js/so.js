@@ -125,7 +125,8 @@ const done = reservations.filter(r =>
     tbody.innerHTML = rows.map(r => {
   const status = (r.status || "pending").toLowerCase();
 
-  const actionCell = status === "pending"
+ const actionCell =
+  status === "pending"
     ? `<div class="action-btns">
         <button class="btn-approve" onclick="updateStatus('${r._docId}','accepted')">
           <i class="fas fa-check"></i> Approve
@@ -134,18 +135,17 @@ const done = reservations.filter(r =>
           <i class="fas fa-xmark"></i> Reject
         </button>
       </div>`
+
     : status === "accepted"
       ? `<span class="resolved-label">✓ Approved</span>`
-      : status === "rejected"
-        ? `<span class="resolved-label">✗ Rejected</span>`
-        : `<div class="action-btns">
-            <button class="btn-approve" onclick="updateStatus('${r._docId}','accepted')">
-              <i class="fas fa-check"></i> Approve
-            </button>
-            <button class="btn-reject" onclick="updateStatus('${r._docId}','rejected')">
-              <i class="fas fa-xmark"></i> Reject
-            </button>
-          </div>`;
+
+    : status === "rejected"
+      ? `<span class="resolved-label">✗ Rejected</span>`
+
+    : status === "expired"
+      ? `<span class="resolved-label">⏳ Expired</span>`
+
+    : `<span class="resolved-label">—</span>`;
 
   return `
     <tr id="row-${r._docId}">
