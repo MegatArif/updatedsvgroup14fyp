@@ -78,7 +78,7 @@ import { showToast } from './toast.js'
     overlay.classList.remove('show');
     overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
   }
-
+  
   /* ── RESET OWNER FOR RESUBMISSION ── */
   async function resetOwnerForResubmission(user) {
     const ownerRef  = doc(db, "ShopOwner", user.uid);
@@ -325,6 +325,13 @@ import { showToast } from './toast.js'
         return;
       }
 
+      const ownerDoc = await getDoc(doc(db, "ShopOwner", user.uid));
+      if (ownerDoc.exists()) {
+        showToast('This account is registered as a Shop Owner. Please use the Shop Owner login.', 'error', 5000);
+        await auth.signOut();
+        return;
+      }
+
       // ✅ Check if admin — silent, no one knows this check exists
       if (ADMIN_EMAILS.includes(email)) {
         sessionStorage.setItem('userRole', 'admin');
@@ -516,7 +523,12 @@ function validateUsername(name) {
       showEmailOverlay('verify', email);
       return;
     }
-
+    const customerDoc = await getDoc(doc(db, "Customers", user.uid));
+    if (customerDoc.exists()) {
+      showToast('This account is registered as a Customer. Please use the Customer login.', 'error', 5000);
+      await auth.signOut();
+      return;
+    }
     // ── Fetch ShopOwner document to check cafe registration & approval status ──
     const ownerDoc = await getDoc(doc(db, "ShopOwner", user.uid));
     const ownerData = ownerDoc.exists() ? ownerDoc.data() : {};
