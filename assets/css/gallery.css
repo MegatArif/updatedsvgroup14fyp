@@ -1068,6 +1068,118 @@ body{
 }
 .btn-save-facilities:hover { background: #a55f36; transform: scale(1.02); }
 .btn-save-facilities:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+/* ── Footer ───────────────────────────────────────────── */
+.site-footer {
+    background: #1a1a2e;
+    color: #ccc;
+    padding: 48px 24px 0;
+    margin-top: 48px;
+}
+
+.footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: space-between;
+    padding-bottom: 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.footer-brand i {
+    font-size: 24px;
+    color: #c8973a;
+}
+
+.footer-brand span {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.footer-brand p {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #999;
+    max-width: 260px;
+    line-height: 1.6;
+}
+
+.footer-contact h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+}
+
+.footer-contact ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-contact li {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #bbb;
+}
+
+.footer-contact li i {
+    color: #c8973a;
+    width: 16px;
+    text-align: center;
+}
+
+.footer-contact a {
+    color: #bbb;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-contact a:hover {
+    color: #c8973a;
+}
+
+.footer-socials {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.footer-socials a {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bbb;
+    font-size: 14px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.footer-socials a:hover {
+    background: #c8973a;
+    color: #fff;
+    border-color: #c8973a;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 16px;
+    font-size: 12px;
+    color: #666;
+}
 
 @media (max-width: 780px) {
     .search-card { width: 92%; padding: 1rem; }
