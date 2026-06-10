@@ -1,5 +1,6 @@
 import { db, app } from './firebase-config.js';
-import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js';
+import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js';
 import { setupNavbar } from './navbar.js';
 
