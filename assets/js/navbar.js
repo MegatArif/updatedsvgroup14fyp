@@ -15,6 +15,8 @@ import {
   query,
   where,
   onSnapshot,
+   getDoc,
+   doc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 export function setupNavbar() {
@@ -188,5 +190,55 @@ export function setupNavbar() {
       });
     });
   }
+
+  if (isShopOwner) {
+
+  const auth = getAuth();
+
+  onAuthStateChanged(auth, async (user) => {
+
+    if (!user) return;
+
+    try {
+
+      const ownerSnap = await getDoc(doc(db, "ShopOwner", user.uid));
+      if (!ownerSnap.exists()) return;
+
+      const cafeDocId = ownerSnap.data().cafeDocId;
+
+      const cafeSnap = await getDoc(doc(db, "cafes", cafeDocId));
+      if (!cafeSnap.exists()) return;
+
+      const cafeName = cafeSnap.data().name;
+
+      const q = query(
+        collection(db, "sonotifications"),
+        where("cafeName", "==", cafeName),
+        where("read", "==", false)
+      );
+
+      onSnapshot(q, (snap) => {
+
+        const badgeEl = document.getElementById("notif-badge");
+        if (!badgeEl) return;
+
+        const count = snap.size;
+
+        if (count > 0) {
+          badgeEl.textContent = count > 99 ? "99+" : String(count);
+          badgeEl.style.display = "flex";
+        } else {
+          badgeEl.style.display = "none";
+        }
+
+      });
+
+    } catch (err) {
+      console.error("shop owner notif error:", err);
+    }
+
+  });
 }
+}
+
 
