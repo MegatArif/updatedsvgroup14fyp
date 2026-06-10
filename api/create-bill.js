@@ -1,12 +1,12 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
-  console.log('SECRET KEY:', process.env.TOYYIBPAY_SECRET_KEY_SANDBOX ? 'loaded' : 'MISSING');
-  console.log('CATEGORY CODE:', process.env.TOYYIBPAY_CATEGORY_CODE_SANDBOX ? 'loaded' : 'MISSING');
+  console.log('SECRET KEY:', process.env.TOYYIBPAY_SECRET_KEY ? 'loaded' : 'MISSING');
+  console.log('CATEGORY CODE:', process.env.TOYYIBPAY_CATEGORY_CODE ? 'loaded' : 'MISSING');
   const { customerName, customerEmail, customerPhone, amount, reservationId, cafeName } = req.body;
 
   const params = new URLSearchParams({
-    userSecretKey:         process.env.TOYYIBPAY_SECRET_KEY_SANDBOX,
-    categoryCode:          process.env.TOYYIBPAY_CATEGORY_CODE_SANDBOX,
+    userSecretKey:         process.env.TOYYIBPAY_SECRET_KEY,
+    categoryCode:          process.env.TOYYIBPAY_CATEGORY_CODE,
     billName:              `Res - ${cafeName}`.substring(0, 30),
     billDescription:       `Reservation ID: ${reservationId}`,
     billPriceSetting:      1,                        // fixed price
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   });
 
   try {
-  const response = await fetch("https://dev.toyyibpay.com/index.php/api/createBill", {
+  const response = await fetch("https://toyyibpay.com/index.php/api/createBill", {
     method: "POST",
     body: params,
   });
@@ -46,8 +46,8 @@ export default async function handler(req, res) {
     raw: text,
     // also echo back what we sent so we can verify
     sentData: {
-      userSecretKey: process.env.TOYYIBPAY_SECRET_KEY_SANDBOX ? 'present' : 'MISSING',
-      categoryCode:  process.env.TOYYIBPAY_CATEGORY_CODE_SANDBOX ? 'present' : 'MISSING',
+      userSecretKey: process.env.TOYYIBPAY_SECRET_KEY ? 'present' : 'MISSING',
+      categoryCode:  process.env.TOYYIBPAY_CATEGORY_CODE ? 'present' : 'MISSING',
       billName:      `Reservation - ${cafeName}`,
       billAmount:    String(amount * 100),
       billPhone:     customerPhone,
