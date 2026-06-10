@@ -103,6 +103,26 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.nav-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: hsl(32, 23%, 29%);
+  font-family: inherit;
+  padding: 0;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-logout-btn:hover {
+  color: #e53935;  /* red on hover to signal logout */
+  opacity: 1;
+}
+
 .ntab {
   padding: 8px 18px;
   border-radius: 8px;
