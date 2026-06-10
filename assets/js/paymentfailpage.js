@@ -44,14 +44,9 @@ async function loadDetails() {
 
 // Retry button — go back to payment page
 document.getElementById('retryBtn').addEventListener('click', () => {
-  window.location.href = `paymentbill.html?reservationId=${reservationId}`;
+  window.location.href = `paymentpage.html?reservationId=${reservationId}`;
 });
 
 onAuthStateChanged(auth, async (user) => {
   await loadDetails();
 });
-
-// Add this at the bottom of paymentbill.js
-if (new URLSearchParams(window.location.search).get('failed') === '1') {
-  showError('Payment was unsuccessful. Please try again.');
-}
