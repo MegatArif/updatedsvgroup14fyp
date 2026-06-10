@@ -67,12 +67,7 @@ export function setupNavbar() {
       </a>
     ` : ''}
 
-    ${/* ── APPROVAL: admin only ── */
-    isAdmin ? `
-      <a href="adminnotification.html" id="nav-notif">
-        <i class="fas fa-clipboard-check"></i> Notification
-      </a>
-    ` : ''}
+    
 
     ${/* ── DASHBOARD: shop owner only ── */
     isShopOwner ? `
