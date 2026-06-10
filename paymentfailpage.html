@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Failed – CafeHunt</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/css/paymentfailpage.css"/>
+  <link rel="stylesheet" href="assets/css/navbar.css"/>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo-area">
+      <i class="fas fa-mug-hot logo-icon"></i>
+      <span class="logo-text">CafeHunt</span>
+    </div>
+    <div class="nav-links"></div>
+  </div>
+
+  <div class="fail-page">
+
+    <div class="pay-brand">
+      <div class="pay-brand-logo">
+        <i class="fas fa-mug-hot"></i> CafeHunt
+      </div>
+      <div class="pay-brand-sub">Payment Status</div>
+    </div>
+
+    <div class="fail-card">
+
+      <div class="fail-hero">
+        <div class="x-ring">
+          <i class="fas fa-xmark"></i>
+        </div>
+        <div class="fail-title">Payment Failed</div>
+        <div class="fail-subtitle">Don't worry — your reservation is still held ☕</div>
+      </div>
+      <div class="tear-line"></div>
+
+      <div class="fail-body">
+
+        <div class="info-box">
+          <i class="fas fa-circle-info"></i>
+          <div>
+            <div class="info-title">What happened?</div>
+            <div class="info-desc">Your payment was not completed. This could be due to insufficient funds, a cancelled transaction, or a connection issue. No charges were made.</div>
+          </div>
+        </div>
+
+        <div class="receipt-section-label">Reservation Details</div>
+
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-store"></i> Cafe</span>
+          <span class="receipt-row-value" id="failCafe">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-calendar"></i> Date</span>
+          <span class="receipt-row-value" id="failDate">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-clock"></i> Time</span>
+          <span class="receipt-row-value" id="failTime">—</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-row-label"><i class="fas fa-users"></i> Guests</span>
+          <span class="receipt-row-value" id="failGuests">—</span>
+        </div>
+
+        <div class="ref-box">
+          <span class="ref-label"><i class="fas fa-receipt" style="margin-right:5px;color:#c0392b"></i>Reservation ID</span>
+          <span class="ref-value" id="failRef">—</span>
+        </div>
+
+        <div class="fail-actions">
+          <button class="btn-retry" id="retryBtn">
+            <i class="fas fa-rotate-right"></i> Try Again
+          </button>
+          <a href="reservation.html" class="btn-secondary">
+            <i class="fas fa-calendar-check"></i> View My Reservations
+          </a>
+          <a href="gallery.html" class="btn-secondary">
+            <i class="fas fa-mug-hot"></i> Explore More Cafes
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="assets/js/paymentfailpage.js"></script>
+</body>
+</html>
