@@ -12,6 +12,7 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
   getAuth,
@@ -71,9 +72,11 @@ const renderNotifications = () => {
     return true; // 'all' filter
   });
 
+  const actualUnreadCount = allNotifications.filter((notif) => !notif.read).length;
+
   if (filteredNotifications.length === 0) {
-    emptyState.classList.remove("hidden");
-    markAllReadBtn.disabled = true;
+    markAllReadBtn.disabled = (actualUnreadCount === 0); // Disable if no unread notifications exist
+    markAllReadBtn.textContent = `Mark all as read`; // Reset text if no notifications
     return;
   }
 
