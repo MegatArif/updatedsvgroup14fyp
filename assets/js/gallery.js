@@ -818,7 +818,7 @@ function setLoading(show) {
 }
 
 // ---------- EVENT LISTENERS ----------
-document.getElementById('searchBtn').addEventListener('click', updateCafeList);
+//document.getElementById('searchBtn').addEventListener('click', updateCafeList);
 document.getElementById('clearFiltersBtn').addEventListener('click', () => {
     document.getElementById('locationFilter').value    = 'all';
     document.getElementById('nameSearch').value        = '';
