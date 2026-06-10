@@ -211,6 +211,16 @@ submitBtn.addEventListener("click", async () => {
     };
 
     const cafeRef = await addDoc(collection(db, "cafes"), cafeDoc);
+   
+    // ADDED: Notify Admin of the new registration for the numbering indicator
+    await addDoc(collection(db, "adminnotifications"), {
+      type:          "new_cafe_registration",
+      message:       `New Cafe: "${nameEl.value.trim()}" has been submitted and is awaiting approval.`,
+      cafeName:      nameEl.value.trim(),
+      ownerEmail:    currentUser?.email || "Unknown",
+      createdAt:     serverTimestamp(),
+      read:          false,
+    });
 
     // Flag the shop owner's Firestore doc as having submitted a cafe
     // Also store the cafe's Firestore doc ID so adminapproval.js can find it

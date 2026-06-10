@@ -145,9 +145,9 @@ markAllReadBtn.addEventListener("click", async () => {
   const unreadNotifications = allNotifications.filter((notif) => !notif.read);
   if (unreadNotifications.length === 0) return;
 
-  if (confirm(`Mark ${unreadNotifications.length} unread notifications as read?`)) {
+  if (confirm(`Mark all ${unreadNotifications.length} unread notifications as read?`)) {
     try {
-      const batch = db.batch();
+      const batch = writeBatch(db);
       unreadNotifications.forEach((notif) => {
         const notifRef = doc(db, "adminnotifications", notif.id);
         batch.update(notifRef, { read: true, readAt: serverTimestamp() });

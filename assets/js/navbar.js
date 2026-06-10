@@ -165,14 +165,14 @@ export function setupNavbar() {
       });
     });
   }
-   /* ── LIVE UNREAD BADGE (admin only) ────────────────────────────────────── */
+    /* ── LIVE UNREAD BADGE (admin only) ────────────────────────────────────── */
   if (isAdmin) {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
       if (!user) return;
 
-      const badgeEl = document.getElementById("admin-notif-badge");
-      if (!badgeEl) return;
+      const mainBadge  = document.getElementById("notif-badge");
+      if (!mainBadge) return;
 
       const q = query(
         collection(db, "adminnotifications"), // Query the new adminnotifications collection
@@ -181,15 +181,17 @@ export function setupNavbar() {
 
       onSnapshot(q, (snap) => {
         const count = snap.size;
-        if (count > 0) {
-          badgeEl.textContent = count > 99 ? "99+" : String(count);
-          badgeEl.style.display = "flex";
-        } else {
-          badgeEl.style.display = "none";
+        const countStr = count > 99 ? "99+" : String(count);
+        const displayStyle = count > 0 ? "flex" : "none";
+
+        if (mainBadge) {
+          mainBadge.textContent = countStr;
+          mainBadge.style.display = displayStyle;
         }
       });
     });
   }
+
 
   if (isShopOwner) {
 
