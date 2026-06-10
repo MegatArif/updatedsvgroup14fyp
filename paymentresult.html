@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Payment Result</title>
+</head>
+<body>
+<script>
+  const params       = new URLSearchParams(window.location.search);
+  const statusId     = params.get('status_id');
+  const reservationId = params.get('billExternalReferenceNo') 
+                      || params.get('reservationId') 
+                      || '';
+
+  if (statusId === '1') {
+    // Success
+    window.location.href = `successfulpaymentpage.html?reservationId=${reservationId}&status_id=1`;
+  } else if (statusId === '3') {
+    // Failed
+    window.location.href = `paymentfailpage.html?reservationId=${reservationId}`;
+  } else {
+    // Pending or unknown
+    window.location.href = `reservation.html`;
+  }
+</script>
+</body>
+</html>

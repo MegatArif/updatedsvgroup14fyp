@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     billPriceSetting:      1,                        // fixed price
     billPayorInfo:         1,                        // collect payer info
     billAmount:            String(amount * 100),     // in cents e.g. RM10 = 1000
-    billReturnUrl:         `https://svgroup14fyp.vercel.app/successfulpaymentpage.html?reservationId=${reservationId}`,
+    billReturnUrl:         `https://svgroup14fyp.vercel.app/paymentresult.html?reservationId=${reservationId}`,
     billCallbackUrl:       `https://svgroup14fyp.vercel.app/api/payment-callback`,
     billExternalReferenceNo: reservationId,
     billTo:                customerName,
