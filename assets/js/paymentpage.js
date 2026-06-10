@@ -104,7 +104,7 @@ import { db, app }   from './firebase-config.js';
         const data = await response.json();
  
         if (data.billCode) {
-          window.location.href = `https://dev.toyyibpay.com/${data.billCode}`;
+          window.location.href = `https://toyyibpay.com/${data.billCode}`;
         } else {
         const detail = data.detail?.[0]?.msg || data.raw || data.error || 'Failed to create payment.';
           showError(data.error || 'Failed to create payment. Please try again.');
