@@ -93,11 +93,12 @@ function animateCount(elId, target) {
 ═══════════════════════════════════════════════════════ */
 function makeBadge(status) {
   const map = {
-    pending:   { cls:"badge-pending",   icon:"fa-clock",        label:"Pending"   },
-    accepted:  { cls:"badge-confirmed", icon:"fa-circle-check", label:"Accepted" },
-    rejected:  { cls:"badge-rejected",  icon:"fa-circle-xmark", label:"Rejected"  },
-    expired:   { cls:"badge-rejected",  icon:"fa-hourglass-end",label:"Expired"   },
-    completed: { cls:"badge-completed", icon:"fa-check-double", label:"Completed" },
+    pending:   { cls:"badge-pending",   icon:"fa-clock",          label:"Pending"   },
+    accepted:  { cls:"badge-confirmed", icon:"fa-circle-check",   label:"Accepted"  },
+    rejected:  { cls:"badge-rejected",  icon:"fa-circle-xmark",   label:"Rejected"  },
+    expired:   { cls:"badge-rejected",  icon:"fa-hourglass-end",  label:"Expired"   },
+    completed: { cls:"badge-completed", icon:"fa-check-double",   label:"Completed" },
+    cancel:    { cls:"badge-cancel",    icon:"fa-ban",            label:"Cancelled" },
   };
   const c = map[status] || map.pending;
   return `<span class="badge ${c.cls}"><i class="fas ${c.icon}"></i>${c.label}</span>`;
@@ -144,6 +145,9 @@ const done = reservations.filter(r =>
 
     : status === "expired"
       ? `<span class="resolved-label">⏳ Expired</span>`
+    
+    : status === "cancel"  
+    ? `<span class="resolved-label">✗ Cancelled</span>`
 
     : `<span class="resolved-label">—</span>`;
 
