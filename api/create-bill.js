@@ -20,10 +20,12 @@ export default async function handler(req, res) {
     billPhone:             customerPhone,
     billSplitPayment:      0,
     billSplitPaymentArgs:  "",
-    billPaymentChannel:    0,                        // all channels
+    billPaymentChannel:    2,                        // all channels
     billDisplayMerchant:   1,
     billContentEmail:      "Thank you for your reservation!",
     billChargeToCustomer:  1,                        // customer absorbs charges
+    enableDuitNowQR:   1,   // 1 = enable, 0 = disable
+    chargeDuitNowQR:   0,   // 0 = bill owner pays fee, 1 = customer pays
   });
 
   try {
