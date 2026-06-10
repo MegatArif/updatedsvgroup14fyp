@@ -175,9 +175,10 @@
               </div>
               <div class="field">
                 <i class="ri-phone-fill"></i>
-                <input type="tel" name="phone" required placeholder=" " id="o-phone">
+                <input type="tel" name="phone" required placeholder=" " id="o-phone" inputmode="numeric" pattern="[0-9]{10,12}" maxlength="12" aria-describedby="o-phone-hint" title="Enter 10 to 12 digits only, e.g. 0123456789">
                 <label for="o-phone">Phone Number</label>
               </div>
+              <small id="o-phone-hint">Format: 0123456789 (10-12 digits only)</small>
               <div class="field">
                 <i class="ri-lock-2-fill"></i>
                 <input type="password" name="owner_reg_pass" required placeholder=" " id="o-regpass" class="has-eye">
