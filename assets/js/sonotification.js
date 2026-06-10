@@ -334,7 +334,7 @@ function showDetails(type) {
 
         <div class="detail-title">${n.type}</div>
 
-        <div>${n.message || ""}</div>
+        <div>${formatTimesInMessage(n.message)}</div>
 
         <div class="detail-time">${dateText}</div>
 
@@ -351,3 +351,23 @@ function showDetails(type) {
     `;
 
   }).join("");}
+
+function formatTimeDisplay(timeString) {
+  if (!timeString || !timeString.includes(":")) return timeString || "";
+
+  const [hourString, minuteString = "00"] = timeString.split(":");
+  let hour = Number.parseInt(hourString, 10);
+  if (Number.isNaN(hour)) return timeString;
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour}:${minuteString} ${ampm}`;
+}
+
+function formatTimesInMessage(message) {
+  return String(message ?? "").replace(
+    /\bat\s+([01]?\d|2[0-3]):([0-5]\d)(?!\s*[AP]M)\b/gi,
+    (_match, hour, minute) => `at ${formatTimeDisplay(`${hour}:${minute}`)}`
+  );
+}

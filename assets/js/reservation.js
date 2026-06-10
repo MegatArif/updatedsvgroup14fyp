@@ -139,7 +139,7 @@ function render(r) {
 
       <div class="booking-info">
         <div class="info-box"><span>Date</span><strong>${r.date}</strong></div>
-        <div class="info-box"><span>Time</span><strong>${r.time}</strong></div>
+        <div class="info-box"><span>Time</span><strong>${formatTimeDisplay(r.time)}</strong></div>
         <div class="info-box"><span>Guests</span><strong>${r.guests}</strong></div>
       </div>
 
@@ -197,7 +197,7 @@ async function sendExpiredNotificationOnce(r) {
     await addDoc(collection(db, "notifications"), {
       userId:        r.userId,
       type:          "expired",
-      message:       `Your reservation at ${r.cafe || "the cafe"} on ${r.date} at ${r.time} has expired — it was not approved in time. You can make a new booking anytime.`,
+      message:       `Your reservation at ${r.cafe || "the cafe"} on ${r.date} at ${formatTimeDisplay(r.time)} has expired — it was not approved in time. You can make a new booking anytime.`,
       cafeName:      r.cafe || "",
       reservationId: r.id,
       read:          false,
@@ -263,7 +263,7 @@ window.downloadPDF = function(id) {
   row("Cafe",     r.cafe);
   row("Location", r.location);
   row("Date",     r.date);
-  row("Time",     r.time);
+  row("Time",     formatTimeDisplay(r.time));
   row("Guests",   r.guests);
 
   y += 5;
@@ -456,4 +456,17 @@ function getStatusLabel(status) {
     cancel:    "CANCELLED",
   };
   return map[status] || status.toUpperCase();
+}
+
+function formatTimeDisplay(timeString) {
+  if (!timeString || !timeString.includes(":")) return timeString || "";
+
+  const [hourString, minuteString = "00"] = timeString.split(":");
+  let hour = Number.parseInt(hourString, 10);
+  if (Number.isNaN(hour)) return timeString;
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour}:${minuteString} ${ampm}`;
 }

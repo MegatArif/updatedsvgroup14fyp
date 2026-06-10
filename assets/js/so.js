@@ -156,7 +156,7 @@ const done = reservations.filter(r =>
       <td><strong>${r._docId.substring(0, 6)}…</strong></td>
       <td>${r.username || r.customer || "—"}</td>
       <td>${r.date || "—"}</td>
-      <td>${r.time || "—"}</td>
+      <td>${formatReceiptTime(r.time)}</td>
       <td>${r.guests || "—"}</td>
       <td id="payment-${r._docId}">${makePaymentBadge(r)}</td>
       <td id="badge-${r._docId}">${makeBadge(r.status)}</td>
@@ -195,7 +195,7 @@ window.updateStatus = async function(docId, newStatus) {
       await addDoc(collection(db, "notifications"), {
         userId:        r.userId,                          // customer's UID
         type:          "accepted",
-        message:       `Your reservation at ${ownerCafeName || r.cafe || "the cafe"} on ${r.date} at ${r.time} has been accepted! We look forward to seeing you.`,
+        message:       `Your reservation at ${ownerCafeName || r.cafe || "the cafe"} on ${r.date} at ${formatReceiptTime(r.time)} has been accepted! We look forward to seeing you.`,
         cafeName:      ownerCafeName || r.cafe || "",
         reservationId: docId,
         read:          false,
@@ -266,7 +266,7 @@ function renderCompletedCards() {
           ${makeBadge(r.status)}
         </div>
         <div class="comp-card-meta">
-          <span><i class="fas fa-calendar-alt"></i>${r.date || ""} ${r.time || ""}</span>
+          <span><i class="fas fa-calendar-alt"></i>${r.date || ""} ${formatReceiptTime(r.time)}</span>
           <span><i class="fas fa-users"></i>${r.guests || "—"} guests</span>
         </div>
         <div class="comp-card-actions">
@@ -691,7 +691,7 @@ async function checkExpiredReservations(list) {
       userId: r.userId,
       type: "expired",
       message:
-        `Your reservation at ${r.cafe || "the cafe"} on ${r.date} at ${r.time} has expired because no decision was made before the reservation time.`,
+        `Your reservation at ${r.cafe || "the cafe"} on ${r.date} at ${formatReceiptTime(r.time)} has expired because no decision was made before the reservation time.`,
       cafeName: r.cafe || "",
       reservationId: r._docId,
       read: false,
@@ -708,7 +708,7 @@ async function checkExpiredReservations(list) {
     read: false,
     createdAt: serverTimestamp(),
     message:
-      `${r.username || r.customer || "A customer"}'s reservation on ${r.date} at ${r.time} expired because no action was taken before the reservation time.`
+      `${r.username || r.customer || "A customer"}'s reservation on ${r.date} at ${formatReceiptTime(r.time)} expired because no action was taken before the reservation time.`
   });
 
   await updateDoc(
@@ -753,7 +753,7 @@ async function checkCompletedReservations(list) {
           await addDoc(collection(db, "notifications"), {
             userId: r.userId,
             type: "completed",
-            message: `Your visit to ${r.cafe || "the cafe"} on ${r.date} at ${r.time} is now marked as completed. Thank you for visiting!`,
+            message: `Your visit to ${r.cafe || "the cafe"} on ${r.date} at ${formatReceiptTime(r.time)} is now marked as completed. Thank you for visiting!`,
             cafeName: r.cafe || "",
             reservationId: r._docId,
             read: false,

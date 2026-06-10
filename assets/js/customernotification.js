@@ -198,7 +198,7 @@ function notifCardHtml(n) {
         <i class="fas ${meta.icon}"></i>
       </div>
       <div class="notif-content">
-        <div class="notif-msg">${escHtml(n.message)}</div>
+        <div class="notif-msg">${escHtml(formatTimesInMessage(n.message))}</div>
         ${n.cafeName
           ? `<div class="notif-cafe"><i class="fas fa-mug-hot"></i>${escHtml(n.cafeName)}</div>`
           : ""}
@@ -241,4 +241,11 @@ function formatTimeDisplay(timeString) {
   hour = hour % 12 || 12;
 
   return `${hour}:${minuteString} ${ampm}`;
+}
+
+function formatTimesInMessage(message) {
+  return String(message ?? "").replace(
+    /\bat\s+([01]?\d|2[0-3]):([0-5]\d)(?!\s*[AP]M)\b/gi,
+    (_match, hour, minute) => `at ${formatTimeDisplay(`${hour}:${minute}`)}`
+  );
 }
