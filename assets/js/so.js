@@ -835,7 +835,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       loadReservations(cafeName);
-
+ setInterval(() => {
+      if (reservations.length > 0) {
+        checkExpiredReservations(reservations);
+        checkCompletedReservations(reservations);
+      }
+    }, 60000);
     } catch (err) {
       console.error("so.js init error:", err);
       showToast("Could not load reservation data.", "error");
