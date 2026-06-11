@@ -304,6 +304,16 @@
                 document.getElementById('mobileToCustomer').classList.remove('active-role');
                 animateFormPane('right');  // slides in from right when going forward
             }
+        document.querySelectorAll('.show-login, .show-reg').forEach(link => {
+          link.addEventListener('click', () => {
+              if (window.innerWidth <= 640) {
+                  // Force layout recalc so card shrinks/grows correctly
+                  setTimeout(() => {
+                      card.style.height = 'auto';
+                  }, 400); // wait for switchView animation to finish
+              }
+          });
+      });
         });
 </script>
     </body>
