@@ -329,6 +329,7 @@
     .form-pane {
         position: relative;
         background: var(--surface);
+        isolation: isolate;
     }
 
     /* Inject the background image via pseudo-element so it doesn't affect layout */
@@ -338,7 +339,7 @@
         inset: 0;
         background: url('../img/login-bg.jpg') center/cover no-repeat;
         opacity: 0.07;  /* very subtle so text stays readable */
-        z-index: 0;
+        z-index: -1;
         animation: mobilePaneBg 8s ease-in-out infinite alternate;
         pointer-events: none;
     }
@@ -349,7 +350,7 @@
         inset: 0;
         background: url('../img/logincafe-bg.jpg') center/cover no-repeat;
         opacity: 0.07;
-        z-index: 0;
+        z-index: -1;
         animation: mobilePaneBg 8s ease-in-out infinite alternate;
         pointer-events: none;
     }
@@ -440,6 +441,7 @@
     .form-pane {
         position: relative;
         background: var(--surface);
+        isolation: isolate;
     }
 
     /* Inject the background image via pseudo-element so it doesn't affect layout */
@@ -449,7 +451,7 @@
         inset: 0;
         background: url('../img/login-bg.jpg') center/cover no-repeat;
         opacity: 0.07;  /* very subtle so text stays readable */
-        z-index: 0;
+        z-index: -1;
         animation: mobilePaneBg 8s ease-in-out infinite alternate;
         pointer-events: none;
     }
@@ -460,7 +462,7 @@
         inset: 0;
         background: url('../img/logincafe-bg.jpg') center/cover no-repeat;
         opacity: 0.07;
-        z-index: 0;
+        z-index: -1;
         animation: mobilePaneBg 8s ease-in-out infinite alternate;
         pointer-events: none;
     }
