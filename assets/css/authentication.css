@@ -265,12 +265,32 @@
       line-height: 1.5; text-align: center;
     }
 
+    /* Add this to your existing CSS (outside any media query) */
+@keyframes mobileSlideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes mobileSlideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.mobile-slide-in {
+    animation: mobileSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mobile-slide-in-left {
+    animation: mobileSlideInLeft 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
    @media (max-width: 640px) {
 
     body {
         overflow-y: auto;
-        align-items: flex-start;
-        padding: 24px 0;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: column;   /* ← stack bar above card */
+        padding: 24px 0 40px;
     }
 
     .auth-card {
@@ -295,9 +315,7 @@
         display: block;
     }
 
-    .img-pane {
-        display: none;
-    }
+    .img-pane { display: none; }
 
     .form-pane {
         width: 100%;
@@ -327,11 +345,11 @@
     .form-title { font-size: 1.4rem; margin-bottom: 1.1rem; }
     .field-group { row-gap: 0.65rem; }
 
-    /* ── Mobile role switcher bar ── */
+    /* ── Mobile role switcher bar — sits ABOVE the card ── */
     .mobile-role-bar {
         display: flex !important;
         width: 92vw;
-        margin: 0 auto 16px;
+        margin-bottom: 14px;
         background: hsl(0,0%,13%);
         border-radius: 3rem;
         padding: 5px;
@@ -340,22 +358,17 @@
 
     .mobile-role-bar button {
         flex: 1;
-        padding: 10px;
+        padding: 11px;
         border: none;
         border-radius: 3rem;
         font-family: var(--font);
-        font-size: .78rem;
+        font-size: .82rem;
         font-weight: 700;
-        letter-spacing: .05em;
+        letter-spacing: .04em;
         cursor: pointer;
         background: transparent;
         color: var(--muted);
-        transition: background .25s, color .25s;
-    }
-
-    .mobile-role-bar button.active-role {
-        background: var(--surface);
-        color: var(--title);
+        transition: background .3s, color .3s;
     }
 
     .mobile-role-bar button.c-role.active-role {
@@ -369,13 +382,15 @@
     }
 }
 
-/* ── Landscape on mobile ── */
+/* ── Landscape mobile ── */
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
 
     body {
         overflow-y: auto;
-        align-items: flex-start;
-        padding: 16px 0;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: column;
+        padding: 12px 0 24px;
     }
 
     .auth-card {
@@ -385,17 +400,10 @@
     }
 
     .track { width: 200%; height: auto; }
-
     .auth-card.shop-mode .track { transform: translateX(-50%); }
 
-    .screen {
-        flex: 0 0 50%;
-        height: auto;
-        display: block;
-    }
-
+    .screen { flex: 0 0 50%; height: auto; display: block; }
     .img-pane { display: none; }
-
     .form-pane { width: 100%; height: auto; overflow: visible; }
 
     .view {
@@ -409,10 +417,7 @@
         transition: none;
     }
 
-    .view.active {
-        display: flex;
-        pointer-events: all;
-    }
+    .view.active { display: flex; pointer-events: all; }
 
     .field { height: 42px; }
     .submit-btn { height: 40px; }
@@ -424,7 +429,7 @@
     .mobile-role-bar {
         display: flex !important;
         width: 94vw;
-        margin: 0 auto 12px;
+        margin-bottom: 10px;
         background: hsl(0,0%,13%);
         border-radius: 3rem;
         padding: 4px;
@@ -442,7 +447,7 @@
         cursor: pointer;
         background: transparent;
         color: var(--muted);
-        transition: background .25s, color .25s;
+        transition: background .3s, color .3s;
     }
 
     .mobile-role-bar button.c-role.active-role { background: var(--purple); color: #fff; }

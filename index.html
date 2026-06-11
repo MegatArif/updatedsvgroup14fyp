@@ -219,26 +219,46 @@
         <!--MAIN JS-->
         <script src="assets/js/authen.js" type="module"></script>
         <script>
-// Inject mobile role switcher bar
-const bar = document.createElement('div');
-bar.className = 'mobile-role-bar';
-bar.style.display = 'none'; // hidden on desktop, shown via CSS
-bar.innerHTML = `
-  <button class="c-role active-role" id="mobileToCustomer">👤 Customer</button>
-  <button class="o-role" id="mobileToOwner">🏪 Shop Owner</button>
-`;
-document.body.insertBefore(bar, document.getElementById('authCard'));
+        const bar = document.createElement('div');
+        bar.className = 'mobile-role-bar';
+        bar.style.display = 'none';
+        bar.innerHTML = `
+          <button class="c-role active-role" id="mobileToCustomer">👤 Customer</button>
+          <button class="o-role" id="mobileToOwner">🏪 Shop Owner</button>
+        `;
+        document.body.insertBefore(bar, document.getElementById('authCard'));
 
-document.getElementById('mobileToCustomer').addEventListener('click', () => {
-    document.getElementById('authCard').classList.remove('shop-mode');
-    document.getElementById('mobileToCustomer').classList.add('active-role');
-    document.getElementById('mobileToOwner').classList.remove('active-role');
-});
-document.getElementById('mobileToOwner').addEventListener('click', () => {
-    document.getElementById('authCard').classList.add('shop-mode');
-    document.getElementById('mobileToOwner').classList.add('active-role');
-    document.getElementById('mobileToCustomer').classList.remove('active-role');
-});
+        function animateFormPane(direction) {
+            const activeViews = document.querySelectorAll('.view.active');
+            activeViews.forEach(view => {
+                // Remove old animation classes first
+                view.classList.remove('mobile-slide-in', 'mobile-slide-in-left');
+                // Force reflow so animation restarts
+                void view.offsetWidth;
+                // Add direction-appropriate animation
+                view.classList.add(direction === 'right' ? 'mobile-slide-in' : 'mobile-slide-in-left');
+            });
+        }
+
+        document.getElementById('mobileToCustomer').addEventListener('click', () => {
+            const card = document.getElementById('authCard');
+            if (card.classList.contains('shop-mode')) {
+                card.classList.remove('shop-mode');
+                document.getElementById('mobileToCustomer').classList.add('active-role');
+                document.getElementById('mobileToOwner').classList.remove('active-role');
+                animateFormPane('left');   // slides in from left when going back
+            }
+        });
+
+        document.getElementById('mobileToOwner').addEventListener('click', () => {
+            const card = document.getElementById('authCard');
+            if (!card.classList.contains('shop-mode')) {
+                card.classList.add('shop-mode');
+                document.getElementById('mobileToOwner').classList.add('active-role');
+                document.getElementById('mobileToCustomer').classList.remove('active-role');
+                animateFormPane('right');  // slides in from right when going forward
+            }
+        });
 </script>
     </body>
  </html>
