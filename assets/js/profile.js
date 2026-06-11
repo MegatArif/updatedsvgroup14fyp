@@ -1,6 +1,6 @@
 import { db, storage, app } from './firebase-config.js';
-import { doc, getDoc, setDoc, collection, query, where, getDocs} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 import { getAuth, onAuthStateChanged, updatePassword, updateEmail, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider, signOut } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { setupNavbar } from './navbar.js';
@@ -298,4 +298,50 @@ document.addEventListener('DOMContentLoaded', () => {
             )
         });
     }
+});
+
+// =====================
+// DELETE ACCOUNT
+// =====================
+document.getElementById('delete-account-btn').addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    showConfirm(
+        "⚠️ Delete your account?\n\nYour profile and all data will be permanently removed. This cannot be undone.",
+        async () => {
+            showLoading(true);
+            try {
+                // Delete Firestore customer doc
+                await deleteDoc(doc(db, "Customers", user.uid));
+
+                // Delete profile image from Storage (if it's not the default)
+                const pic = document.getElementById('main-profile-pic');
+                if (pic.src && !pic.src.includes('user2avatar')) {
+                    try {
+                        await deleteObject(ref(storage, `profile-images/${user.uid}`));
+                    } catch (_) {} // Ignore if no image exists
+                }
+
+                // Delete Firebase Auth account
+                await user.delete();
+
+                showToast("Account deleted successfully. Goodbye! 👋");
+                setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                if (err.code === 'auth/requires-recent-login') {
+                    showToast("Session expired. Please log in again before deleting.", "error");
+                    setTimeout(async () => {
+                        await signOut(auth);
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    showToast("Failed to delete account. Please try again.", "error");
+                }
+                showLoading(false);
+            }
+        }
+    );
 });

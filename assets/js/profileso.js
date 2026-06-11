@@ -251,12 +251,7 @@ document.getElementById('delete-shop-btn').addEventListener('click', async () =>
             try {
                 const batch = writeBatch(db);
                 batch.delete(doc(db, "cafes", currentCafeId));
-                batch.set(doc(db, "ShopOwner", user.uid), {
-                    cafeRegistered: false,
-                    approved: false,
-                    rejected: false,
-                    resolvedAt: null
-                }, { merge: true });
+                batch.delete(doc(db, "ShopOwner", user.uid)); // ← fully delete the doc too
                 await batch.commit();
 
                 try {
@@ -265,12 +260,21 @@ document.getElementById('delete-shop-btn').addEventListener('click', async () =>
                     await deleteObject(ref(storage, imgPath));
                 } catch (_) {}
 
-                showToast("Shop deleted and account unregistered. Redirecting...");
+                await user.delete(); // ← deletes the Firebase Auth account
+
+                showToast("Shop deleted and account removed. Redirecting...");
                 setTimeout(() => { window.location.href = 'index.html'; }, 2000);
 
             } catch (err) {
                 console.error(err);
-                showToast("Failed to delete shop. Please try again.", "error");
+
+                // Firebase requires a recent login before deleting an account
+                if (err.code === 'auth/requires-recent-login') {
+                    showToast("Session expired. Please log in again before deleting.", "error");
+                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+                } else {
+                    showToast("Failed to delete shop. Please try again.", "error");
+                }
                 showLoading(false);
             }
         }

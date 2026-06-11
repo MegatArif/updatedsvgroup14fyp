@@ -66,6 +66,9 @@ body { background-color: var(--color-bg); color: var(--color-text-dark); line-he
     background: rgba(255, 255, 255, 0.15);
     border-color: #FFFFFF;
 }
+
+.btn-danger { background: var(--color-error); color: white; }
+.btn-danger:hover { background: #a31f1f; }
 /* Profile Grid */
 .page-header { margin-bottom: 2rem; }
 .profile-grid { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
