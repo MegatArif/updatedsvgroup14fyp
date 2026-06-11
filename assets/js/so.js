@@ -24,6 +24,9 @@ import {
   addDoc,
   getDoc,
   serverTimestamp,
+  getDocs,   
+  setDoc,    
+  deleteDoc,  
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
   getAuth,
@@ -488,7 +491,7 @@ window.handleReceipt = async function(id) {
 ═══════════════════════════════════════════════════════ */
 let activeNoteId = null;
 
-window.openNotesModal = function(id) {
+window.openNotesModal = async function(id) {
   activeNoteId = id;
   const r = reservations.find(x => x._docId === id);
 
@@ -499,8 +502,11 @@ window.openNotesModal = function(id) {
   ta.value = "";
   updateCharCount();
 
-  renderNotesList(id);
+  // Show loading state
+  document.getElementById("notesList").innerHTML = `<p class="notes-empty">Loading notes…</p>`;
   document.getElementById("notesOverlay").classList.add("open");
+
+  await loadAndRenderNotes(id);
   setTimeout(() => ta.focus(), 350);
 };
 
@@ -518,13 +524,13 @@ function renderNotesList(id) {
     return;
   }
 
-  list.innerHTML = noteArr.map((n, i) => `
+  list.innerHTML = noteArr.map(n => `
     <div class="note-item">
       <div class="note-item-header">
         <span class="note-item-date">
           <i class="fas fa-clock" style="margin-right:5px;opacity:.4;"></i>${n.date}
         </span>
-        <button class="note-item-delete" onclick="deleteNote(${i})" title="Delete note">
+        <button class="note-item-delete" onclick="deleteNote('${n.id}')" title="Delete note">
           <i class="fas fa-trash-can"></i>
         </button>
       </div>
@@ -533,38 +539,60 @@ function renderNotesList(id) {
   ).join("");
 }
 
-window.saveNote = function() {
+window.saveNote = async function() {
   const ta   = document.getElementById("noteTextarea");
   const text = ta.value.trim();
   if (!text || !activeNoteId) return;
 
-  if (!notes[activeNoteId]) notes[activeNoteId] = [];
-
   const now  = new Date();
   const date =
     now.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" }) +
-    "  " +
-    now.toLocaleTimeString("en-MY", { hour:"2-digit", minute:"2-digit" });
+    "  " + now.toLocaleTimeString("en-MY", { hour:"2-digit", minute:"2-digit" });
 
-  notes[activeNoteId].unshift({ text, date });
-
-  ta.value = "";
-  updateCharCount();
-  renderNotesList(activeNoteId);
-  refreshNoteButton(activeNoteId);
-
-  showToast("Note saved successfully.", "success");
+  try {
+    await addDoc(collection(db, "reservation", activeNoteId, "notes"), {
+      text,
+      date,
+      createdAt: serverTimestamp(),
+    });
+    ta.value = "";
+    updateCharCount();
+    await loadAndRenderNotes(activeNoteId);
+    showToast("Note saved successfully.", "success");
+  } catch (err) {
+    console.error("saveNote error:", err);
+    showToast("Failed to save note.", "error");
+  }
 };
 
-window.deleteNote = function(index) {
+window.deleteNote = async function(noteDocId) {
   if (!activeNoteId) return;
   if (!confirm("Delete this note?")) return;
-  notes[activeNoteId].splice(index, 1);
-  renderNotesList(activeNoteId);
-  refreshNoteButton(activeNoteId);
-
-  showToast("Note deleted.", "info");
+  try {
+    await deleteDoc(doc(db, "reservation", activeNoteId, "notes", noteDocId));
+    await loadAndRenderNotes(activeNoteId);
+    showToast("Note deleted.", "info");
+  } catch (err) {
+    console.error("deleteNote error:", err);
+    showToast("Failed to delete note.", "error");
+  }
 };
+
+async function loadAndRenderNotes(reservationId) {
+  const snap = await getDocs(
+    query(collection(db, "reservation", reservationId, "notes"))
+  );
+  // Sort by createdAt descending
+  const noteArr = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+  // Update in-memory cache for badge count
+  notes[reservationId] = noteArr;
+
+  renderNotesList(reservationId);
+  refreshNoteButton(reservationId);
+}
 
 function refreshNoteButton(id) {
   const btn   = document.getElementById(`noteBtn-${id}`);
