@@ -219,15 +219,15 @@
         <!--MAIN JS-->
         <script src="assets/js/authen.js" type="module"></script>
         <script>
+        const card = document.getElementById('authCard'); // ← ADD THIS
         const bar = document.createElement('div');
         bar.className = 'mobile-role-bar';
-        bar.style.display = 'none';
         bar.innerHTML = `
           <button class="c-role active-role" id="mobileToCustomer">👤 Customer</button>
           <button class="o-role" id="mobileToOwner">🏪 Shop Owner</button>
         `;
         document.body.insertBefore(bar, document.getElementById('authCard'));
-        
+
         const isMobile = window.innerWidth <= 640;
 
         if (!isMobile) {
