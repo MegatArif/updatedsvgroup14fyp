@@ -266,19 +266,37 @@ button:hover {
   letter-spacing: 1px;
 }
 
+/* Replace your existing @media (max-width: 768px) block with this */
 @media (max-width: 768px) {
-    .page {
-        flex-direction: column;
-        padding: 10px;          /* reduce padding */
-        margin-top: 0;
-        gap: 16px;              /* reduce gap */
+  .navbar {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 10px 1rem;
+        gap: 6px;
+    }
+
+    .logo-area {
         width: 100%;
-        box-sizing: border-box;
+        justify-content: flex-start;
+    }
+
+    .nav-links {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        font-size: 0.85rem;
+        justify-content: flex-start;
+    }  
+  .page {
+        flex-direction: column;
+        padding: 10px;
+        margin-top: 0;
+        gap: 16px;
+        width: 100%;
     }
 
     .sidebar {
         width: 100%;
-        box-sizing: border-box; /* ADD - prevents padding from causing overflow */
         position: static;
         min-height: auto;
     }
@@ -287,7 +305,6 @@ button:hover {
     .feed .post-card,
     .sidebar .post-card {
         width: 100%;
-        box-sizing: border-box; /* ADD - prevents padding causing overflow */
     }
 
     .feed {
@@ -295,8 +312,25 @@ button:hover {
         width: 100%;
     }
 
+    /* ── CREATE BAR FIX ── */
     .create-post-bar {
-        width: 100%;
-        box-sizing: border-box;
+        flex-wrap: wrap;        /* allow items to wrap to next line */
+        gap: 8px;
+        border-radius: 12px;   /* squarish looks better when wrapped */
+    }
+
+    .create-post-bar input[type="text"] {
+        flex: 1 1 100%;         /* text input takes its own full row */
+        min-width: 0;
+    }
+
+    .create-post-bar label,
+    .create-post-bar .action-icon,
+    .create-post-bar button {
+        flex-shrink: 0;
+    }
+
+    .create-post-bar button {
+        margin-left: auto;      /* push Create to the right on its row */
     }
 }
