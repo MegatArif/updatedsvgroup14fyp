@@ -451,7 +451,7 @@
     .track { width: 200%; height: auto; }
     .auth-card.shop-mode .track { transform: translateX(-50%); }
 
-    .screen { flex: 0 0 50%; height: auto; display: block; overflow: hidden; }
+    .screen { flex: 0 0 50%; height: auto; display: block; }
     .img-pane { display: none; }
 
     /* Mobile: show image as subtle background on the form pane */
@@ -459,8 +459,6 @@
         position: relative;
         background: var(--surface);
         isolation: isolate;
-        height: auto;        /* ADD */
-        min-height: 0;  
     }
 
     /* Inject the background image via pseudo-element so it doesn't affect layout */
@@ -495,8 +493,6 @@
         pointer-events: none;
         padding: 1.2rem 1.6rem 1.6rem;
         transition: none;
-        overflow: hidden;
-        min-height: 0;
     }
 
     .view.active { display: flex; pointer-events: all; }
