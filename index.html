@@ -259,21 +259,18 @@
         }
 
         // Stagger entrance — works on both, just adjust delay
-        if (!isMobile) {
-          // Desktop only — stagger entrance animation
-          gsap.from('#custLoginView > *', {
-              opacity: 0, y: -22, duration: 1,
-              ease: 'power2.out', stagger: .12, delay: 2.3
-          });
-          gsap.from('#custImgBody > *', {
-              opacity: 0, y: 20, duration: .9,
-              ease: 'power2.out', stagger: .14, delay: 2.8
-          });
-      } else {
-          // Mobile — make sure all children are immediately visible
-          gsap.set('#custLoginView > *', { opacity: 1, y: 0 });
-      }
+        const delay = isMobile ? 0.3 : 2.3;
+        gsap.from('#custLoginView > *', {
+            opacity: 0, y: -22, duration: 1,
+            ease: 'power2.out', stagger: .12, delay: delay
+        });
 
+        if (!isMobile) {
+            gsap.from('#custImgBody > *', {
+                opacity: 0, y: 20, duration: .9,
+                ease: 'power2.out', stagger: .14, delay: 2.8
+            });
+        }
         function animateFormPane(direction) {
             const activeViews = document.querySelectorAll('.view.active');
             activeViews.forEach(view => {
