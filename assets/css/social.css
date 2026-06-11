@@ -21,7 +21,21 @@ body {
   justify-content: flex-start;
   align-items: flex-start;
 }
-
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;                    /* ADD THIS */
+    box-sizing: border-box;         /* ADD THIS - ensures padding doesn't cause overflow */
+    
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    background: hsl(39, 64%, 87%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
 /* SIDEBAR */
 .sidebar {
   width: 450px;
