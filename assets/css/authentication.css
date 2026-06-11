@@ -265,63 +265,78 @@
       line-height: 1.5; text-align: center;
     }
 
-    @media (max-width: 640px) {
+   @media (max-width: 640px) {
+
     body {
-        overflow-y: auto;        /* allow scrolling on mobile */
+        overflow-y: auto;
         align-items: flex-start;
-        padding: 20px 0;
+        padding: 24px 0;
     }
 
+    /* Card takes full width, auto height */
     .auth-card {
-        width: 96vw;
-        height: auto;            /* no more fixed height */
+        width: 92vw;
+        height: auto;
         border-radius: 1.4rem;
+        overflow: hidden;
     }
 
+    /* Track: still 200% wide so the JS slide still works,
+       but each screen is now 92vw not 50% of 200vw */
     .track {
-        width: 100%;             /* track no longer needs 200% */
+        width: 200%;
+        height: auto;
     }
 
-    /* Each screen stacks form on top, hides image pane */
+    /* shop-mode slide: move exactly one card width left */
+    .auth-card.shop-mode .track {
+        transform: translateX(-50%);   /* still 50% of 200% = one screen */
+    }
+
+    /* Each screen: single column, hide image pane */
     .screen {
-        grid-template-columns: 1fr;   /* single column */
-        width: 100vw;
+        flex: 0 0 50%;                 /* keep the 50% of track logic */
+        height: auto;
+        display: block;                /* drop the grid */
     }
 
-    /* Hide the decorative image pane entirely on mobile */
+    /* Hide decorative image pane on mobile */
     .img-pane {
         display: none;
     }
 
-    /* When owner mode is active, the form is the second child —
-       make sure it still shows */
-    .screen-owner {
-        direction: ltr;
-    }
-
+    /* Form pane fills the whole screen */
     .form-pane {
-        min-height: 100%;
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        overflow: visible;
     }
 
-    /* Views need auto height and less padding */
+    /* Views: switch from absolute to relative so height is natural */
     .view {
-        position: relative;      /* no longer absolute overlay */
+        position: relative;
         inset: auto;
-        padding: 2rem 1.5rem;
-        opacity: 0;
-        transform: translateY(16px);
         display: none;
+        opacity: 1;
+        transform: none;
+        pointer-events: none;
+        padding: 2rem 1.6rem 2.4rem;
+        transition: none;
     }
 
     .view.active {
         display: flex;
-        opacity: 1;
-        transform: translateY(0);
+        pointer-events: all;
     }
 
-    /* Slightly smaller fields */
+    /* Slightly compact fields and buttons */
     .field {
         height: 48px;
+    }
+
+    .submit-btn {
+        height: 46px;
     }
 
     .form-title {
@@ -329,13 +344,7 @@
         margin-bottom: 1.1rem;
     }
 
-    .submit-btn {
-        height: 46px;
-    }
-
-    /* track sliding still works via JS — keep the translateX logic
-       but since track is now 100% wide, override the shift */
-    .auth-card.shop-mode .track {
-        transform: translateX(-100vw);
+    .field-group {
+        row-gap: 0.65rem;
     }
 }
