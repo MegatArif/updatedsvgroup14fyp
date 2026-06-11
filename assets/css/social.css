@@ -266,7 +266,6 @@ button:hover {
   letter-spacing: 1px;
 }
 
-/* Replace your existing @media (max-width: 768px) block with this */
 @media (max-width: 768px) {
   .navbar {
         height: auto;
