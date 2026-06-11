@@ -116,10 +116,28 @@ function filterCafes(location, searchName, timeSlot, facilities, minRating) {
 }
 
 function isOpenDuringSlot(cafe, ts) {
-    const [s] = ts.split('~');
-    const toMin = t => { const [h, m] = t.split(':'); return +h * 60 + +m; };
-    const slot = toMin(s.trim());
-    return slot >= toMin(cafe.openHour) && slot <= toMin(cafe.closeHour);
+    const toMin = (t) => {
+        if (!t || !t.includes(':')) return null;
+        const [h, m] = t.trim().split(':').map(Number);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+    };
+
+    const [slotStartRaw, slotEndRaw] = ts.split('~');
+    const slotStart = toMin(slotStartRaw);
+    let slotEnd = toMin(slotEndRaw);
+    const open = toMin(cafe.openHour);
+    let close = toMin(cafe.closeHour);
+
+    if ([slotStart, slotEnd, open, close].some(v => v === null)) return false;
+
+    if (slotEnd <= slotStart) slotEnd += 24 * 60;
+    if (close <= open) close += 24 * 60;
+
+    const cafeIntervals = [[open, close]];
+    if (close > 24 * 60) cafeIntervals.push([open - 24 * 60, close - 24 * 60]);
+
+    return cafeIntervals.some(([start, end]) => slotStart < end && slotEnd > start);
 }
 
 function renderStars(rating) {
