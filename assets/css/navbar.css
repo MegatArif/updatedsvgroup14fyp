@@ -143,10 +143,12 @@
 @media (max-width: 768px) {
     .navbar {
         height: auto;
-        flex-direction: column;       /* stack everything vertically */
-        align-items: center;          /* center all children */
-        padding: 12px 1rem;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 0;       
         gap: 8px;
+        left: 0;                
+        right: 0;
     }
 
     .logo-area {
