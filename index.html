@@ -227,7 +227,50 @@
           <button class="o-role" id="mobileToOwner">🏪 Shop Owner</button>
         `;
         document.body.insertBefore(bar, document.getElementById('authCard'));
+        
+        const isMobile = window.innerWidth <= 640;
 
+        if (!isMobile) {
+            // Full GSAP entrance — desktop only
+            const tl = gsap.timeline();
+            tl.fromTo(card,
+                { y: -700, scaleX: .2, scaleY: .35, opacity: 0 },
+                { y: 0,    scaleX: .2, scaleY: .35, opacity: 1, duration: 1.45, ease: 'power3.out' }
+            )
+            .to(card, { scaleY: 1, duration: .55, ease: 'power3.out' }, '-=0.28')
+            .to(card, { scaleX: 1, duration: .65, ease: 'power3.out' }, '-=0.15');
+        } else {
+            // Mobile: just fade in cleanly, no drop
+            gsap.fromTo(card,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+            );
+        }
+
+        // Ken Burns only on desktop (image pane is hidden on mobile anyway)
+        if (!isMobile) {
+            ['imgFront', 'imgBack'].forEach(id => {
+                gsap.to(`#${id}`, {
+                    scale: 1.09, duration: 7, ease: 'power1.inOut',
+                    repeat: -1, yoyo: true,
+                    transformOrigin: 'center center', delay: 2.2
+                });
+            });
+        }
+
+        // Stagger entrance — works on both, just adjust delay
+        const delay = isMobile ? 0.3 : 2.3;
+        gsap.from('#custLoginView > *', {
+            opacity: 0, y: -22, duration: 1,
+            ease: 'power2.out', stagger: .12, delay: delay
+        });
+
+        if (!isMobile) {
+            gsap.from('#custImgBody > *', {
+                opacity: 0, y: 20, duration: .9,
+                ease: 'power2.out', stagger: .14, delay: 2.8
+            });
+        }
         function animateFormPane(direction) {
             const activeViews = document.querySelectorAll('.view.active');
             activeViews.forEach(view => {

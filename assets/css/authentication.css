@@ -286,19 +286,22 @@
     
    @media (max-width: 640px) {
 
-    body {
+     body {
         overflow-y: auto;
         align-items: center;
-        justify-content: flex-start;
-        flex-direction: column;   /* ← stack bar above card */
+        justify-content: center;        /* CHANGE: was flex-start */
+        flex-direction: column;
         padding: 24px 0 40px;
+        min-height: 100vh;
     }
 
+    /* Give the card a natural top margin so it feels centered */
     .auth-card {
         width: 92vw;
         height: auto;
         border-radius: 1.4rem;
         overflow: hidden;
+        margin: auto 0;                 /* ADD: push card to true center */
     }
 
     .track {
@@ -351,6 +354,7 @@
         display: flex !important;
         width: 92vw;
         margin-bottom: 14px;
+        flex-shrink: 0;  
         background: hsl(0,0%,13%);
         border-radius: 3rem;
         padding: 5px;
