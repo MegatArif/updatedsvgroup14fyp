@@ -191,10 +191,20 @@ body {
   color: var(--green);
   border: 1px solid var(--green-border);
 }
+.notif-icon.pending {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+}
 .notif-icon.payment_success {
   background: var(--amber-bg);
   color: var(--amber);
   border: 1px solid var(--amber-border);
+}
+.notif-icon.completed {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid var(--green-border);
 }
 .notif-icon.expired {
   background: var(--red-bg);

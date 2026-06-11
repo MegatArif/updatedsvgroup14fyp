@@ -44,8 +44,10 @@ let activeFilter = "all";
 // ── Icon + label maps ─────────────────────────────────────────
 const ICON_MAP = {
   accepted:        { icon: "fa-circle-check", label: "Booking Accepted" },
+  pending:         { icon: "fa-hourglass-half", label: "Booking Pending" },
   payment_success: { icon: "fa-receipt",      label: "Payment Confirmed" },
   expired:         { icon: "fa-clock",         label: "Booking Expired"  },
+  completed:       { icon: "fa-check-double",  label: "Visit Completed"  },
 };
 
 // ── Auth → load notifications ─────────────────────────────────
@@ -161,7 +163,7 @@ function renderList() {
   const filtered =
     activeFilter === "all"
       ? allNotifs
-      : allNotifs.filter((n) => n.type === activeFilter);
+      : allNotifs.filter((n) => getNotificationType(n) === activeFilter);
 
   if (!filtered.length) {
     listEl.innerHTML = "";
@@ -183,7 +185,8 @@ function renderList() {
 }
 
 function notifCardHtml(n) {
-  const meta   = ICON_MAP[n.type] || { icon: "fa-bell", label: "Notification" };
+  const type   = getNotificationType(n);
+  const meta   = ICON_MAP[type] || { icon: "fa-bell", label: "Notification" };
   const unread = !n.read;
   const time   = n.createdAt
     ? n.createdAt.toDate().toLocaleString("en-MY", {
@@ -194,7 +197,7 @@ function notifCardHtml(n) {
 
   return `
     <div class="notif-card ${unread ? "unread" : ""}">
-      <div class="notif-icon ${n.type}">
+      <div class="notif-icon ${type}">
         <i class="fas ${meta.icon}"></i>
       </div>
       <div class="notif-content">
@@ -228,6 +231,22 @@ function escHtml(str) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function getNotificationType(notification) {
+  const type = notification.type || "";
+  const message = String(notification.message || "").toLowerCase();
+
+  // Legacy booking-created notices were stored as payment_success.
+  // Treat those as pending so the Payment tab only shows real payments.
+  if (
+    type === "payment_success" &&
+    (message.includes("awaiting cafe confirmation") || message.includes("has been received"))
+  ) {
+    return "pending";
+  }
+
+  return type;
 }
 
 function formatTimeDisplay(timeString) {

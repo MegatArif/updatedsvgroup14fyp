@@ -65,17 +65,33 @@ async function markPaid() {
 
       const rData = rSnap.data();
 
-      // Guard: If already marked as paid, skip to avoid duplicate notifications
-      if (rData.paymentStatus === 'paid') {
+      // Guard: If already marked as paid and notified, skip duplicates.
+      if (rData.paymentStatus === 'paid' && rData.notifSentPayment) {
         console.log('Payment already processed and recorded.');
         return;
       }
 
-      await updateDoc(resRef, {
-        paymentStatus: 'paid',
-        paidAt: serverTimestamp(),
-      });
+      const paymentUpdates = { notifSentPayment: true };
+
+      if (rData.paymentStatus !== 'paid') {
+        paymentUpdates.paymentStatus = 'paid';
+        paymentUpdates.paidAt = serverTimestamp();
+      }
+
+      await updateDoc(resRef, paymentUpdates);
       console.log('paymentStatus updated to paid');
+
+      if (rData.userId) {
+        await addDoc(collection(db, "notifications"), {
+          userId: rData.userId,
+          type: "payment_success",
+          message: `Your payment for ${rData.cafe || 'the cafe'} on ${rData.date || 'your reservation date'} at ${formatTime(rData.time)} was successful.`,
+          cafeName: rData.cafe || "",
+          reservationId: reservationId,
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      }
 
       // Trigger Admin Notification for the successful payment
       await addDoc(collection(db, "adminnotifications"), {
