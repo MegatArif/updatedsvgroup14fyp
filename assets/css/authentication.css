@@ -264,7 +264,9 @@
       font-size: .64rem; color: hsl(174,60%,55%);
       line-height: 1.5; text-align: center;
     }
-
+    .mobile-role-bar {
+    display: none;
+  }
     /* Add this to your existing CSS (outside any media query) */
     @keyframes mobileSlideIn {
         from { opacity: 0; transform: translateX(30px); }

@@ -171,15 +171,7 @@ import { showToast } from './toast.js'
     });
   });
  
-  /* Stagger entrance of customer login view */
-  gsap.from('#custLoginView > *', {
-    opacity: 0, y: -22, duration: 1,
-    ease: 'power2.out', stagger: .12, delay: 2.3
-  });
-  gsap.from('#custImgBody > *', {
-    opacity: 0, y: 20, duration: .9,
-    ease: 'power2.out', stagger: .14, delay: 2.8
-  });
+  
  
   /* ── SLIDE to shop owner ── */
   toOwnerBtn.addEventListener('click', () => {

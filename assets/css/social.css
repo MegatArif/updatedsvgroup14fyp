@@ -7,9 +7,6 @@ body {
 *, *::before, *::after {
     box-sizing: border-box;
 }
-/* TOPBAR */
-
-
 /* PAGE */
 .page {
   display: flex;
@@ -63,6 +60,7 @@ body {
 
   display: flex;
   align-items: center;
+  flex-wrap: wrap; 
   gap: 10px;
 
   background: white;
@@ -79,12 +77,16 @@ body {
   border-radius: 50%;
 }
 
-.create-post-bar input {
-  flex: 1;
+.create-post-bar input[type="text"] {
+  flex: 1 1 100%;     
+  min-width: 0;
   border: none;
   outline: none;
 }
 
+.create-post-bar button {
+  margin-left: auto;    
+}
 /* FEED */
 .feed {
   flex: 1;
