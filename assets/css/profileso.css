@@ -90,6 +90,36 @@ body { background-color: var(--color-bg); color: var(--color-text-dark); line-he
 .page-header { margin-bottom: 2rem; }
 .profile-grid { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
 
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 2.8rem; /* make room for the eye button */
+}
+
+.eye-btn {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.eye-btn:hover {
+    opacity: 1;
+}
+
+.eye-btn.active {
+    opacity: 1;
+}
 
 /* Profile Sidebar */
 .profile-pic-container { position: relative; width: 150px; height: 150px; margin: 0 auto; }

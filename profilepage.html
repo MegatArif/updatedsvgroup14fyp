@@ -85,27 +85,37 @@
                         <button type="submit" id="save-profile-btn" class="btn btn-primary">💾 Save Changes</button>
                         <button type="button" id="log-up-btn" class="btn btn-primary">🔺 Log Out</button>
                     </div>
-</div>
+                </div>
                 </form>
 
-                <form id="change-password" class="tab-content hidden form-layout">
-                    <div class="form-group">
-                        <label>Current Password</label>
+                <!-- Change Password form — replace in BOTH profile.html and profileso.html -->
+            <form id="change-password" class="tab-content hidden form-layout">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <div class="password-wrapper">
                         <input type="password" id="current-password" required>
+                        <button type="button" class="eye-btn" onclick="togglePw('current-password', this)">🔓</button>
                     </div>
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <input type="password" id="new-password" required minlength="8">
-                        <small class="text-muted">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char. Cannot match previous passwords.</small>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="new-password" required minlength="6">
+                        <button type="button" class="eye-btn" onclick="togglePw('new-password', this)">🔓</button>
                     </div>
-                    <div class="form-group">
-                        <label>Confirm New Password</label>
+                    <small class="text-muted">Min 6 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.</small>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <div class="password-wrapper">
                         <input type="password" id="confirm-password" required>
+                        <button type="button" class="eye-btn" onclick="togglePw('confirm-password', this)">🔓</button>
                     </div>
-                    <div class="text-right">
-                        <button type="submit" class="btn btn-primary">Update Password</button>
-                    </div>
-                </form>
+                </div>
+                <div class="text-right">
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </div>
+            </form>
 
                  <form id="change-email" class="tab-content hidden form-layout">
                     <div class="form-group">

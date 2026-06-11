@@ -130,19 +130,29 @@
                 </form>
 
                 <!-- ===================== CHANGE PASSWORD ===================== -->
+                <!-- Change Password form — replace in BOTH profile.html and profileso.html -->
                 <form id="change-password" class="tab-content hidden form-layout">
                     <div class="form-group">
                         <label>Current Password</label>
-                        <input type="password" id="current-password" required>
+                        <div class="password-wrapper">
+                            <input type="password" id="current-password" required>
+                            <button type="button" class="eye-btn" onclick="togglePw('current-password', this)">🔓</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>New Password</label>
-                        <input type="password" id="new-password" required minlength="8">
-                        <small class="text-muted">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.</small>
+                        <div class="password-wrapper">
+                            <input type="password" id="new-password" required minlength="6">
+                            <button type="button" class="eye-btn" onclick="togglePw('new-password', this)">🔓</button>
+                        </div>
+                        <small class="text-muted">Min 6 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.</small>
                     </div>
                     <div class="form-group">
                         <label>Confirm New Password</label>
-                        <input type="password" id="confirm-password" required>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirm-password" required>
+                            <button type="button" class="eye-btn" onclick="togglePw('confirm-password', this)">🔓</button>
+                        </div>
                     </div>
                     <div class="text-right">
                         <button type="submit" class="btn btn-primary">Update Password</button>

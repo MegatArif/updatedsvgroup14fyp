@@ -213,6 +213,22 @@ shopPhotoInput.addEventListener('change', async (e) => {
     );
 });
 
+// =====================
+// TOGGLE PASSWORD VISIBILITY
+// =====================
+window.togglePw = function (inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🔒';
+        btn.classList.add('active');
+    } else {
+        input.type = 'password';
+        btn.textContent = '🔓';
+        btn.classList.remove('active');
+    }
+};
+
 // ─── SAVE SHOP SETTINGS ───────────────────────────────────────────────────────
 document.getElementById('shop-settings').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -293,7 +309,15 @@ document.getElementById('change-password').addEventListener('submit', async (e) 
     const confirmPw = document.getElementById('confirm-password').value;
 
     if (newPw !== confirmPw) {
-        showToast("Passwords do not match.", "error");
+    showToast("Passwords do not match.", "error");
+    showLoading(false);
+    return;
+}
+
+    
+    const pwRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+    if (!pwRules.test(newPw)) {
+        showToast("Password must be at least 6 characters with uppercase, lowercase, number, and special character.", "error");
         showLoading(false);
         return;
     }

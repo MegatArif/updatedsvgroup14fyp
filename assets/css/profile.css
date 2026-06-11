@@ -84,6 +84,36 @@ body { background-color: var(--color-bg); color: var(--color-text-dark); line-he
     border-color: #FFFFFF;
 }
 
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 2.8rem; /* make room for the eye button */
+}
+
+.eye-btn {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.eye-btn:hover {
+    opacity: 1;
+}
+
+.eye-btn.active {
+    opacity: 1;
+}
 .btn-danger { background: var(--color-error); color: white; }
 .btn-danger:hover { background: #a31f1f; }
 /* Profile Grid */
