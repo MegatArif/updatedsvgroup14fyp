@@ -180,3 +180,10 @@ body {
 
   cursor: pointer;
 }
+
+@media (max-width: 768px) {
+    .container { flex-direction: column; margin-top: 0; }
+    .sidebar { width: 100%; height: auto; position: static; }
+    .post-card { width: 100%; }
+    #admin-feed { flex-direction: column; }
+}

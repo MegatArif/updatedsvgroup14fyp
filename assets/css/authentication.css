@@ -264,3 +264,78 @@
       font-size: .64rem; color: hsl(174,60%,55%);
       line-height: 1.5; text-align: center;
     }
+
+    @media (max-width: 640px) {
+    body {
+        overflow-y: auto;        /* allow scrolling on mobile */
+        align-items: flex-start;
+        padding: 20px 0;
+    }
+
+    .auth-card {
+        width: 96vw;
+        height: auto;            /* no more fixed height */
+        border-radius: 1.4rem;
+    }
+
+    .track {
+        width: 100%;             /* track no longer needs 200% */
+    }
+
+    /* Each screen stacks form on top, hides image pane */
+    .screen {
+        grid-template-columns: 1fr;   /* single column */
+        width: 100vw;
+    }
+
+    /* Hide the decorative image pane entirely on mobile */
+    .img-pane {
+        display: none;
+    }
+
+    /* When owner mode is active, the form is the second child —
+       make sure it still shows */
+    .screen-owner {
+        direction: ltr;
+    }
+
+    .form-pane {
+        min-height: 100%;
+    }
+
+    /* Views need auto height and less padding */
+    .view {
+        position: relative;      /* no longer absolute overlay */
+        inset: auto;
+        padding: 2rem 1.5rem;
+        opacity: 0;
+        transform: translateY(16px);
+        display: none;
+    }
+
+    .view.active {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Slightly smaller fields */
+    .field {
+        height: 48px;
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .submit-btn {
+        height: 46px;
+    }
+
+    /* track sliding still works via JS — keep the translateX logic
+       but since track is now 100% wide, override the shift */
+    .auth-card.shop-mode .track {
+        transform: translateX(-100vw);
+    }
+}

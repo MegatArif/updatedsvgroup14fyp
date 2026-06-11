@@ -265,4 +265,6 @@ body {
   .notif-header-row { flex-direction: column; }
   .notif-card { flex-wrap: wrap; }
   .btn-mark-read { align-self: flex-start; }
+  .notif-page { padding: 20px 14px 48px; }
+  .notif-title { font-size: 1.4rem; }
 }

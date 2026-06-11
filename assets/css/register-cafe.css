@@ -508,4 +508,5 @@ input[type="time"] { padding-left: 36px; }
   .preview-sticky { position: static; }
   .field-grid { grid-template-columns: 1fr; }
   .field-group.full { grid-column: 1; }
+  .reg-wrapper { padding: 20px 14px 48px; } 
 }

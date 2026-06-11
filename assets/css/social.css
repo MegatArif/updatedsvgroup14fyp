@@ -248,3 +248,10 @@ button:hover {
   color: #3b2f2f;
   letter-spacing: 1px;
 }
+
+@media (max-width: 768px) {
+    .page { flex-direction: column; padding: 15px; margin-top: 0; }
+    .sidebar { width: 100%; position: static; min-height: auto; }
+    .post-card, .feed .post-card { width: 100%; }
+    .feed { flex-direction: column; }
+}
