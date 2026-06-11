@@ -2,8 +2,11 @@ body {
   margin: 0;
   font-family: Arial;
   background: #f4f4f4;
+  overflow-x: hidden;
 }
-
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 /* TOPBAR */
 
 
@@ -250,8 +253,36 @@ button:hover {
 }
 
 @media (max-width: 768px) {
-    .page { flex-direction: column; padding: 15px; margin-top: 0; }
-    .sidebar { width: 100%; position: static; min-height: auto; }
-    .post-card, .feed .post-card { width: 100%; }
-    .feed { flex-direction: column; }
+    .page {
+        flex-direction: column;
+        padding: 10px;          /* reduce padding */
+        margin-top: 0;
+        gap: 16px;              /* reduce gap */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .sidebar {
+        width: 100%;
+        box-sizing: border-box; /* ADD - prevents padding from causing overflow */
+        position: static;
+        min-height: auto;
+    }
+
+    .post-card,
+    .feed .post-card,
+    .sidebar .post-card {
+        width: 100%;
+        box-sizing: border-box; /* ADD - prevents padding causing overflow */
+    }
+
+    .feed {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .create-post-bar {
+        width: 100%;
+        box-sizing: border-box;
+    }
 }

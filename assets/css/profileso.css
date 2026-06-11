@@ -16,10 +16,12 @@
     --shadow-soft: 0 4px 20px rgba(162, 143, 112, 0.15);
     --transition: all 0.3s ease;
 }
-
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 /* Base Styles */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', system-ui, sans-serif; }
-body { background-color: var(--color-bg); color: var(--color-text-dark); line-height: 1.6; padding-bottom: 2rem; }
+body { background-color: var(--color-bg); color: var(--color-text-dark); line-height: 1.6; padding-bottom: 2rem; overflow-x: hidden;}
 .bg-primary { background-color: var(--color-bg); }
 .bg-secondary { background-color: var(--color-secondary); }
 .text-dark { color: var(--color-text-dark); }

@@ -30,7 +30,9 @@
     --SoftIvory: hsl(33, 100%, 97%); /* footer-bg */
     --LightStone: hsl(30, 30%, 90%); /* hr-color */
 } 
-
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 /* ==============================
    Main Body
    ==============================*/

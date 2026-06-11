@@ -4,7 +4,9 @@ body {
   background: #fffaf3;
   color: #3a2f28;
 }
-
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 .page {
   padding: 50px;
   display: flex;
