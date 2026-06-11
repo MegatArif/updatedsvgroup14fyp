@@ -273,7 +273,6 @@
         padding: 24px 0;
     }
 
-    /* Card takes full width, auto height */
     .auth-card {
         width: 92vw;
         height: auto;
@@ -281,31 +280,25 @@
         overflow: hidden;
     }
 
-    /* Track: still 200% wide so the JS slide still works,
-       but each screen is now 92vw not 50% of 200vw */
     .track {
         width: 200%;
         height: auto;
     }
 
-    /* shop-mode slide: move exactly one card width left */
     .auth-card.shop-mode .track {
-        transform: translateX(-50%);   /* still 50% of 200% = one screen */
+        transform: translateX(-50%);
     }
 
-    /* Each screen: single column, hide image pane */
     .screen {
-        flex: 0 0 50%;                 /* keep the 50% of track logic */
+        flex: 0 0 50%;
         height: auto;
-        display: block;                /* drop the grid */
+        display: block;
     }
 
-    /* Hide decorative image pane on mobile */
     .img-pane {
         display: none;
     }
 
-    /* Form pane fills the whole screen */
     .form-pane {
         width: 100%;
         height: auto;
@@ -313,7 +306,6 @@
         overflow: visible;
     }
 
-    /* Views: switch from absolute to relative so height is natural */
     .view {
         position: relative;
         inset: auto;
@@ -330,21 +322,129 @@
         pointer-events: all;
     }
 
-    /* Slightly compact fields and buttons */
-    .field {
-        height: 48px;
+    .field { height: 48px; }
+    .submit-btn { height: 46px; }
+    .form-title { font-size: 1.4rem; margin-bottom: 1.1rem; }
+    .field-group { row-gap: 0.65rem; }
+
+    /* ── Mobile role switcher bar ── */
+    .mobile-role-bar {
+        display: flex !important;
+        width: 92vw;
+        margin: 0 auto 16px;
+        background: hsl(0,0%,13%);
+        border-radius: 3rem;
+        padding: 5px;
+        gap: 6px;
     }
 
-    .submit-btn {
-        height: 46px;
+    .mobile-role-bar button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 3rem;
+        font-family: var(--font);
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        transition: background .25s, color .25s;
     }
 
-    .form-title {
-        font-size: 1.4rem;
-        margin-bottom: 1.1rem;
+    .mobile-role-bar button.active-role {
+        background: var(--surface);
+        color: var(--title);
     }
 
-    .field-group {
-        row-gap: 0.65rem;
+    .mobile-role-bar button.c-role.active-role {
+        background: var(--purple);
+        color: #fff;
     }
+
+    .mobile-role-bar button.o-role.active-role {
+        background: var(--teal);
+        color: #fff;
+    }
+}
+
+/* ── Landscape on mobile ── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+        padding: 16px 0;
+    }
+
+    .auth-card {
+        width: 94vw;
+        height: auto;
+        border-radius: 1.2rem;
+    }
+
+    .track { width: 200%; height: auto; }
+
+    .auth-card.shop-mode .track { transform: translateX(-50%); }
+
+    .screen {
+        flex: 0 0 50%;
+        height: auto;
+        display: block;
+    }
+
+    .img-pane { display: none; }
+
+    .form-pane { width: 100%; height: auto; overflow: visible; }
+
+    .view {
+        position: relative;
+        inset: auto;
+        display: none;
+        opacity: 1;
+        transform: none;
+        pointer-events: none;
+        padding: 1.2rem 1.6rem 1.6rem;
+        transition: none;
+    }
+
+    .view.active {
+        display: flex;
+        pointer-events: all;
+    }
+
+    .field { height: 42px; }
+    .submit-btn { height: 40px; }
+    .form-title { font-size: 1.2rem; margin-bottom: 0.8rem; }
+    .field-group { row-gap: 0.5rem; margin-bottom: 0.3rem; }
+    .forgot { margin-bottom: 0.7rem; }
+    .role-chip { margin-bottom: 0.5rem; }
+
+    .mobile-role-bar {
+        display: flex !important;
+        width: 94vw;
+        margin: 0 auto 12px;
+        background: hsl(0,0%,13%);
+        border-radius: 3rem;
+        padding: 4px;
+        gap: 5px;
+    }
+
+    .mobile-role-bar button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 3rem;
+        font-family: var(--font);
+        font-size: .75rem;
+        font-weight: 700;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        transition: background .25s, color .25s;
+    }
+
+    .mobile-role-bar button.c-role.active-role { background: var(--purple); color: #fff; }
+    .mobile-role-bar button.o-role.active-role { background: var(--teal); color: #fff; }
 }

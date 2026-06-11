@@ -218,6 +218,28 @@
         
         <!--MAIN JS-->
         <script src="assets/js/authen.js" type="module"></script>
+        <script>
+// Inject mobile role switcher bar
+const bar = document.createElement('div');
+bar.className = 'mobile-role-bar';
+bar.style.display = 'none'; // hidden on desktop, shown via CSS
+bar.innerHTML = `
+  <button class="c-role active-role" id="mobileToCustomer">👤 Customer</button>
+  <button class="o-role" id="mobileToOwner">🏪 Shop Owner</button>
+`;
+document.body.insertBefore(bar, document.getElementById('authCard'));
+
+document.getElementById('mobileToCustomer').addEventListener('click', () => {
+    document.getElementById('authCard').classList.remove('shop-mode');
+    document.getElementById('mobileToCustomer').classList.add('active-role');
+    document.getElementById('mobileToOwner').classList.remove('active-role');
+});
+document.getElementById('mobileToOwner').addEventListener('click', () => {
+    document.getElementById('authCard').classList.add('shop-mode');
+    document.getElementById('mobileToOwner').classList.add('active-role');
+    document.getElementById('mobileToCustomer').classList.remove('active-role');
+});
+</script>
     </body>
  </html>
 
