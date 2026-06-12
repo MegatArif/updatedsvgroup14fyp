@@ -317,6 +317,53 @@ async function geocode(address) {
     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
 }
 
+function compactAddress(address, city) {
+    const cleanedAddress = String(address || '').trim();
+    const cleanedCity = String(city || '').trim();
+    if (!cleanedCity || cleanedAddress.toLowerCase().includes(cleanedCity.toLowerCase())) {
+        return cleanedAddress;
+    }
+    return [cleanedAddress, cleanedCity].filter(Boolean).join(', ');
+}
+
+function buildGeocodeCandidates(address, city, cafeName = '') {
+    const full = compactAddress(address, city);
+    const withoutCountry = full
+        .replace(/\b\d{5}\b/g, '')
+        .replace(/Johor\s+Darul\s+Ta['’]?zim/ig, 'Johor')
+        .replace(/\bMalaysia\b/ig, '')
+        .replace(/\s*,\s*/g, ', ')
+        .replace(/(^,\s*|\s*,$)/g, '')
+        .trim();
+    const withoutStreetNumber = withoutCountry.replace(/^\d+\s*,?\s*/g, '').trim();
+    const parts = withoutStreetNumber.split(',').map(part => part.trim()).filter(Boolean);
+    const roadAreaCity = parts.length >= 2
+        ? [parts[0], parts[1], city].filter(Boolean).join(', ')
+        : '';
+
+    return [
+        full,
+        withoutCountry,
+        withoutStreetNumber,
+        roadAreaCity,
+        compactAddress(cafeName, city)
+    ].filter((candidate, index, list) =>
+        candidate && list.findIndex(item => item.toLowerCase() === candidate.toLowerCase()) === index
+    );
+}
+
+async function geocodeAny(candidates) {
+    let lastError;
+    for (const candidate of candidates) {
+        try {
+            return await geocode(candidate);
+        } catch (err) {
+            lastError = err;
+        }
+    }
+    throw lastError || new Error('Location not found');
+}
+
 /** Road distance + duration via OSRM (free, no key) */
 async function getRouteInfo(origin, dest) {
     try {
@@ -521,7 +568,8 @@ async function showDetailModal(cafe) {
     const imageUrl  = await getCafeImageUrl(cafe.image);
     // Use the human-readable city name so Nominatim geocoding works correctly
     const cityTitle = CITY_NAMES[cafe.city] || cafe.city;
-    const destAddress = [cafe.address, cityTitle].filter(Boolean).join(', ');
+    const destAddress = compactAddress(cafe.address, cityTitle);
+    const destGeocodeCandidates = buildGeocodeCandidates(cafe.address, cityTitle, cafe.name);
     const placeUrl    = buildPlaceUrl(cafe.address, cityTitle);
     const dirUrl      = buildDirectionsUrl(cafe.address, cityTitle);
     const embedUrl    = buildEmbedUrl(cafe.address, cityTitle);
@@ -740,7 +788,7 @@ async function showDetailModal(cafe) {
         try {
             const [originCoords, destCoords] = await Promise.all([
                 geocode(originText),
-                geocode(destAddress)
+                geocodeAny(destGeocodeCandidates)
             ]);
             mapStatus.textContent = '🛣️ Calculating route…';
             const { km, mins, source } = await getRouteInfo(originCoords, destCoords);
@@ -779,7 +827,7 @@ async function showDetailModal(cafe) {
                 mapStatus.textContent = '🛣️ Calculating route…';
                 try {
                     // Geocode only the destination — origin is already lat/lng
-                    const destCoords = await geocode(destAddress);
+                    const destCoords = await geocodeAny(destGeocodeCandidates);
                     const { km, mins, source } = await getRouteInfo(
                         { lat: latitude, lng: longitude },
                         destCoords
