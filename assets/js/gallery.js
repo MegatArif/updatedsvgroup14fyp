@@ -521,10 +521,10 @@ async function showDetailModal(cafe) {
     const imageUrl  = await getCafeImageUrl(cafe.image);
     // Use the human-readable city name so Nominatim geocoding works correctly
     const cityTitle = CITY_NAMES[cafe.city] || cafe.city;
-    const destAddress = `${cafe.address}`;
-    const placeUrl    = buildPlaceUrl(cafe.address);
-    const dirUrl      = buildDirectionsUrl(cafe.address);
-    const embedUrl    = buildEmbedUrl(cafe.address);
+    const destAddress = [cafe.address, cityTitle].filter(Boolean).join(', ');
+    const placeUrl    = buildPlaceUrl(cafe.address, cityTitle);
+    const dirUrl      = buildDirectionsUrl(cafe.address, cityTitle);
+    const embedUrl    = buildEmbedUrl(cafe.address, cityTitle);
 
     const facilityIcons = {
         'WiFi':              'fa-wifi',
@@ -702,6 +702,13 @@ async function showDetailModal(cafe) {
     const timeValue     = document.getElementById('timeValue');
     const distSourceRow = document.getElementById('distSourceRow');
     const btnDirections = document.getElementById('btnDirections');
+    const useLocationBtn = document.getElementById('useLocationBtn');
+
+    function setDistanceBusy(isBusy, message = '') {
+        calcBtn.disabled = isBusy;
+        useLocationBtn.disabled = isBusy;
+        if (message) mapStatus.textContent = message;
+    }
 
     // ── Shared result renderer ──
     function showRouteResult(km, mins, source, originText) {
@@ -716,7 +723,7 @@ async function showDetailModal(cafe) {
         mapStatus.textContent = '';
 
         // Update directions URL with actual origin
-        btnDirections.href = buildDirectionsUrl(cafe.address, originText);
+        btnDirections.href = buildDirectionsUrl(cafe.address, cityTitle, originText);
         // Swap iframe to route view
         iframe.src = buildRouteEmbedUrl(originText, destAddress);
         if (placeholder) placeholder.style.display = 'none';
@@ -728,8 +735,7 @@ async function showDetailModal(cafe) {
             mapStatus.textContent = '⚠️ Please enter a starting location.';
             return;
         }
-        mapStatus.textContent = '🔍 Locating addresses…';
-        calcBtn.disabled = true;
+        setDistanceBusy(true, '🔍 Locating addresses…');
         distResult.classList.remove('visible');
         try {
             const [originCoords, destCoords] = await Promise.all([
@@ -744,7 +750,7 @@ async function showDetailModal(cafe) {
             mapStatus.textContent = '❌ Could not find that location. Try a more specific address.';
             distResult.classList.remove('visible');
         } finally {
-            calcBtn.disabled = false;
+            setDistanceBusy(false);
         }
     }
 
@@ -752,14 +758,14 @@ async function showDetailModal(cafe) {
     originInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcFromText(originInput.value); });
 
     // ── Use browser geolocation ──
-    document.getElementById('useLocationBtn').addEventListener('click', () => {
+    useLocationBtn.addEventListener('click', () => {
         if (!navigator.geolocation) {
             mapStatus.textContent = '❌ Geolocation not supported by your browser.';
             return;
         }
-        mapStatus.textContent = '📡 Detecting your location…';
-        calcBtn.disabled = true;
+        setDistanceBusy(true, '📡 Detecting your location…');
         distResult.classList.remove('visible');
+        originInput.value = 'Using current location...';
 
         navigator.geolocation.getCurrentPosition(
             async ({ coords: { latitude, longitude } }) => {
@@ -768,21 +774,7 @@ async function showDetailModal(cafe) {
                 // which Nominatim cannot reliably reverse-geocode back.
                 const coordString = `${latitude},${longitude}`;
 
-                // Fill the input with a human-readable label (display only, not geocoded again)
-                try {
-                    const rev  = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-                        { headers: { 'Accept-Language': 'en' } }
-                    );
-                    const data = await rev.json();
-                    // Show a short label: road + suburb if available, otherwise coords
-                    const addr = data.address || {};
-                    const shortLabel = [addr.road, addr.suburb || addr.village || addr.town || addr.city]
-                        .filter(Boolean).join(', ') || coordString;
-                    originInput.value = shortLabel;
-                } catch {
-                    originInput.value = coordString;
-                }
+                originInput.value = 'Current location';
 
                 mapStatus.textContent = '🛣️ Calculating route…';
                 try {
@@ -794,19 +786,40 @@ async function showDetailModal(cafe) {
                     );
                     // Pass coordString (not display_name) so embed & directions URLs are precise
                     showRouteResult(km, mins, source, coordString);
+
+                    // Fill the input with a readable label after routing succeeds.
+                    try {
+                        const rev  = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+                            { headers: { 'Accept-Language': 'en' } }
+                        );
+                        const data = await rev.json();
+                        const addr = data.address || {};
+                        const shortLabel = [addr.road, addr.suburb || addr.village || addr.town || addr.city]
+                            .filter(Boolean).join(', ') || coordString;
+                        originInput.value = shortLabel;
+                    } catch {
+                        originInput.value = coordString;
+                    }
                 } catch (err) {
                     console.error(err);
                     mapStatus.textContent = '❌ Route calculation failed. Please try again.';
                 } finally {
-                    calcBtn.disabled = false;
+                    setDistanceBusy(false);
                 }
             },
             err => {
-                mapStatus.textContent = '❌ Location access denied or timed out.';
-                calcBtn.disabled = false;
+                const messages = {
+                    1: '❌ Location permission was denied. Please allow location access or type your starting point.',
+                    2: '❌ Your location is unavailable right now. Please try again or type your starting point.',
+                    3: '❌ Location request timed out. Please try again or type your starting point.'
+                };
+                mapStatus.textContent = messages[err.code] || '❌ Could not detect your location.';
+                originInput.value = '';
+                setDistanceBusy(false);
                 console.warn('Geolocation error:', err);
             },
-            { timeout: 10000 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
         );
     });
 }
