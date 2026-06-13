@@ -70,10 +70,6 @@ CafeHunt helps users find cafes, view cafe information, create reservations, and
 - Role data stored in `sessionStorage` during active sessions
 - Admin access controlled by approved admin email list
 - Re-authentication required before sensitive profile changes
-- Environment variables used for payment and server credentials:
-  - `TOYYIBPAY_SECRET_KEY`
-  - `TOYYIBPAY_CATEGORY_CODE`
-  - `FIREBASE_SERVICE_ACCOUNT`
 
 ## Deployment
 
