@@ -65,8 +65,7 @@ CafeHunt helps users find cafes, view cafe information, create reservations, and
 - Firebase Authentication for customer and shop owner accounts
 - Email verification before login access
 - Password reset through Firebase Authentication
-- Role-based page protection through `assets/js/session.js`
-- Role data stored in `sessionStorage` during active sessions
+- Role-based page protection 
 - Admin access controlled by approved admin email list
 - Re-authentication required before sensitive profile changes
 
@@ -76,7 +75,7 @@ The project is deployed on Vercel:
 
 - Production site: https://cafehunt.vercel.app/index.html
 - Frontend pages are served as static HTML, CSS, and JavaScript files.
-- Backend payment routes are deployed as Vercel serverless functions under `api/`.
+- Backend payment routes are deployed as Vercel serverless functions.
 - Firebase provides authentication, database, and file storage services.
 
 Required deployment configuration:
