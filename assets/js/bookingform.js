@@ -3,6 +3,10 @@ import { collection, addDoc, serverTimestamp, doc, getDoc, getDocs, query, where
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { showToast } from './toast.js';
 
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['customer']);
+
 const auth = getAuth(app);
 
 let currentUserName = "Guest User";

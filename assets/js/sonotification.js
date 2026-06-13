@@ -10,7 +10,8 @@ import {
   onSnapshot,
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
+  writeBatch
 }
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
@@ -19,6 +20,10 @@ import {
   onAuthStateChanged
 }
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['shopowner']);
 
 const auth = getAuth(app);
 
@@ -44,6 +49,9 @@ const detailList =
 
 const backBtn =
   document.getElementById("backBtn");
+
+const markAllBtn =
+  document.getElementById("markAllBtn");
 
 
 // =========================
@@ -175,16 +183,64 @@ window.markAsRead = async function(id) {
     const n = notifications.find(x => x.id === id);
     if (n) n.read = true;
 
-    // 🔥 IMPORTANT: refresh UI
-    showCategories();
-    showDetails(selectedType);
+    refreshNotificationView();
 
   } catch (err) {
     console.error(err);
   }
 };
 
+markAllBtn?.addEventListener("click", async () => {
+  const unreadNotifications =
+    notifications.filter(n => n.read !== true);
+
+  if (!unreadNotifications.length) return;
+
+  try {
+    const batch = writeBatch(db);
+
+    unreadNotifications.forEach((n) => {
+      batch.update(
+        doc(db, "sonotifications", n.id),
+        { read: true }
+      );
+    });
+
+    await batch.commit();
+
+    notifications = notifications.map(n => ({
+      ...n,
+      read: true
+    }));
+
+    refreshNotificationView();
+
+  } catch (err) {
+    console.error("Error marking all notifications as read:", err);
+  }
+});
+
+function refreshNotificationView() {
+  updateMarkAllButton();
+
+  if (selectedType) {
+    showDetails(selectedType);
+  } else {
+    showCategories();
+  }
+}
+
+function updateMarkAllButton() {
+  if (!markAllBtn) return;
+
+  const unreadCount =
+    notifications.filter(n => n.read !== true).length;
+
+  markAllBtn.disabled = unreadCount === 0;
+}
+
 function showCategories() {
+  updateMarkAllButton();
 
   const bookingCount =
     notifications.filter(n =>
@@ -282,6 +338,7 @@ window.goType = function(type) {
 // =========================
 
 function showDetails(type) {
+  updateMarkAllButton();
 
   mainView.style.display = "none";
   detailView.style.display = "block";

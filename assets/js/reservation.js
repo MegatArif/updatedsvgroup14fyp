@@ -27,6 +27,10 @@ import {
 
 import { setupNavbar } from "./navbar.js";
 
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['customer']);
+
 setupNavbar();
 
 const auth = getAuth(app);

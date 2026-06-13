@@ -11,6 +11,10 @@ import { showConfirm } from './toast.js';
 
 const auth = getAuth(app);
 
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['shopowner']);
+
 // Maps display names back to select keys (for existing data stored as display names)
 const CITY_KEY_MAP = {
     'Skudai': 'skudai', 'Kulai': 'kulai', 'Masai': 'masai',

@@ -6,6 +6,10 @@ import { setupNavbar } from './navbar.js';
 
 setupNavbar();
 
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['customer']);
+
 const urlParams     = new URLSearchParams(window.location.search);
 const reservationId = urlParams.get('reservationId')
                    || urlParams.get('order_id')

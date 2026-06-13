@@ -8,6 +8,10 @@ import { showConfirm } from './toast.js';
 
 const auth = getAuth(app);
 
+import { guardSession, sessionLogout } from './session.js';
+// Call guardFunction 
+guardSession(['customer']);
+
 const DEFAULT_AVATAR = "picture/user2avatar.jpeg"; // ✅ default for all accounts
 
 // UI Utilities
