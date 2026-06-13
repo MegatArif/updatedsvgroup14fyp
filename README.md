@@ -55,11 +55,10 @@ CafeHunt helps users find cafes, view cafe information, create reservations, and
 
 ### Backend
 
-- Vercel serverless API routes in `api/`
-- Firebase Firestore for application data
-- Firebase Storage for uploaded images
-- Firebase Admin SDK for server-side payment callback updates
-- ToyyibPay API for bill creation and payment processing
+- JavaScript
+- Vercel 
+- Firebase 
+- ToyyibPay 
 
 ### Authentication & Security
 
